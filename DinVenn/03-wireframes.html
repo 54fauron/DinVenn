@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DinVenn – Wireframes</title>
+<style>
+  :root{
+    --peach:#FFC9A8; --peach-d:#FFB38A;
+    --coral:#FF8A7A;
+    --lilac:#B79CC9; --lilac-l:#E6DAF0;
+    --yellow:#FFD98A; --yellow-l:#FFF1CC;
+    --cream:#FFF7F0;
+    --ink:#3B2A3A; --ink-soft:#7A6678;
+    --white:#fff;
+    --radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(160deg,#FFE3D0,#F3E6F7);color:var(--ink);padding:32px 16px 64px}
+  h1{text-align:center;font-size:32px;margin-bottom:6px}
+  .sub{text-align:center;color:var(--ink-soft);margin-bottom:28px}
+  h2.sec{max-width:1200px;margin:40px auto 16px;font-size:20px}
+  .palette{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+  .sw{padding:10px 14px;border-radius:12px;font-size:12px;font-weight:600}
+  .row{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;max-width:1300px;margin:0 auto}
+  .col{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .label{font-weight:700}
+  .note{max-width:340px;font-size:13px;color:var(--ink-soft);text-align:center}
+
+  /* Telefon */
+  .phone{width:340px;height:700px;background:var(--cream);border-radius:38px;border:10px solid #2d2230;position:relative;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 18px 40px rgba(80,40,80,.25)}
+  .scroll{flex:1;overflow-y:auto;padding:16px 16px 12px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+  .status{height:26px;font-size:11px;display:flex;justify-content:space-between;padding:6px 18px 0;color:var(--ink-soft)}
+  .tabbar{display:flex;justify-content:space-around;padding:10px 6px 14px;background:var(--white);border-top:1px solid #f0e2d8}
+  .tab{font-size:10px;text-align:center;color:var(--ink-soft)}
+  .tab b{display:block;font-size:18px}
+  .tab.on{color:var(--coral);font-weight:700}
+
+  /* Komponenter */
+  .hello{font-size:22px;font-weight:800;margin:4px 0 2px}
+  .muted{color:var(--ink-soft);font-size:12px}
+  .search{background:var(--white);border-radius:999px;padding:11px 16px;font-size:13px;color:var(--ink-soft);margin:12px 0;box-shadow:0 2px 8px rgba(255,138,122,.15)}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  .chip{white-space:nowrap;padding:7px 13px;border-radius:999px;font-size:12px;font-weight:600;background:var(--white);border:1.5px solid var(--peach)}
+  .chip.on{background:var(--coral);color:#fff;border-color:var(--coral)}
+  .sech{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 8px;font-weight:800;font-size:15px}
+  .sech a{font-size:12px;color:var(--lilac);font-weight:600}
+  .hscroll{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+  .deal{min-width:200px;border-radius:var(--radius);background:linear-gradient(145deg,var(--peach),var(--coral));color:#fff;padding:14px;position:relative}
+  .deal.y{background:linear-gradient(145deg,var(--yellow),var(--peach-d));color:var(--ink)}
+  .deal.l{background:linear-gradient(145deg,var(--lilac),#d6b9de);color:#fff}
+  .deal .big{font-size:26px;font-weight:900;line-height:1}
+  .deal .t{font-size:12px;margin-top:6px;opacity:.95}
+  .deal .biz{font-size:11px;margin-top:10px;opacity:.9}
+  .timer{display:inline-block;background:rgba(255,255,255,.35);border-radius:999px;padding:3px 9px;font-size:10px;font-weight:700;margin-top:8px}
+  .heart{position:absolute;top:10px;right:12px;font-size:18px}
+  .card{background:var(--white);border-radius:var(--radius);padding:12px;display:flex;gap:12px;align-items:center;margin-bottom:10px;box-shadow:0 3px 10px rgba(183,156,201,.18)}
+  .thumb{width:56px;height:56px;border-radius:16px;background:var(--lilac-l);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .card .n{font-weight:700;font-size:14px}
+  .tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:999px;background:var(--yellow-l);margin-top:4px;font-weight:600}
+  .date{width:48px;text-align:center;background:var(--lilac-l);border-radius:14px;padding:6px 0;flex-shrink:0}
+  .date b{display:block;font-size:18px}
+  .date span{font-size:10px;text-transform:uppercase;color:var(--ink-soft)}
+
+  .btn{display:block;text-align:center;background:var(--coral);color:#fff;font-weight:700;padding:13px;border-radius:999px;font-size:14px;margin:10px 0}
+  .btn.o{background:var(--white);color:var(--coral);border:2px solid var(--coral)}
+  .btn.l{background:var(--lilac)}
+  .cover{height:150px;margin:-16px -16px 0;background:linear-gradient(160deg,var(--peach),var(--lilac));position:relative}
+  .logo{width:72px;height:72px;border-radius:22px;background:var(--white);border:4px solid var(--cream);position:absolute;bottom:-34px;left:16px;display:flex;align-items:center;justify-content:center;font-size:28px}
+  .back{position:absolute;top:10px;left:12px;background:rgba(255,255,255,.8);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+  .info{display:flex;gap:8px;font-size:12px;margin:6px 0;align-items:flex-start}
+  .map{height:100px;border-radius:16px;background:repeating-linear-gradient(45deg,#f6e7dc,#f6e7dc 10px,#f9efe6 10px,#f9efe6 20px);display:flex;align-items:center;justify-content:center;font-size:24px;margin:8px 0}
+  .gal{display:flex;gap:8px}
+  .gal div{flex:1;height:70px;border-radius:14px;background:var(--lilac-l)}
+  .gal div:nth-child(2){background:var(--yellow-l)}
+  .gal div:nth-child(3){background:var(--peach)}
+
+  /* Kart-skjerm */
+  .bigmap{flex:1;position:relative;background:repeating-linear-gradient(45deg,#f6e7dc,#f6e7dc 14px,#faf0e8 14px,#faf0e8 28px)}
+  .pin{position:absolute;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;font-size:14px}
+  .pin span{transform:rotate(45deg)}
+  .sheet{position:absolute;left:10px;right:10px;bottom:10px}
+
+  /* QR */
+  .qr{width:150px;height:150px;margin:12px auto;background:
+    conic-gradient(var(--ink) 25%,transparent 0 50%,var(--ink) 0 75%,transparent 0) 0 0/20px 20px;border:10px solid #fff;border-radius:12px}
+
+  /* Dashboard (web) */
+  .web{width:1000px;max-width:100%;background:var(--cream);border-radius:18px;border:8px solid #2d2230;box-shadow:0 18px 40px rgba(80,40,80,.25);display:flex;min-height:620px;overflow:hidden}
+  .side{width:210px;background:linear-gradient(180deg,var(--lilac),#9f86b3);color:#fff;padding:20px 14px}
+  .side h3{font-size:18px;margin-bottom:18px}
+  .side div{padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:4px}
+  .side div.on{background:rgba(255,255,255,.25);font-weight:700}
+  .main{flex:1;padding:22px}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  .top h2{font-size:20px}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat{background:var(--white);border-radius:16px;padding:14px}
+  .stat b{font-size:24px;display:block}
+  .stat span{font-size:11px;color:var(--ink-soft)}
+  .stat:nth-child(1){border-top:5px solid var(--coral)}
+  .stat:nth-child(2){border-top:5px solid var(--yellow)}
+  .stat:nth-child(3){border-top:5px solid var(--lilac)}
+  .stat:nth-child(4){border-top:5px solid var(--peach-d)}
+  .two{display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-top:14px}
+  .panel{background:var(--white);border-radius:16px;padding:14px}
+  .panel h4{font-size:14px;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  td,th{text-align:left;padding:8px 4px;border-bottom:1px solid #f3e6dc}
+  th{color:var(--ink-soft);font-weight:600}
+  .pill{padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700}
+  .pill.g{background:#D7F0E1}.pill.y{background:var(--yellow-l)}.pill.r{background:#FFD9D3}
+  .bars{display:flex;align-items:flex-end;gap:8px;height:110px}
+  .bars div{flex:1;background:linear-gradient(var(--coral),var(--peach));border-radius:8px 8px 0 0}
+  .btn.s{display:inline-block;padding:9px 16px;font-size:12px;margin:0}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:3px;font-weight:600}
+  .field div{background:var(--cream);border:1.5px solid var(--peach);border-radius:12px;padding:9px 11px;font-size:12px}
+  .field.ta div{height:54px}
+  .legend{max-width:900px;margin:30px auto 0;background:#fff8;border-radius:16px;padding:16px 20px;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<h1>DinVenn – wireframes</h1>
+<p class="sub">Første skisseforslag. Alt er klikk-fritt, men bruk det som mal i Figma.</p>
+
+<div class="palette">
+  <div class="sw" style="background:#FFC9A8">Fersken #FFC9A8</div>
+  <div class="sw" style="background:#FF8A7A;color:#fff">Korall #FF8A7A</div>
+  <div class="sw" style="background:#B79CC9;color:#fff">Dus lilla #B79CC9</div>
+  <div class="sw" style="background:#FFD98A">Varm gul #FFD98A</div>
+  <div class="sw" style="background:#FFF7F0">Krem #FFF7F0</div>
+  <div class="sw" style="background:#3B2A3A;color:#fff">Tekst #3B2A3A</div>
+</div>
+<p class="note" style="margin:0 auto">Avrundede hjørner (20 px), rund og vennlig font (f.eks. Nunito / Poppins), emojis eller myke ikoner. Mørk tekst på pastell for god kontrast.</p>
+
+<!-- ============ UNGDOMSAPP ============ -->
+<h2 class="sec">1. Ungdomsappen</h2>
+<div class="row">
+
+  <!-- HJEM -->
+  <div class="col">
+    <div class="label">Hjem / Utforsk</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="scroll">
+        <div class="muted">📍 Kristiansand</div>
+        <div class="hello">Hei Emma! 👋</div>
+        <div class="muted">Dette skjer i dag hos vennene dine</div>
+        <div class="search">🔍 Søk etter kafé, butikk, aktivitet …</div>
+        <div class="chips">
+          <div class="chip on">Alle</div><div class="chip">☕ Mat & Drikke</div><div class="chip">🛍 Shopping</div><div class="chip">🎳 Aktiviteter</div><div class="chip">🎵 Kultur</div>
+        </div>
+
+        <div class="sech">Vennepriser nå <a>Se alle</a></div>
+        <div class="hscroll">
+          <div class="deal"><span class="heart">♡</span><div class="big">-20 %</div><div class="t">Alle lattes og kaffe</div><span class="timer">⏱ Slutter om 3t 12m</span><div class="biz">Kaffebrenneriet</div></div>
+          <div class="deal y"><span class="heart">♥</span><div class="big">2 for 1</div><div class="t">Bowling på tirsdager</div><span class="timer">⏱ 2 dager igjen</span><div class="biz">StrikeZone</div></div>
+          <div class="deal l"><span class="heart">♡</span><div class="big">-15 %</div><div class="t">Studentrabatt på jeans</div><span class="timer">⏱ 5 dager igjen</span><div class="biz">Vintage Vibes</div></div>
+        </div>
+
+        <div class="sech">Hva skjer? <a>Se alle</a></div>
+        <div class="card"><div class="date"><b>02</b><span>nov</span></div><div><div class="n">Åpen scene-kveld</div><div class="muted">Bølgen Kulturhus · 19:00</div><span class="tag">Gratis</span></div></div>
+        <div class="card"><div class="date"><b>05</b><span>nov</span></div><div><div class="n">Thrift-marked</div><div class="muted">Vintage Vibes · 12:00</div><span class="tag">Gratis</span></div></div>
+
+        <div class="sech">Populært i nærheten <a>Se alle</a></div>
+        <div class="card"><div class="thumb">☕</div><div><div class="n">Kaffebrenneriet</div><div class="muted">⭐ 4.8 · 350 m</div><span class="tag">1 vennepris</span></div></div>
+        <div class="card"><div class="thumb">🎳</div><div><div class="n">StrikeZone</div><div class="muted">⭐ 4.6 · 1,2 km</div><span class="tag">2 vennepriser</span></div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab on"><b>🏠</b>Hjem</div><div class="tab"><b>🗺</b>Kart</div><div class="tab"><b>♥</b>Favoritter</div><div class="tab"><b>👤</b>Meg</div>
+      </div>
+    </div>
+    <div class="note">Feed med nedtelling på tilbud, kategorifilter øverst og personlige forslag basert på interesser.</div>
+  </div>
+
+  <!-- KART -->
+  <div class="col">
+    <div class="label">Kart</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>📶 🔋</span></div>
+      <div style="padding:6px 14px"><div class="search" style="margin:0">🔍 Søk i området</div>
+        <div class="chips" style="margin-top:8px"><div class="chip on">Alle</div><div class="chip">☕</div><div class="chip">🛍</div><div class="chip">🎳</div><div class="chip">🎵</div></div></div>
+      <div class="bigmap">
+        <div class="pin" style="background:var(--coral);top:60px;left:70px"><span>☕</span></div>
+        <div class="pin" style="background:var(--yellow);top:130px;left:190px"><span>🎳</span></div>
+        <div class="pin" style="background:var(--lilac);top:220px;left:100px"><span>🛍</span></div>
+        <div class="pin" style="background:var(--peach-d);top:300px;left:200px"><span>🎵</span></div>
+        <div style="position:absolute;top:175px;left:155px;width:16px;height:16px;border-radius:50%;background:#4a90e2;border:3px solid #fff"></div>
+        <div class="sheet card" style="margin:0"><div class="thumb">☕</div><div><div class="n">Kaffebrenneriet</div><div class="muted">350 m · Åpent til 18:00</div><span class="tag">-20 % lattes</span></div></div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><b>🏠</b>Hjem</div><div class="tab on"><b>🗺</b>Kart</div><div class="tab"><b>♥</b>Favoritter</div><div class="tab"><b>👤</b>Meg</div>
+      </div>
+    </div>
+    <div class="note">Fargede pins etter kategori. Trykk på pin åpner kort med tilbud, så bedriftssiden.</div>
+  </div>
+
+  <!-- BEDRIFTSSIDE -->
+  <div class="col">
+    <div class="label">Bedriftsside</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="scroll">
+        <div class="cover"><div class="back">←</div><div class="logo">☕</div></div>
+        <div style="margin-top:42px;display:flex;justify-content:space-between;align-items:flex-start">
+          <div><div class="hello" style="font-size:20px">Kaffebrenneriet</div><div class="muted">Mat & Drikke · ⭐ 4.8 · 350 m</div></div>
+          <div style="font-size:24px">♡</div>
+        </div>
+        <p style="font-size:12px;margin:10px 0;color:var(--ink-soft)">Lokalt brenneri med hjemmelagde kaker og gode sitteplasser. Studenter er alltid velkomne!</p>
+
+        <div class="sech">Vennepriser</div>
+        <div class="deal"><div class="big">-20 %</div><div class="t">Alle lattes og kaffe</div><span class="timer">⏱ Slutter om 3t 12m</span>
+          <div class="btn" style="background:#fff;color:var(--coral);margin:12px 0 0">Hent vennepris</div></div>
+
+        <div class="sech">Kommende</div>
+        <div class="card"><div class="date"><b>08</b><span>nov</span></div><div><div class="n">Latte art-workshop</div><div class="muted">17:00 · 50 kr</div></div></div>
+
+        <div class="sech">Bilder</div>
+        <div class="gal"><div></div><div></div><div></div></div>
+
+        <div class="sech">Praktisk</div>
+        <div class="info">📍 Markens gate 12, Kristiansand</div>
+        <div class="info">🕒 Man–Fre 08–18 · Lør 10–16 · Søn stengt</div>
+        <div class="info">🌐 kaffebrenneriet.no · 📷 @kaffebrenneriet</div>
+        <div class="map">📍</div>
+        <div class="btn o">Veibeskrivelse</div>
+      </div>
+    </div>
+    <div class="note">Hovedhandling: «Hent vennepris». Knappen åpner QR-skjermen (se under).</div>
+  </div>
+
+  <!-- QR -->
+  <div class="col">
+    <div class="label">Innløs vennepris</div>
+    <div class="phone">
+      <div class="status"><span>9:41</span><span>📶 🔋</span></div>
+      <div class="scroll" style="text-align:center">
+        <div class="muted" style="text-align:left">← Tilbake</div>
+        <div class="hello" style="margin-top:20px">Din vennepris 🎉</div>
+        <div class="muted">Vis denne til kassen hos Kaffebrenneriet</div>
+        <div class="deal" style="margin:18px 0;text-align:left"><div class="big">-20 %</div><div class="t">Alle lattes og kaffe</div></div>
+        <div class="qr"></div>
+        <div style="font-weight:800;letter-spacing:3px">VENN-4F7K</div>
+        <span class="timer" style="background:var(--yellow-l)">⏱ Gyldig i 14:32</span>
+        <div class="muted" style="margin-top:18px;font-size:11px">Kan brukes 1 gang. Vilkår: Ikke i kombinasjon med andre tilbud.</div>
+      </div>
+    </div>
+    <div class="note">Unik QR + kode. Bedriften skanner eller taster inn koden og tilbudet markeres som brukt.</div>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<h2 class="sec">2. Bedrifts-dashboard (web)</h2>
+<div class="row">
+  <div class="col" style="width:100%">
+    <div class="label">Oversikt</div>
+    <div class="web">
+      <div class="side">
+        <h3>💛 DinVenn</h3>
+        <div class="on">📊 Oversikt</div>
+        <div>🏪 Bedriftsprofil</div>
+        <div>🏷 Vennepriser</div>
+        <div>📅 Arrangementer</div>
+        <div>📰 Nyheter</div>
+        <div>📷 Skann QR</div>
+        <div>💳 Abonnement</div>
+        <div style="margin-top:30px;opacity:.8">⚙ Innstillinger</div>
+      </div>
+      <div class="main">
+        <div class="top"><h2>God morgen, Kaffebrenneriet ☀️</h2><div class="btn s">+ Ny vennepris</div></div>
+        <div class="stats">
+          <div class="stat"><b>1 284</b><span>Profilvisninger (7 d)</span></div>
+          <div class="stat"><b>96</b><span>Lagret som favoritt</span></div>
+          <div class="stat"><b>148</b><span>Hentet vennepris</span></div>
+          <div class="stat"><b>112</b><span>Innløst i butikk</span></div>
+        </div>
+        <div class="two">
+          <div class="panel">
+            <h4>Aktive vennepriser</h4>
+            <table>
+              <tr><th>Tilbud</th><th>Slutter</th><th>Innløst</th><th>Status</th><th></th></tr>
+              <tr><td>-20 % lattes</td><td>I dag 18:00</td><td>64</td><td><span class="pill g">Aktiv</span></td><td>✏️</td></tr>
+              <tr><td>Gratis kake ved 2 kaffe</td><td>12. nov</td><td>31</td><td><span class="pill g">Aktiv</span></td><td>✏️</td></tr>
+              <tr><td>Fredagsdeal</td><td>–</td><td>0</td><td><span class="pill y">Utkast</span></td><td>✏️</td></tr>
+              <tr><td>Høstmeny -10 %</td><td>Utløpt</td><td>17</td><td><span class="pill r">Utløpt</span></td><td>✏️</td></tr>
+            </table>
+          </div>
+          <div class="panel">
+            <h4>Innløsninger siste 7 dager</h4>
+            <div class="bars"><div style="height:40%"></div><div style="height:55%"></div><div style="height:35%"></div><div style="height:70%"></div><div style="height:90%"></div><div style="height:100%"></div><div style="height:60%"></div></div>
+            <div class="muted" style="display:flex;justify-content:space-between;margin-top:4px"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:14px"><h4>Kommende arrangementer</h4>
+          <table>
+            <tr><td>08. nov 17:00</td><td>Latte art-workshop</td><td>12 interesserte</td><td>✏️</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:34px">
+  <div class="col" style="width:100%">
+    <div class="label">Opprett vennepris (skjema)</div>
+    <div class="web" style="min-height:0">
+      <div class="side"><h3>💛 DinVenn</h3><div>📊 Oversikt</div><div>🏪 Bedriftsprofil</div><div class="on">🏷 Vennepriser</div><div>📅 Arrangementer</div><div>📰 Nyheter</div></div>
+      <div class="main">
+        <div class="top"><h2>Ny vennepris</h2><div><span class="btn s l">Lagre utkast</span> <span class="btn s">Publiser</span></div></div>
+        <div class="two" style="grid-template-columns:1.3fr 1fr;margin-top:0">
+          <div class="panel">
+            <div class="field"><label>Tittel</label><div>-20 % på alle lattes</div></div>
+            <div class="field ta"><label>Beskrivelse</label><div>Vis QR-koden i kassen og få 20 % …</div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div class="field"><label>Type rabatt</label><div>Prosent ▾</div></div>
+              <div class="field"><label>Verdi</label><div>20</div></div>
+              <div class="field"><label>Starter</label><div>30.10.2026 08:00</div></div>
+              <div class="field"><label>Slutter (nedtelling)</label><div>30.10.2026 18:00</div></div>
+              <div class="field"><label>Innløsning</label><div>QR-kode ▾</div></div>
+              <div class="field"><label>Maks per bruker</label><div>1</div></div>
+            </div>
+            <div class="field"><label>Vilkår</label><div>Ikke i kombinasjon med andre tilbud</div></div>
+          </div>
+          <div class="panel">
+            <h4>Forhåndsvisning i appen</h4>
+            <div class="deal"><span class="heart">♡</span><div class="big">-20 %</div><div class="t">Alle lattes og kaffe</div><span class="timer">⏱ Slutter om 9t 40m</span><div class="biz">Kaffebrenneriet</div></div>
+            <div class="field" style="margin-top:12px"><label>Bilde</label><div>⬆ Last opp bilde</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row" style="margin-top:34px">
+  <div class="col" style="width:100%">
+    <div class="label">Bedriftsprofil (redigering)</div>
+    <div class="web" style="min-height:0">
+      <div class="side"><h3>💛 DinVenn</h3><div>📊 Oversikt</div><div class="on">🏪 Bedriftsprofil</div><div>🏷 Vennepriser</div><div>📅 Arrangementer</div><div>📰 Nyheter</div></div>
+      <div class="main">
+        <div class="top"><h2>Bedriftsprofil</h2><span class="btn s">Lagre</span></div>
+        <div class="two" style="grid-template-columns:1fr 1fr;margin-top:0">
+          <div class="panel">
+            <div style="display:flex;gap:12px;align-items:center;margin-bottom:10px"><div class="thumb">☕</div><div class="btn s o">Bytt logo</div></div>
+            <div class="field"><label>Navn</label><div>Kaffebrenneriet</div></div>
+            <div class="field"><label>Kategori</label><div>Mat & Drikke ▾</div></div>
+            <div class="field ta"><label>Beskrivelse</label><div>Lokalt brenneri med …</div></div>
+            <div class="field"><label>Adresse</label><div>Markens gate 12, Kristiansand</div></div>
+          </div>
+          <div class="panel">
+            <h4>Plassering på kart</h4><div class="map">📍</div>
+            <h4>Åpningstider</h4>
+            <table><tr><td>Man–Fre</td><td>08:00–18:00</td></tr><tr><td>Lørdag</td><td>10:00–16:00</td></tr><tr><td>Søndag</td><td>Stengt</td></tr></table>
+            <h4 style="margin-top:10px">Bilder</h4><div class="gal"><div></div><div></div><div>+</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Skjermer som bør lages i Figma videre:</b><br>
+  Onboarding (velg interesser) · Innlogging/registrering (bruker og bedrift) · Favoritter · Min profil · Arrangement-detalj · Nyheter · Skann QR (bedrift) · Abonnement/betaling · Admin: godkjenn bedrifter.
+</div>
+
+</body>
+</html>
