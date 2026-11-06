@@ -12,6 +12,7 @@
     "android": {
       "package": "no.dinvenn.pilot"
     },
-    "plugins": ["expo-secure-store"]
+    "plugins": ["expo-secure-store"],
+    "icon": "./assets/dinvenn-logo.png"
   }
 }

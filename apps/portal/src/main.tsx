@@ -690,7 +690,8 @@ function App() {
     <>
       <header>
         <a className="brand" href="/">
-          DinVenn<span>♥</span>
+          <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+          <span>DinVenn</span>
         </a>
         <span>FOR LOKALE BEDRIFTER</span>
         {session && (
@@ -848,28 +849,31 @@ function App() {
                         </small>
                       </div>
                       <div className="actions">
-                        {(["approved", "suspended"] as const).map((status) => (
-                          <button
-                            key={status}
-                            className={status === "suspended" ? "quiet" : ""}
-                            onClick={() =>
-                              void run(async () => {
-                                unwrap(
-                                  await db!
-                                    .from("businesses")
-                                    .update({ status })
-                                    .eq("id", b.id)
-                                    .select()
-                                    .single(),
-                                );
-                                await load();
-                                setNotice("Bedriftsstatus oppdatert.");
-                              })
-                            }
-                          >
-                            {status === "approved" ? "Godkjenn" : "Suspender"}
-                          </button>
-                        ))}
+                        {(["approved", "suspended"] as const)
+                          .filter((status) => status !== b.status)
+                          .map((status) => (
+                            <button
+                              key={status}
+                              disabled={busy}
+                              className={status === "suspended" ? "quiet" : ""}
+                              onClick={() =>
+                                void run(async () => {
+                                  unwrap(
+                                    await db!
+                                      .from("businesses")
+                                      .update({ status })
+                                      .eq("id", b.id)
+                                      .select()
+                                      .single(),
+                                  );
+                                  await load();
+                                  setNotice("Bedriftsstatus oppdatert.");
+                                })
+                              }
+                            >
+                              {status === "approved" ? "Godkjenn" : "Suspender"}
+                            </button>
+                          ))}
                       </div>
                     </article>
                   ))}
