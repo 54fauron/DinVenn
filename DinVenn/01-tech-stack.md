@@ -61,3 +61,9 @@
 - **Misbruk av rabatter:** engangs-QR, maks innløsninger per bruker, utløpstid.
 - **Moderering:** admin godkjenner nye bedrifter før de vises.
 - **Universell utforming:** god kontrast (pastell + mørk tekst), store trykkflater.
+
+## Implementert pilot (november 2026)
+
+Piloten bruker nå **Expo / React Native (SDK 58)** for iPhone/Android og **React / Vite** for bedriftsportalen, med TypeScript og delte Supabase-typer. FlutterFlow-anbefalingen over er historisk konseptmateriale. Test på mobil gjøres først med Expo Go; publisering i appbutikkene inngår ikke ennå.
+
+Se [oppstartsguiden](../README.md). Appkode ligger i `apps/`, delte grensesnitt i `packages/core/`, og kjørbare databasemigrasjoner i `supabase/migrations/`.

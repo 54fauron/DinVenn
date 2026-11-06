@@ -1,0 +1,30 @@
+{
+  "name": "dinvenn",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "npm run start -w @dinvenn/mobile",
+    "portal": "npm run dev -w @dinvenn/portal",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @dinvenn/portal",
+    "test": "node --test tests/*.test.mjs",
+    "test:live": "node --test tests/live.integration.mjs",
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "mobile:export": "npm exec -w @dinvenn/mobile -- expo export --platform ios --platform android",
+    "test:browser": "playwright test",
+    "db:bundle": "node scripts/bundle-sql.mjs",
+    "format": "prettier --write apps packages scripts tests playwright.config.ts package.json",
+    "db:types": "node scripts/generate-types.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.14",
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
+    "supabase": "3.0.0",
+    "typescript": "~5.9.3"
+  }
+}

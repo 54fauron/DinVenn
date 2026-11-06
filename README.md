@@ -1,2 +1,110 @@
 # DinVenn
-Markedsføring Din Venn UB
+
+En pilot for lokale vennepriser: Expo-app for ungdom, React/Vite-portal for bedrifter og Supabase for innlogging, database og bilder. Originalskissene og konseptdokumentene ligger fortsatt i `DinVenn/`.
+
+## Start appene
+
+Bruk Node 22.13+ (testet med Node 26), npm og Expo Go som støtter Expo SDK 58.
+
+```sh
+npm ci
+cp apps/portal/.env.example apps/portal/.env
+cp apps/mobile/.env.example apps/mobile/.env
+```
+
+Fyll inn Supabase URL og **publishable key** (eventuelt eldre anon key) i begge `.env`-filene. Default publishable key i Supabase → Settings → API Keys er riktig. Miljøfilene ignoreres av Git. Bruk aldri service-role/secret key i klientappene.
+
+```sh
+npm run portal
+```
+
+Åpne http://localhost:5173. I en annen terminal:
+
+```sh
+npm run mobile
+```
+
+Skann Expo-koden med Expo Go på Android eller Kamera/Expo Go på iPhone. Telefon og utviklermaskin må kunne nå hverandre på nettverket. Portalen kan åpnes på telefon via Vite-serverens Network-adresse. Sett `EXPO_PUBLIC_PORTAL_URL` til denne adressen for å åpne bekreftelses- og passordlenker på telefonen. Start Expo på nytt etter miljøendringer.
+
+## Database i Supabase-prosjektet ditt
+
+For et **nytt, tomt prosjekt**:
+
+1. Åpne prosjektets **SQL Editor**.
+2. Kjør hele [supabase/setup.sql](supabase/setup.sql). Filen er generert fra sju versjonerte migrasjoner og kjører i én transaksjon. Den skal bare kjøres én gang på en tom database.
+3. Kontroller at `categories`, `businesses`, `deals` og bucket `business-images` finnes.
+4. Under **Authentication → URL Configuration**: sett Site URL til portaladressen. Legg til portalens URL og samme URL med `/?recovery=1` som Redirect URLs. For lokal bruk inkluder `http://localhost:5173`, `http://localhost:5173/?recovery=1`, og telefonens bruk av maskinens LAN-adresse tilsvarende.
+5. Behold e-postbekreftelse på. Sett minimum passordlengde til 8. Bruk Supabase sine standard e-postmaler som følger redirect-adressen. Konfigurer SMTP for e-post til pilotbrukerne hvis prosjektets standard e-posttjeneste begrenser mottakere eller sendinger.
+
+Registrer din egen konto og bekreft e-posten. Gjør deretter akkurat den kontoen til administrator gjennom SQL Editor (erstatt e-postadressen):
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = (select id from auth.users where email = 'din-epost@example.no');
+```
+
+Logg inn eller oppdater portalen. Under **Godkjenning** kan du godkjenne og suspendere bedrifter. Kontoer trenger ikke `business`-rolle for å registrere bedrift; `business_members` styrer tilgangen.
+
+Alternativt kan du bruke Supabase CLI (`npx supabase login`, `npx supabase link --project-ref DIN_PROSJEKTREF`, `npx supabase db push --remote`) med egen administratortilgang. **Ikke kjør db push etter manuell setup.sql uten å registrere migrasjonene som allerede brukt** med `npx supabase migration repair --remote --status applied` for versjonene `20261106000001` til `20261106000007`. CLI skal ikke forsøke å opprette tabellene igjen.
+
+### Lokal Supabase (valgfritt)
+
+Supabase CLI 3 er installert som prosjektavhengighet. På Apple silicon/macOS 14+ eller støttet Linux kan native runtime brukes uten Docker. På andre plattformer brukes en Docker-kompatibel runtime og `--runtime docker`. Prosjektet har allerede `supabase/config.toml`; ikke kjør init over den.
+
+```sh
+npx supabase start --runtime native
+npx supabase db reset
+npx supabase status
+```
+
+`db reset` sletter **lokal** database og kjører migrasjonene på nytt. Kopier lokal API URL og anon key fra `npx supabase status` til miljøfilene. På fysisk telefon må mobilens Supabase URL bruke utviklermaskinens LAN-IP i stedet for `127.0.0.1`. Lokale bekreftelsesmailer kan leses i Mailpit på http://localhost:54324. Tilpass lokal auth-allowlist i `config.toml` for LAN-adressen.
+
+Tydelig merkede eksempelbedrifter og kontoer kan opprettes **kun lokalt**. Sett `SUPABASE_URL`, lokal `SUPABASE_SERVICE_ROLE_KEY` og et eget `DEMO_PASSWORD` i terminalens miljø og kjør:
+
+```sh
+npm run seed:demo
+```
+
+Kontoene er `bruker@dinvenn.example`, `bedrift@dinvenn.example`, `annen@dinvenn.example` og `admin@dinvenn.example`. Alle bruker passordet du valgte. Ikke bruk dem i offentlig pilot.
+
+## Dette er implementert
+
+- Mobil: offentlig utforsking, tekst/by/kategorifilter, bedrifts- og tilbudsdetaljer, favoritter, konto, hent QR, historikk over egne koder, utløpstid og oppdatert innløsningsstatus.
+- Portal: registrering, innlogging, passordtilbakestilling, bedriftsprofil og bilder, tilbudsredigering med datoer/vilkår/grenser, publisering/pause, QR-kamera eller manuell kode, innløsningsoversikt og admin-godkjenning.
+- E-postbekreftelse og passordtilbakestilling åpnes i portalen; etterpå kan samme konto/passord brukes i mobilappen. Dette fungerer uten en egen mobil-deeplink i Expo Go.
+- Native økter lagres i Expo SecureStore med små segmenter for å håndtere store tokens. AppState starter/stopper tokenfornyelse. Browserøkter håndteres av Supabase-klienten.
+- `claim_deal` og `redeem_deal` håndhever innløsningsgrenser og engangsbruk på serveren. Begge låser tilbud først. Innløsning avvises også hvis bedriften er suspendert eller tilbudet er pauset/utløpt.
+- Bilder: JPG/PNG/WebP, maks 5 MB, mappe per bedrift, medlemskap kreves for skriving. Bilder som er lastet opp er offentlig lesbare; ikke last opp private dokumenter.
+
+Portalen er vanlig lokal Vite-utvikling; ingen nettside er publisert. Betaling, kart, push, venner, studentkontroll, arrangementer og lojalitet har ingen pilotgrensesnitt. Databaseutvidelsene er beholdt.
+
+## Tester og videre verifisering
+
+Se [verifiseringsrapporten](tests/VERIFICATION.md) for faktisk gjennomførte kontroller, inkludert den ekte lokale Supabase-testen.
+
+```sh
+npm run typecheck
+npm test
+npm run build
+npm run mobile:export
+npx playwright install chromium
+npm run test:browser
+```
+
+- `npm test`: PostgreSQL/PGlite med mock av Supabase auth/storage, samt filter-, validerings- og QR-statuslogikk. Mock av tilfeldige bytes er bare i testen; Supabase bruker pgcrypto.
+- `test:browser`: Chromium på desktop og mobilstørrelse, med simulerte Supabase HTTP-svar. Tester skjemaer, godkjenning, tilbud, manuell innløsning og passordflyt. Beviser ikke ekte e-postlevering eller kameratilgang.
+- `mobile:export`: lager iOS/Android JavaScript-bundles. Dette er ikke en fysisk enhetstest eller en appbutikkbygging.
+- `test:live`: ekte Supabase Auth/PostgREST/Storage og samtidige forespørsler. Sett `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` i **terminalmiljøet**, og kjør `npm run test:live`. Bruk et dedikert testprosjekt. Testen oppretter isolerte testkontoer, bedrifter og bilder og rydder dem opp etterpå. Uten variablene markeres testen som hoppet over. Service-role-nøkkelen skal ikke i klientenes `.env`-filer.
+
+Før pilot med ekte brukere: kjør live-testen, registrer og bekreft en konto gjennom faktisk e-post, test passordlenken, og prøv begge mobilplattformene fysisk. Bruk to kontoer og en bedrift: godkjenn bedrift → publiser tilbud → lagre favoritt → hent QR på telefon → skann i portal over HTTPS/localhost → bekreft innløsning → kontroller at samme kode og utløpte koder avvises. Mobilkamera i nettleser krever sikker origin (HTTPS eller localhost); manuell innliming fungerer også ved lokal HTTP over LAN.
+
+### Ved databaseendringer
+
+Legg til en ny fil i `supabase/migrations/`; originalfilene i `DinVenn/` er referansemateriale. Kjør `npm run db:bundle` etterpå for å oppdatere den samlede SQL-filen for nye databaser. Delte TypeScript-typer ligger i `packages/core/src/database.types.ts` og kan erstattes med output fra `npx supabase gen types typescript` (eller `--project-id` for skyprosjekt). Oppdater API-et og kjør typekontroll ved kontraktsendringer.
+
+Dokumentasjon: [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started), [Auth redirect-adresser](https://supabase.com/docs/guides/auth/redirect-urls), [Expo SecureStore](https://docs.expo.dev/versions/latest/sdk/securestore/).
+
+Supabase CLI 3 bruker lokal database som standard; bruk eksplisitt `--remote` for skydatabase. Hjelperen `node scripts/local-stack.mjs start` starter en redusert lokal native stack, `node scripts/local-stack.mjs test` kjører live-testen uten å skrive ut nøklene, og `node scripts/local-stack.mjs stop` stopper den.
+
+Avhengighetskontrollen fant fem moderate varsler i Expo-verktøyenes transitive `glob`/`minimatch`-avhengigheter. npm foreslår en inkompatibel Expo-nedgradering; den er ikke anvendt.
