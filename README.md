@@ -70,14 +70,14 @@ Kontoene er `bruker@dinvenn.example`, `bedrift@dinvenn.example`, `annen@dinvenn.
 
 ## Dette er implementert
 
-- Mobil: offentlig utforsking, tekst/by/kategorifilter, bedrifts- og tilbudsdetaljer, favoritter, konto, hent QR, historikk over egne koder, utløpstid og oppdatert innløsningsstatus.
-- Portal: registrering, innlogging, passordtilbakestilling, bedriftsprofil og bilder, tilbudsredigering med datoer/vilkår/grenser, publisering/pause, QR-kamera eller manuell kode, innløsningsoversikt og admin-godkjenning.
+- Mobil: wireframe-inspirert forside med horisontale vennepriskort og nedtelling, arrangementer, nyheter, tekst/by/kategorifilter, egne detaljsider og en kartfane. Bedriftsprofiler viser tilbud, arrangementer, nyheter og praktisk informasjon. Favoritter støtter også arrangementer. Konto, QR-innløsning og egne koder er beholdt.
+- Portal: registrering, innlogging, passordtilbakestilling, bedriftsprofil og bilder, tilbudsredigering med datoer/vilkår/grenser, publisering/pause, QR-kamera eller manuell kode, innløsningsoversikt og admin-godkjenning. Wireframe-inspirert oversikt med nøkkeltall, tilbudstabell, sjudagersgraf og kommende arrangementer. Egne sider for oppretting/redigering/publisering/pause av arrangementer og nyheter, med bilde og forhåndsvisning. Abonnementsside med registrert status og prisforslag (199/399 kr), uten betaling.
 - E-postbekreftelse og passordtilbakestilling åpnes i portalen; etterpå kan samme konto/passord brukes i mobilappen. Dette fungerer uten en egen mobil-deeplink i Expo Go.
 - Native økter lagres i Expo SecureStore med små segmenter for å håndtere store tokens. AppState starter/stopper tokenfornyelse. Browserøkter håndteres av Supabase-klienten.
 - `claim_deal` og `redeem_deal` håndhever innløsningsgrenser og engangsbruk på serveren. Begge låser tilbud først. Innløsning avvises også hvis bedriften er suspendert eller tilbudet er pauset/utløpt.
 - Bilder: JPG/PNG/WebP, maks 5 MB, mappe per bedrift, medlemskap kreves for skriving. Bilder som er lastet opp er offentlig lesbare; ikke last opp private dokumenter.
 
-Portalen er vanlig lokal Vite-utvikling; ingen nettside er publisert. Betaling, kart, push, venner, studentkontroll, arrangementer og lojalitet har ingen pilotgrensesnitt. Databaseutvidelsene er beholdt.
+Portalen er vanlig lokal Vite-utvikling; ingen nettside er publisert. Push, venner, studentkontroll og lojalitet har ingen pilotgrensesnitt. Arrangementer og nyheter administreres i bedriftsportalen og vises nå i ungdomsappen når de er publisert og bedriften er godkjent. Nyheter med fremtidig publiseringsdato og avsluttede arrangementer vises ikke i mobilfeeden. Abonnementspakkene er forslag, uten betalingsflyt eller håndhevede plangrenser. Ingen nye SQL-migrasjoner er nødvendige for denne dashboardoppdateringen.
 
 ## Tester og videre verifisering
 
@@ -86,6 +86,7 @@ Se [verifiseringsrapporten](tests/VERIFICATION.md) for faktisk gjennomførte kon
 ```sh
 npm run typecheck
 npm test
+npm run test:mobile
 npm run build
 npm run mobile:export
 npx playwright install chromium
@@ -108,3 +109,13 @@ Dokumentasjon: [Supabase CLI](https://supabase.com/docs/guides/local-development
 Supabase CLI 3 bruker lokal database som standard; bruk eksplisitt `--remote` for skydatabase. Hjelperen `node scripts/local-stack.mjs start` starter en redusert lokal native stack, `node scripts/local-stack.mjs test` kjører live-testen uten å skrive ut nøklene, og `node scripts/local-stack.mjs stop` stopper den.
 
 Avhengighetskontrollen fant fem moderate varsler i Expo-verktøyenes transitive `glob`/`minimatch`-avhengigheter. npm foreslår en inkompatibel Expo-nedgradering; den er ikke anvendt.
+
+### Kart i ungdomsappen
+
+Kartfanen bruker `react-native-maps` (versjonen som følger Expo SDK 58). Den kan testes i Expo Go uten egne kartnøkler. Egne appbutikkbygg krever ytterligere Google Maps-oppsett på Android. Se [Expo-dokumentasjonen](https://docs.expo.dev/versions/latest/sdk/map-view/).
+
+Bedrifter med gyldig `lat`/`lng` vises direkte. Andre norske gateadresser slås opp i [Kartverkets åpne adresse-API](https://www.kartverket.no/api-og-data/eiendomsdata/brukarrettleiing-adresse-api), med maksimalt tre samtidige oppslag og tidsavbrudd. Gate, husnummer og eventuell husbokstav bør fylles ut korrekt i bedriftsprofilen, sammen med by/postnummer. Tvetydige eller ukjente adresser vises i listen uten gjettet markør. «Veibeskrivelse» åpner en ekstern karttjeneste.
+
+Ingen brukerposisjon samles inn eller etterspørres. Kun bedriftenes offentlige adresser sendes til adresse-API-et. Nye koordinater mellomlagres i appens minne; ingen SQL-endringer er nødvendige. Kartet trenger nettverk. Hvis en adresse ikke vises, bruk «Vis liste» eller «Prøv igjen».
+
+Etter denne oppdateringen: stopp Expo-serveren med Ctrl+C og kjør `npm run mobile` igjen, og last prosjektet på nytt i Expo Go. Bruk `npm ci` først på andre maskiner for å få de nye avhengighetene.

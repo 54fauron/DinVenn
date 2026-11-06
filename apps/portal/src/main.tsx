@@ -19,6 +19,15 @@ import {
   type Profile,
   type Redemption,
 } from "@dinvenn/core";
+import {
+  ContentManager,
+  useImagePreview,
+  SubscriptionPage,
+  type BusinessEvent,
+  type NewsPost,
+  type Subscription,
+} from "./content";
+import { Dashboard, NavIcon } from "./dashboard";
 import "./style.css";
 const configured =
   !!import.meta.env.VITE_SUPABASE_URL &&
@@ -411,153 +420,188 @@ function DealForm({
   const [perUser, setPerUser] = useState(String(deal?.max_per_user ?? 1));
   const [status, setStatus] = useState<Deal["status"]>(deal?.status ?? "draft");
   const [image, setImage] = useState<File | null>(null);
+  const previewImage = useImagePreview(image, deal?.image_url ?? null);
   return (
     <section className="card">
       <h2>{deal ? "Rediger vennepris" : "En ny grunn til å komme innom"}</h2>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void run(async () => {
-            const values = {
-              business_id: business.id,
-              title: title.trim(),
-              description,
-              terms,
-              discount_type: kind,
-              discount_value:
-                kind === "percent" || kind === "amount" ? Number(value) : null,
-              starts_at: new Date(start).toISOString(),
-              ends_at: end ? new Date(end).toISOString() : null,
-              max_redemptions: max ? Number(max) : null,
-              max_per_user: Number(perUser),
-              status,
-            };
-            validateDeal(values);
-            const image_url = image
-              ? await api(db).upload(business.id, image)
-              : (deal?.image_url ?? null);
-            unwrap(
-              deal
-                ? await db
-                    .from("deals")
-                    .update({ ...values, image_url })
-                    .eq("id", deal.id)
-                    .select()
-                    .single()
-                : await db
-                    .from("deals")
-                    .insert({ ...values, image_url })
-                    .select()
-                    .single(),
-            );
-            await saved();
-          });
-        }}
-      >
-        <Field
-          label="Tittel"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <label>
-          Beskrivelse
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+      <div className="editor-layout">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void run(async () => {
+              const values = {
+                business_id: business.id,
+                title: title.trim(),
+                description,
+                terms,
+                discount_type: kind,
+                discount_value:
+                  kind === "percent" || kind === "amount"
+                    ? Number(value)
+                    : null,
+                starts_at: new Date(start).toISOString(),
+                ends_at: end ? new Date(end).toISOString() : null,
+                max_redemptions: max ? Number(max) : null,
+                max_per_user: Number(perUser),
+                status,
+              };
+              validateDeal(values);
+              const image_url = image
+                ? await api(db).upload(business.id, image)
+                : (deal?.image_url ?? null);
+              unwrap(
+                deal
+                  ? await db
+                      .from("deals")
+                      .update({ ...values, image_url })
+                      .eq("id", deal.id)
+                      .select()
+                      .single()
+                  : await db
+                      .from("deals")
+                      .insert({ ...values, image_url })
+                      .select()
+                      .single(),
+              );
+              await saved();
+            });
+          }}
+        >
+          <Field
+            label="Tittel"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
           />
-        </label>
-        <div className="formgrid">
           <label>
-            Type rabatt
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as Deal["discount_type"])}
-            >
-              <option value="percent">Prosent</option>
-              <option value="amount">Kroner</option>
-              <option value="freebie">Gratis gave</option>
-              <option value="other">Annet / 2 for 1</option>
-            </select>
+            Beskrivelse
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </label>
-          {(kind === "percent" || kind === "amount") && (
+          <div className="formgrid">
+            <label>
+              Type rabatt
+              <select
+                value={kind}
+                onChange={(e) =>
+                  setKind(e.target.value as Deal["discount_type"])
+                }
+              >
+                <option value="percent">Prosent</option>
+                <option value="amount">Kroner</option>
+                <option value="freebie">Gratis gave</option>
+                <option value="other">Annet / 2 for 1</option>
+              </select>
+            </label>
+            {(kind === "percent" || kind === "amount") && (
+              <Field
+                label="Rabatt"
+                type="number"
+                min="0.01"
+                max={kind === "percent" ? 100 : undefined}
+                step="0.01"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                required
+              />
+            )}
             <Field
-              label="Rabatt"
-              type="number"
-              min="0.01"
-              max={kind === "percent" ? 100 : undefined}
-              step="0.01"
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
+              label="Starter (lokal tid)"
+              type="datetime-local"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
               required
             />
+            <Field
+              label="Slutter (valgfritt)"
+              type="datetime-local"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+            />
+            <Field
+              label="Totalt antall innløsninger (tomt = ubegrenset)"
+              type="number"
+              min="1"
+              value={max}
+              onChange={(e) => setMax(e.target.value)}
+            />
+            <Field
+              label="Maks per bruker"
+              type="number"
+              min="1"
+              value={perUser}
+              onChange={(e) => setPerUser(e.target.value)}
+              required
+            />
+          </div>
+          <label>
+            Vilkår
+            <textarea
+              value={terms}
+              onChange={(e) => setTerms(e.target.value)}
+            />
+          </label>
+          {deal?.image_url && (
+            <img className="cover" src={deal.image_url} alt="Tilbudsbilde" />
           )}
           <Field
-            label="Starter (lokal tid)"
-            type="datetime-local"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            required
+            label="Tilbudsbilde (maks 5 MB)"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(e) => setImage(e.target.files?.[0] ?? null)}
           />
-          <Field
-            label="Slutter (valgfritt)"
-            type="datetime-local"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-          />
-          <Field
-            label="Totalt antall innløsninger (tomt = ubegrenset)"
-            type="number"
-            min="1"
-            value={max}
-            onChange={(e) => setMax(e.target.value)}
-          />
-          <Field
-            label="Maks per bruker"
-            type="number"
-            min="1"
-            value={perUser}
-            onChange={(e) => setPerUser(e.target.value)}
-            required
-          />
-        </div>
-        <label>
-          Vilkår
-          <textarea value={terms} onChange={(e) => setTerms(e.target.value)} />
-        </label>
-        {deal?.image_url && (
-          <img className="cover" src={deal.image_url} alt="Tilbudsbilde" />
-        )}
-        <Field
-          label="Tilbudsbilde (maks 5 MB)"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-        />
-        <label>
-          Status
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as Deal["status"])}
-          >
-            <option value="draft">Utkast</option>
-            <option value="active">Publisert</option>
-            <option value="paused">Pauset</option>
-            <option value="expired">Utløpt</option>
-          </select>
-        </label>
-        {business.status !== "approved" && (
-          <p className="notice">
-            Tilbudet blir ikke synlig for brukere før bedriften er godkjent.
-          </p>
-        )}
-        <div className="actions">
-          <button type="submit">Lagre vennepris</button>
-          <button type="button" className="quiet" onClick={cancel}>
-            Avbryt
-          </button>
-        </div>
-      </form>
+          <label>
+            Status
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Deal["status"])}
+            >
+              <option value="draft">Utkast</option>
+              <option value="active">Publisert</option>
+              <option value="paused">Pauset</option>
+              <option value="expired">Utløpt</option>
+            </select>
+          </label>
+          {business.status !== "approved" && (
+            <p className="notice">
+              Tilbudet blir ikke synlig for brukere før bedriften er godkjent.
+            </p>
+          )}
+          <div className="actions">
+            <button type="submit">Lagre vennepris</button>
+            <button type="button" className="quiet" onClick={cancel}>
+              Avbryt
+            </button>
+          </div>
+        </form>
+        <section className="preview-panel">
+          <span className="eyebrow">FORHÅNDSVISNING</span>
+          <article className="content-preview">
+            {previewImage && (
+              <img src={previewImage} className="cover" alt="Tilbudsbilde" />
+            )}
+            <div className="preview-body">
+              <span className="eyebrow">{business.name}</span>
+              <p className="preview-discount">
+                {kind === "percent"
+                  ? `${value || 0} %`
+                  : kind === "amount"
+                    ? `${value || 0} kr`
+                    : kind === "freebie"
+                      ? "En gave til deg"
+                      : "Vennepris"}
+              </p>
+              <h3>{title || "Din neste vennepris"}</h3>
+              <p className="preserve-lines">
+                {description || "Et godt tilbud fra et lokalt sted."}
+              </p>
+              <p className="muted">{terms || "Vilkårene dine vises her."}</p>
+            </div>
+          </article>
+        </section>
+      </div>
     </section>
   );
 }
@@ -577,6 +621,10 @@ function App() {
   const [selected, setSelected] = useState("");
   const [deals, setDeals] = useState<Deal[]>([]);
   const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  const [events, setEvents] = useState<BusinessEvent[]>([]);
+  const [news, setNews] = useState<NewsPost[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const businessRequest = useRef(0);
   const [adminBusinesses, setAdminBusinesses] = useState<Business[]>([]);
   const [tab, setTab] = useState("overview");
   const [editing, setEditing] = useState<Deal | "new" | null>(null);
@@ -614,6 +662,10 @@ function App() {
         setDeals([]);
         setRedemptions([]);
         setAdminBusinesses([]);
+        setEvents([]);
+        setNews([]);
+        setSubscription(null);
+        businessRequest.current++;
       }
     });
     return () => sub.data.subscription.unsubscribe();
@@ -647,28 +699,52 @@ function App() {
   }
   async function loadBusiness(id: string) {
     if (!db) return;
-    const ds = unwrap(
-      await db
-        .from("deals")
-        .select("*")
-        .eq("business_id", id)
-        .order("created_at", { ascending: false }),
-    );
+    const request = ++businessRequest.current;
+    const [dealResult, eventResult, newsResult, subscriptionResult] =
+      await Promise.all([
+        db
+          .from("deals")
+          .select("*")
+          .eq("business_id", id)
+          .order("created_at", { ascending: false }),
+        db
+          .from("events")
+          .select("*")
+          .eq("business_id", id)
+          .order("starts_at", { ascending: true }),
+        db
+          .from("news_posts")
+          .select("*")
+          .eq("business_id", id)
+          .order("published_at", { ascending: false }),
+        db
+          .from("subscriptions")
+          .select("id, plan, status, current_period_end")
+          .eq("business_id", id)
+          .maybeSingle(),
+      ]);
+    const ds = unwrap(dealResult);
+    const es = unwrap(eventResult);
+    const ns = unwrap(newsResult);
+    check(subscriptionResult);
+    const rs = ds.length
+      ? unwrap(
+          await db
+            .from("deal_redemptions")
+            .select("*")
+            .in(
+              "deal_id",
+              ds.map((d) => d.id),
+            )
+            .order("issued_at", { ascending: false }),
+        )
+      : [];
+    if (request !== businessRequest.current) return;
     setDeals(ds);
-    setRedemptions(
-      ds.length
-        ? unwrap(
-            await db
-              .from("deal_redemptions")
-              .select("*")
-              .in(
-                "deal_id",
-                ds.map((d) => d.id),
-              )
-              .order("issued_at", { ascending: false }),
-          )
-        : [],
-    );
+    setEvents(es);
+    setNews(ns);
+    setSubscription(subscriptionResult.data);
+    setRedemptions(rs);
   }
   useEffect(() => {
     setTab("overview");
@@ -676,8 +752,12 @@ function App() {
     if (session) void run(load);
   }, [session?.user.id]);
   useEffect(() => {
+    businessRequest.current++;
     setDeals([]);
     setRedemptions([]);
+    setEvents([]);
+    setNews([]);
+    setSubscription(null);
     setEditing(null);
     if (selected)
       void loadBusiness(selected).catch((e) => setError(message(e)));
@@ -752,7 +832,7 @@ function App() {
           />
         ) : (
           <div className="layout">
-            <aside>
+            <aside className="sidebar">
               <p className="eyebrow">HEI, {profile?.display_name ?? "VENN"}!</p>
               <label>
                 Din bedrift
@@ -778,7 +858,10 @@ function App() {
                   ["overview", "Oversikt"],
                   ["profile", "Bedriftsprofil"],
                   ["deals", "Vennepriser"],
+                  ["events", "Arrangementer"],
+                  ["news", "Nyheter"],
                   ["redeem", "Løs inn kode"],
+                  ["subscription", "Abonnement"],
                   ["new", "Registrer bedrift"],
                   ...(profile?.role === "admin"
                     ? [["admin", "Godkjenning"]]
@@ -793,7 +876,8 @@ function App() {
                       setScanning(false);
                     }}
                   >
-                    {label}
+                    <NavIcon name={key} />
+                    <span>{label}</span>
                   </button>
                 ))}
               </nav>
@@ -801,7 +885,7 @@ function App() {
                 Oppdater data
               </button>
             </aside>
-            <div className="content">
+            <div className="content" key={selected || "no-business"}>
               {business && (
                 <div className="pageheading">
                   <div>
@@ -878,6 +962,26 @@ function App() {
                     </article>
                   ))}
                 </section>
+              ) : tab === "events" || tab === "news" ? (
+                <ContentManager
+                  key={selected + tab}
+                  db={db!}
+                  business={business!}
+                  kind={tab === "events" ? "events" : "news_posts"}
+                  items={tab === "events" ? events : news}
+                  run={run}
+                  busy={busy}
+                  reload={async () => {
+                    await loadBusiness(selected);
+                    setNotice(
+                      tab === "events"
+                        ? "Arrangementet er lagret."
+                        : "Nyheten er lagret.",
+                    );
+                  }}
+                />
+              ) : tab === "subscription" ? (
+                <SubscriptionPage subscription={subscription} />
               ) : tab === "profile" ? (
                 <BusinessForm
                   key={business!.id}
@@ -1024,76 +1128,23 @@ function App() {
                   </form>
                 </section>
               ) : (
-                <>
-                  <section className="hero">
-                    <span className="eyebrow">SMÅ STEDER. GODE MØTER.</span>
-                    <h2>
-                      Din neste stamkunde
-                      <br />
-                      kan være rett rundt hjørnet.
-                    </h2>
-                    <p>Del en vennepris og gjør det lettere å velge lokalt.</p>
-                    <button
-                      onClick={() => {
-                        setTab("deals");
-                        setEditing("new");
-                      }}
-                    >
-                      Lag en vennepris ↗
-                    </button>
-                  </section>
-                  <div className="stats">
-                    <section className="card">
-                      <b>
-                        {
-                          deals.filter(
-                            (d) =>
-                              d.status === "active" &&
-                              Date.parse(d.starts_at) <= Date.now() &&
-                              (!d.ends_at ||
-                                Date.parse(d.ends_at) > Date.now()),
-                          ).length
-                        }
-                      </b>
-                      <span>Aktive tilbud</span>
-                    </section>
-                    <section className="card">
-                      <b>{redemptions.length}</b>
-                      <span>Hentede koder</span>
-                    </section>
-                    <section className="card">
-                      <b>
-                        {
-                          redemptions.filter((r) => r.status === "redeemed")
-                            .length
-                        }
-                      </b>
-                      <span>Innløsninger</span>
-                    </section>
-                  </div>
-                  <section className="card">
-                    <h2>Siste innløsninger</h2>
-                    {!redemptions.some((r) => r.status === "redeemed") && (
-                      <p>
-                        Besøkene deres dukker opp her når en kode løses inn.
-                      </p>
-                    )}
-                    {redemptions
-                      .filter((r) => r.status === "redeemed")
-                      .slice(0, 10)
-                      .map((r) => (
-                        <div className="listitem" key={r.id}>
-                          <strong>
-                            {deals.find((d) => d.id === r.deal_id)?.title ??
-                              "Vennepris"}
-                          </strong>
-                          <time>
-                            {new Date(r.redeemed_at!).toLocaleString("nb-NO")}
-                          </time>
-                        </div>
-                      ))}
-                  </section>
-                </>
+                <Dashboard
+                  deals={deals}
+                  redemptions={redemptions}
+                  events={events}
+                  news={news}
+                  onNewDeal={() => {
+                    setTab("deals");
+                    setEditing("new");
+                  }}
+                  onDeals={() => setTab("deals")}
+                  onEditDeal={(deal) => {
+                    setTab("deals");
+                    setEditing(deal);
+                  }}
+                  onEvents={() => setTab("events")}
+                  onNews={() => setTab("news")}
+                />
               )}
             </div>
           </div>
