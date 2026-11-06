@@ -31,6 +31,8 @@ export type Business = {
   address: string | null;
   city: string | null;
   postal_code: string | null;
+  lat: number | null;
+  lng: number | null;
   phone: string | null;
   email: string | null;
   website: string | null;
@@ -72,6 +74,8 @@ export type Favorite = {
   target_id: string;
   created_at: string;
 };
+export type BusinessEvent = Database["public"]["Tables"]["events"]["Row"];
+export type NewsPost = Database["public"]["Tables"]["news_posts"]["Row"];
 export type Client = SupabaseClient<Database>;
 export function makeClient(
   url: string,
@@ -182,7 +186,7 @@ export function validateDeal(d: Partial<Deal>) {
 export const api = (db: Client) => ({
   async catalog() {
     const now = new Date().toISOString();
-    const [bs, ds, cs] = await Promise.all([
+    const [bs, ds, cs, es, ns] = await Promise.all([
       db.from("businesses").select("*").eq("status", "approved").order("name"),
       db
         .from("deals")
@@ -194,11 +198,27 @@ export const api = (db: Client) => ({
         .or(`ends_at.is.null,ends_at.gt.${now}`)
         .order("created_at", { ascending: false }),
       db.from("categories").select("*").order("name"),
+      db
+        .from("events")
+        .select("*")
+        .eq("status", "active")
+        .or(`ends_at.gt.${now},and(ends_at.is.null,starts_at.gte.${now})`)
+        .order("starts_at"),
+      db
+        .from("news_posts")
+        .select("*")
+        .eq("status", "active")
+        .lte("published_at", now)
+        .order("published_at", { ascending: false }),
     ]);
+    const businesses = unwrap(bs);
+    const approved = new Set(businesses.map((b) => b.id));
     return {
-      businesses: unwrap(bs),
-      deals: unwrap(ds),
+      businesses,
+      deals: unwrap(ds).filter((d) => approved.has(d.business_id)),
       categories: unwrap(cs),
+      events: unwrap(es).filter((e) => approved.has(e.business_id)),
+      news: unwrap(ns).filter((n) => approved.has(n.business_id)),
     };
   },
   async profile(id: string) {
@@ -209,7 +229,7 @@ export const api = (db: Client) => ({
   },
   async favorite(
     user: string,
-    type: "deal" | "business",
+    type: Favorite["target_type"],
     id: string,
     on: boolean,
   ) {

@@ -20,6 +20,10 @@ async function backend(page: Page, admin = false) {
   };
   let deals: Record<string, unknown>[] = [];
   let used = false;
+  const content: Record<string, Record<string, unknown>[]> = {
+    events: [],
+    news_posts: [],
+  };
   const user = {
     id: ownerId,
     email: admin ? "admin@test.example" : "owner@test.example",
@@ -88,6 +92,29 @@ async function backend(page: Page, admin = false) {
         });
       if (method === "PATCH") deals = deals.map((d) => ({ ...d, ...data }));
       return rows(deals);
+    }
+    if (path.endsWith("/subscriptions"))
+      return rows([
+        {
+          id: "subscription1",
+          plan: "basic",
+          status: "trialing",
+          current_period_end: null,
+        },
+      ]);
+    for (const table of ["events", "news_posts"]) {
+      if (path.endsWith("/" + table)) {
+        if (method === "POST")
+          content[table].push({
+            id: crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            published_at: new Date().toISOString(),
+            ...data,
+          });
+        if (method === "PATCH")
+          content[table] = content[table].map((item) => ({ ...item, ...data }));
+        return rows(content[table]);
+      }
     }
     if (path.endsWith("/deal_redemptions"))
       return rows(
@@ -217,4 +244,147 @@ test("passord kan oppdateres fra en gjenopprettingsøkt", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText(
     "Passordet er oppdatert",
   );
+});
+
+test("arrangementer kan opprettes, redigeres, publiseres og pauses", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page
+    .getByRole("button", { name: "Arrangementer", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "+ Nytt arrangement", exact: true })
+    .click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Latte art-workshop");
+  await page
+    .getByLabel("Beskrivelse", { exact: true })
+    .fill("Lær å lage latte art sammen med oss.");
+  await page.getByLabel("Starter (lokal tid)").fill("2099-11-12T17:00");
+  await page.getByLabel("Slutter (valgfritt)").fill("2099-11-12T19:00");
+  await page.getByLabel("Sted / adresse").fill("Markens gate 12");
+  await page.getByLabel("Pris", { exact: true }).fill("150 kr");
+  await page
+    .getByRole("button", { name: "Lagre arrangement", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Latte art-workshop", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").getByText("Utkast", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Publiser", exact: true }).click();
+  await expect(
+    page.getByRole("article").getByText("Publisert", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Rediger", exact: true }).click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Latte art for alle");
+  await page
+    .getByRole("button", { name: "Lagre og publiser", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Oversikt", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Latte art for alle", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath("dashboard.png"),
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Arrangementer", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(
+    page.getByRole("article").getByText("Pauset", { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+});
+test("arrangement avviser slutt før start uten å lagre", async ({ page }) => {
+  await backend(page);
+  await login(page);
+  await page
+    .getByRole("button", { name: "Arrangementer", exact: true })
+    .click();
+  await page.getByRole("button", { name: "+ Nytt arrangement" }).click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Workshop");
+  await page
+    .getByLabel("Beskrivelse", { exact: true })
+    .fill("En hyggelig kveld.");
+  await page.getByLabel("Starter (lokal tid)").fill("2099-11-12T17:00");
+  await page.getByLabel("Slutter (valgfritt)").fill("2099-11-12T16:00");
+  await page
+    .getByRole("button", { name: "Lagre arrangement", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Slutt må være etter start",
+  );
+  await expect(
+    page.getByRole("heading", { name: "Nytt arrangement", exact: true }),
+  ).toBeVisible();
+});
+test("nyheter støtter publisering, redigering, pause og statusfilter", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page.getByRole("button", { name: "Nyheter", exact: true }).click();
+  await page.getByRole("button", { name: "+ Ny nyhet" }).click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Ny lunsjmeny");
+  await page
+    .getByLabel("Nyhetstekst")
+    .fill("Nå får du suppe og hjemmebakt brød hos oss.");
+  await page
+    .getByRole("combobox", { name: "Status", exact: true })
+    .selectOption("active");
+  await page.getByRole("button", { name: "Lagre og publiser" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Ny lunsjmeny", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Rediger", exact: true }).click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Nye lunsjpriser");
+  await page.getByRole("button", { name: "Lagre og publiser" }).click();
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(
+    page.getByRole("article").getByText("Pauset", { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Vis status").selectOption("active");
+  await expect(page.getByText("Ingen treff", { exact: true })).toBeVisible();
+  await page.getByLabel("Vis status").selectOption("all");
+  await expect(
+    page.getByRole("heading", { name: "Nye lunsjpriser", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Oversikt", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Nye lunsjpriser", exact: true }),
+  ).toBeVisible();
+});
+test("abonnement viser tydelige prisforslag uten aktiv betaling", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page.getByRole("button", { name: "Abonnement", exact: true }).click();
+  await expect(
+    page.getByText("Prisene og pakkene under er forslag.", { exact: false }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Pluss", exact: true }),
+  ).toBeVisible();
+  const buttons = page.getByRole("button", {
+    name: "Kommer senere",
+    exact: true,
+  });
+  await expect(buttons).toHaveCount(2);
+  await expect(buttons.nth(0)).toBeDisabled();
+  await expect(buttons.nth(1)).toBeDisabled();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
 });

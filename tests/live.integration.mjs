@@ -3,6 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createClient } from "@supabase/supabase-js";
+import { api } from "../packages/core/src/index.ts";
 const url = process.env.SUPABASE_URL;
 const key = process.env.SUPABASE_PUBLISHABLE_KEY;
 const secret = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -102,6 +103,147 @@ test(
             .update({ name: "Juks" })
             .eq("id", b.id)
             .select(),
+        ).length,
+        0,
+      );
+      const event = check(
+        await owner
+          .from("events")
+          .insert({
+            business_id: b.id,
+            title: "TEST Workshop",
+            description: "En lokal kveld.",
+            starts_at: new Date(Date.now() + 86400000).toISOString(),
+            price_text: "Gratis",
+            status: "active",
+          })
+          .select()
+          .single(),
+      );
+      assert.equal(
+        check(await anon.from("events").select("id").eq("id", event.id)).length,
+        1,
+      );
+      assert.ok(
+        (await api(anon).catalog()).events.some((e) => e.id === event.id),
+      );
+      await api(user).favorite(userId, "event", event.id, true);
+      assert.ok(
+        (await api(user).favorites(userId)).some(
+          (f) => f.target_type === "event" && f.target_id === event.id,
+        ),
+      );
+      assert.equal(
+        check(
+          await owner2
+            .from("events")
+            .update({ title: "Juks" })
+            .eq("id", event.id)
+            .select(),
+        ).length,
+        0,
+      );
+      check(
+        await owner
+          .from("events")
+          .update({ status: "paused" })
+          .eq("id", event.id),
+      );
+      assert.equal(
+        check(await anon.from("events").select("id").eq("id", event.id)).length,
+        0,
+      );
+      const news = check(
+        await owner
+          .from("news_posts")
+          .insert({
+            business_id: b.id,
+            title: "TEST Ny meny",
+            body: "Suppe og nybakt brød.",
+            status: "active",
+          })
+          .select()
+          .single(),
+      );
+      assert.equal(
+        check(await anon.from("news_posts").select("id").eq("id", news.id))
+          .length,
+        1,
+      );
+      assert.ok((await api(anon).catalog()).news.some((n) => n.id === news.id));
+      assert.equal(
+        check(
+          await owner2
+            .from("news_posts")
+            .update({ body: "Juks" })
+            .eq("id", news.id)
+            .select(),
+        ).length,
+        0,
+      );
+      check(
+        await owner
+          .from("news_posts")
+          .update({ body: "Oppdatert meny.", status: "paused" })
+          .eq("id", news.id),
+      );
+      assert.equal(
+        check(await anon.from("news_posts").select("id").eq("id", news.id))
+          .length,
+        0,
+      );
+      const oldEvent = check(
+        await owner
+          .from("events")
+          .insert({
+            business_id: b.id,
+            title: "TEST Avsluttet",
+            starts_at: new Date(Date.now() - 172800000).toISOString(),
+            ends_at: new Date(Date.now() - 86400000).toISOString(),
+            status: "active",
+          })
+          .select()
+          .single(),
+      );
+      const futureNews = check(
+        await owner
+          .from("news_posts")
+          .insert({
+            business_id: b.id,
+            title: "TEST Fremtid",
+            body: "Ikke publisert ennå.",
+            published_at: new Date(Date.now() + 86400000).toISOString(),
+            status: "active",
+          })
+          .select()
+          .single(),
+      );
+      const mobileFeed = await api(anon).catalog();
+      assert.ok(
+        !mobileFeed.events.some(
+          (e) => e.id === event.id || e.id === oldEvent.id,
+        ),
+      );
+      assert.ok(
+        !mobileFeed.news.some(
+          (n) => n.id === news.id || n.id === futureNews.id,
+        ),
+      );
+      assert.equal(
+        check(
+          await owner
+            .from("subscriptions")
+            .select("plan")
+            .eq("business_id", b.id),
+        ).length,
+        1,
+      );
+      assert.equal(
+        check(
+          await owner2
+            .from("subscriptions")
+            .select("plan")
+            .eq("business_id", b.id),
         ).length,
         0,
       );

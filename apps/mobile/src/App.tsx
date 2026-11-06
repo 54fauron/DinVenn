@@ -20,18 +20,22 @@ import {
   api,
   check,
   discount,
-  filterDeals,
   message,
   redemptionStatus,
-  unwrap,
   type Business,
   type Category,
   type Deal,
   type Favorite,
   type Redemption,
   type Session,
+  type BusinessEvent,
+  type NewsPost,
 } from "@dinvenn/core";
 import { client, configured } from "./client";
+import { Explore, BusinessDetails, ContentDetails } from "./Explore";
+import MapScreen from "./MapScreen";
+import { Icon, palette, ui } from "./ui";
+import { initials } from "./discovery";
 const colors = {
   cream: "#fff7f0",
   ink: "#3b2a3a",
@@ -88,6 +92,14 @@ function AppBody() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [events, setEvents] = useState<BusinessEvent[]>([]);
+  const [news, setNews] = useState<NewsPost[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<BusinessEvent | null>(
+    null,
+  );
+  const [selectedNews, setSelectedNews] = useState<NewsPost | null>(null);
+  const [mapRequest, setMapRequest] = useState(0);
+  const [mapTarget, setMapTarget] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [codes, setCodes] = useState<Redemption[]>([]);
   const [search, setSearch] = useState("");
@@ -129,6 +141,8 @@ function AppBody() {
       setBusinesses(data.businesses);
       setDeals(data.deals);
       setCategories(data.categories);
+      setEvents(data.events);
+      setNews(data.news);
     } finally {
       setLoading(false);
     }
@@ -205,12 +219,14 @@ function AppBody() {
     if (session) return true;
     setDeal(null);
     setBusiness(null);
+    setSelectedEvent(null);
+    setSelectedNews(null);
     setCode(null);
     setTab("Meg");
     setNotice("Logg inn for å lagre favoritter og hente vennepriser.");
     return false;
   }
-  function toggleFavorite(type: "deal" | "business", id: string) {
+  function toggleFavorite(type: "deal" | "business" | "event", id: string) {
     if (!needUser()) return;
     void run(async () => {
       await api(client!).favorite(
@@ -224,47 +240,34 @@ function AppBody() {
   }
   const favorite = (type: string, id: string) =>
     favorites.some((f) => f.target_type === type && f.target_id === id);
-  const filtered = filterDeals(deals, businesses, search, city, category);
-  const visibleDeals =
-    tab === "Favoritter"
-      ? filtered.filter((d) => favorite("deal", d.id))
-      : filtered;
   const currentBusiness = deal
     ? businesses.find((b) => b.id === deal.business_id)
-    : business;
-  function DealCard({ item }: { item: Deal }) {
-    const b = businesses.find((b) => b.id === item.business_id);
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`${item.title}, ${b?.name ?? ""}`}
-        onPress={() => setDeal(item)}
-        style={s.dealCard}
-      >
-        {item.image_url && (
-          <Image source={{ uri: item.image_url }} style={s.cover} />
-        )}
-        <View style={s.row}>
-          <Text style={s.discount}>{discount(item)}</Text>
-          <Button
-            title={favorite("deal", item.id) ? "♥ Lagret" : "♡ Lagre"}
-            quiet
-            disabled={busy}
-            onPress={() => toggleFavorite("deal", item.id)}
-          />
-        </View>
-        <Text style={s.h2}>{item.title}</Text>
-        <Text style={s.muted}>
-          {b?.name} · {b?.city}
-        </Text>
-        <Text style={s.small}>
-          {item.ends_at
-            ? `Til ${new Date(item.ends_at).toLocaleDateString("nb-NO")}`
-            : "Så lenge tilbudet er aktivt"}
-        </Text>
-      </Pressable>
-    );
+    : selectedEvent
+      ? businesses.find((b) => b.id === selectedEvent.business_id)
+      : selectedNews
+        ? businesses.find((b) => b.id === selectedNews.business_id)
+        : business;
+  function openMap(b?: Business) {
+    setMapRequest((request) => request + 1);
+    setMapTarget(b?.id ?? null);
+    setDeal(null);
+    setBusiness(null);
+    setCode(null);
+    setSelectedEvent(null);
+    setSelectedNews(null);
+    setTab("Kart");
   }
+  function closeDetails() {
+    setDeal(null);
+    setBusiness(null);
+    setCode(null);
+    setSelectedEvent(null);
+    setSelectedNews(null);
+  }
+  const firstName =
+    (session?.user.user_metadata?.display_name as string | undefined)?.split(
+      " ",
+    )[0] || "venn";
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar style="dark" />
@@ -280,348 +283,333 @@ function AppBody() {
         </View>
         <Text style={s.small}>HEIA DE LOKALE</Text>
       </View>
-      <ScrollView
-        contentContainerStyle={s.content}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={
-          <RefreshControl
-            refreshing={loading}
-            onRefresh={() =>
-              void run(async () => {
-                await loadCatalog();
-                if (session) await loadPrivate(session.user.id);
-              })
-            }
+      {tab === "Kart" && configured ? (
+        <>
+          <MapScreen
+            businesses={businesses}
+            categories={categories}
+            deals={deals}
+            targetId={mapTarget}
+            targetRequest={mapRequest}
+            initialCity={city}
+            onBusiness={setBusiness}
+            onError={(e) => setError(message(e))}
           />
-        }
-      >
-        {error ? (
-          <View accessibilityRole="alert" style={s.alert}>
-            <Text style={s.text}>{error}</Text>
-            <Button title="Lukk melding" quiet onPress={() => setError("")} />
-          </View>
-        ) : null}
-        {notice ? (
-          <View style={s.notice}>
-            <Text style={s.text}>{notice}</Text>
-          </View>
-        ) : null}
-        {busy && (
-          <ActivityIndicator accessibilityLabel="Jobber" color={colors.ink} />
-        )}
-        {!configured ? (
-          <View style={s.hero}>
-            <Text style={s.eyebrow}>DINVENN PILOT</Text>
-            <Text style={s.h1}>Gode steder.{`\n`}Fine vennepriser.</Text>
-            <Text style={s.text}>
-              Appen trenger Supabase-tilkobling. Kopier apps/mobile/.env.example
-              til .env og fyll inn URL og offentlig nøkkel. Se README.
+          {error ? (
+            <Text accessibilityRole="alert" style={s.alert}>
+              {error}
             </Text>
-          </View>
-        ) : tab === "Meg" ? (
-          <>
-            <Text style={s.h1}>
-              {session ? "Hei, venn!" : "Bli en lokal venn"}
-            </Text>
-            {!authReady ? (
-              <ActivityIndicator />
-            ) : session ? (
-              <View style={s.card}>
-                <Text style={s.text}>{session.user.email}</Text>
-                <Text style={s.muted}>
-                  Favorittene og kodene dine følger kontoen din.
-                </Text>
-                <Button
-                  title="Logg ut"
-                  quiet
-                  disabled={busy}
-                  onPress={() =>
-                    void run(async () => {
-                      check(await client!.auth.signOut());
-                      setPassword("");
-                    })
-                  }
-                />
-              </View>
-            ) : (
-              <View style={s.card}>
-                {authMode === "register" && (
-                  <Input
-                    label="Navnet ditt"
-                    value={name}
-                    onChangeText={setName}
-                    autoComplete="name"
-                  />
-                )}
-                <Input
-                  label="E-post"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoComplete="email"
-                />
-                {authMode !== "reset" && (
-                  <Input
-                    label="Passord (minst 8 tegn)"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoComplete={
-                      authMode === "register"
-                        ? "new-password"
-                        : "current-password"
-                    }
-                  />
-                )}
-                <Button
-                  title={
-                    authMode === "login"
-                      ? "Logg inn"
-                      : authMode === "register"
-                        ? "Opprett konto"
-                        : "Send tilbakestillingslenke"
-                  }
-                  disabled={busy}
-                  onPress={() =>
-                    void run(async () => {
-                      if (!email.trim())
-                        throw new Error("Skriv e-postadressen din.");
-                      const portal = process.env.EXPO_PUBLIC_PORTAL_URL;
-                      if (authMode === "login") {
-                        check(
-                          await client!.auth.signInWithPassword({
-                            email: email.trim(),
-                            password,
-                          }),
-                        );
-                        setPassword("");
-                        setTab("Utforsk");
-                      } else if (authMode === "register") {
-                        if (password.length < 8 || !name.trim())
-                          throw new Error(
-                            "Skriv navn og et passord på minst 8 tegn.",
-                          );
-                        if (!portal)
-                          throw new Error(
-                            "Sett EXPO_PUBLIC_PORTAL_URL for e-postbekreftelse.",
-                          );
-                        check(
-                          await client!.auth.signUp({
-                            email: email.trim(),
-                            password,
-                            options: {
-                              data: { display_name: name.trim() },
-                              emailRedirectTo: portal,
-                            },
-                          }),
-                        );
-                        setPassword("");
-                        setNotice(
-                          "Sjekk e-posten og bekreft kontoen. Deretter kan du logge inn her.",
-                        );
-                      } else {
-                        if (!portal)
-                          throw new Error(
-                            "Sett EXPO_PUBLIC_PORTAL_URL for passordtilbakestilling.",
-                          );
-                        check(
-                          await client!.auth.resetPasswordForEmail(
-                            email.trim(),
-                            { redirectTo: portal + "/?recovery=1" },
-                          ),
-                        );
-                        setNotice(
-                          "Hvis kontoen finnes, får du en e-post. Velg nytt passord i nettleseren, og logg deretter inn her.",
-                        );
-                      }
-                    })
-                  }
-                />
-                <Button
-                  title={
-                    authMode === "register"
-                      ? "Til innlogging"
-                      : "Opprett en konto"
-                  }
-                  quiet
-                  onPress={() =>
-                    setAuthMode(authMode === "register" ? "login" : "register")
-                  }
-                />
-                <Button
-                  title={
-                    authMode === "reset" ? "Til innlogging" : "Glemt passord?"
-                  }
-                  quiet
-                  onPress={() =>
-                    setAuthMode(authMode === "reset" ? "login" : "reset")
-                  }
-                />
-              </View>
-            )}
-          </>
-        ) : tab === "Mine koder" ? (
-          <>
-            <Text style={s.h1}>Dine vennepriser</Text>
-            {!session ? (
-              <Button
-                title="Logg inn for å se kodene dine"
-                onPress={() => setTab("Meg")}
-              />
-            ) : !codes.length ? (
-              <Text style={s.muted}>
-                Du har ikke hentet noen koder ennå. Finn en vennepris under
-                Utforsk.
-              </Text>
-            ) : (
-              codes.map((r) => (
-                <Pressable
-                  accessibilityRole="button"
-                  key={r.id}
-                  style={s.card}
-                  onPress={() => setCode(r)}
-                >
-                  <Text style={s.h2}>
-                    {deals.find((d) => d.id === r.deal_id)?.title ??
-                      "Hentet vennepris"}
-                  </Text>
-                  <Text style={s.text}>{redemptionStatus(r, now)}</Text>
-                  <Text style={s.small}>
-                    Gyldig til {new Date(r.expires_at).toLocaleString("nb-NO")}
-                  </Text>
-                </Pressable>
-              ))
-            )}
-          </>
-        ) : (
-          <>
-            <View style={s.hero}>
-              <Text style={s.eyebrow}>RETT RUNDT HJØRNET</Text>
-              <Text style={s.h1}>
-                {tab === "Favoritter"
-                  ? "Dine lokale favoritter."
-                  : "Finn din neste\nfavoritt."}
-              </Text>
-              <Text style={s.text}>
-                Vennepriser fra små steder med mye å gi.
-              </Text>
-            </View>
-            <Input
-              label="Søk etter tilbud eller bedrift"
-              placeholder="Kaffe, butikk, aktivitet …"
-              value={search}
-              onChangeText={setSearch}
-            />
-            <Text style={s.label}>By</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.chips}
-            >
-              {[
-                "",
-                ...Array.from(
-                  new Set(
-                    businesses
-                      .map((b) => b.city)
-                      .filter((c): c is string => !!c),
-                  ),
-                ),
-              ].map((c) => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: city === c }}
-                  key={c}
-                  style={[s.chip, city === c && s.chipActive]}
-                  onPress={() => setCity(c)}
-                >
-                  <Text style={s.text}>{c || "Alle byer"}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Text style={s.label}>Kategori</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={s.chips}
-            >
-              {[{ id: "", name: "Alle" }, ...categories].map((c) => (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: category === String(c.id) }}
-                  key={c.id}
-                  style={[s.chip, category === String(c.id) && s.chipActive]}
-                  onPress={() => setCategory(String(c.id))}
-                >
-                  <Text style={s.text}>{c.name}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Text style={s.h2}>Vennepriser nå</Text>
-            {loading && !deals.length ? (
-              <ActivityIndicator />
-            ) : !visibleDeals.length ? (
-              <Text style={s.muted}>
-                {tab === "Favoritter"
-                  ? "Ingen lagrede tilbud passer filtrene. Lagre et hjerte under Utforsk."
-                  : "Ingen tilbud passer akkurat nå. Prøv en annen by eller kategori."}
-              </Text>
-            ) : (
-              visibleDeals.map((d) => <DealCard item={d} key={d.id} />)
-            )}
-            <Text style={s.h2}>
-              {tab === "Favoritter"
-                ? "Lagrede bedrifter"
-                : "Bli kjent med de lokale"}
-            </Text>
-            {businesses
-              .filter(
-                (b) =>
-                  (!city || b.city === city) &&
-                  (!category || String(b.category_id) === category) &&
-                  (!search ||
-                    `${b.name} ${b.description ?? ""}`
-                      .toLocaleLowerCase("nb-NO")
-                      .includes(search.toLocaleLowerCase("nb-NO"))) &&
-                  (tab !== "Favoritter" || favorite("business", b.id)),
-              )
-              .map((b) => (
-                <Pressable
-                  key={b.id}
-                  accessibilityRole="button"
-                  style={s.card}
-                  onPress={() => setBusiness(b)}
-                >
-                  <Text style={s.h2}>{b.name}</Text>
-                  <Text style={s.muted}>
-                    {b.city} · {b.address}
-                  </Text>
-                </Pressable>
-              ))}
-            {tab === "Favoritter" && !session && (
-              <Button
-                title="Logg inn for å se favorittene dine"
-                onPress={() => setTab("Meg")}
-              />
-            )}
-            <Button
-              title="Oppdater"
-              quiet
-              disabled={busy}
-              onPress={() =>
+          ) : null}
+        </>
+      ) : (
+        <ScrollView
+          contentContainerStyle={s.content}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={loading}
+              onRefresh={() =>
                 void run(async () => {
                   await loadCatalog();
                   if (session) await loadPrivate(session.user.id);
                 })
               }
             />
-          </>
-        )}
-      </ScrollView>
+          }
+        >
+          {error ? (
+            <View accessibilityRole="alert" style={s.alert}>
+              <Text style={s.text}>{error}</Text>
+              <Button title="Lukk melding" quiet onPress={() => setError("")} />
+            </View>
+          ) : null}
+          {notice ? (
+            <View style={s.notice}>
+              <Text style={s.text}>{notice}</Text>
+            </View>
+          ) : null}
+          {busy && (
+            <ActivityIndicator accessibilityLabel="Jobber" color={colors.ink} />
+          )}
+          {!configured ? (
+            <View style={s.hero}>
+              <Text style={s.eyebrow}>DINVENN PILOT</Text>
+              <Text style={s.h1}>Gode steder.{`\n`}Fine vennepriser.</Text>
+              <Text style={s.text}>
+                Appen trenger Supabase-tilkobling. Kopier
+                apps/mobile/.env.example til .env og fyll inn URL og offentlig
+                nøkkel. Se README.
+              </Text>
+            </View>
+          ) : tab === "Meg" ? (
+            <>
+              <Text style={s.h1}>
+                {session ? `Hei, ${firstName}!` : "Bli en lokal venn"}
+              </Text>
+              {!authReady ? (
+                <ActivityIndicator />
+              ) : session ? (
+                <View style={s.card}>
+                  <View style={s.accountHeading}>
+                    <View style={s.avatar}>
+                      <Text style={s.avatarText}>{initials(firstName)}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={ui.h3}>
+                        {session.user.user_metadata?.display_name ?? firstName}
+                      </Text>
+                      <Text style={s.small}>{session.user.email}</Text>
+                    </View>
+                  </View>
+                  <Text style={s.muted}>
+                    Favorittene og kodene dine følger kontoen din.
+                  </Text>
+                  <View style={s.accountStats}>
+                    <Pressable
+                      accessibilityRole="button"
+                      style={s.accountStat}
+                      onPress={() => setTab("Favoritter")}
+                    >
+                      <Icon name="heart" />
+                      <Text style={s.accountNumber}>{favorites.length}</Text>
+                      <Text style={s.small}>Favoritter</Text>
+                    </Pressable>
+                    <Pressable
+                      accessibilityRole="button"
+                      style={s.accountStat}
+                      onPress={() => setTab("Mine koder")}
+                    >
+                      <Icon name="qr" />
+                      <Text style={s.accountNumber}>{codes.length}</Text>
+                      <Text style={s.small}>Dine koder</Text>
+                    </Pressable>
+                  </View>
+                  <Button
+                    title="Logg ut"
+                    quiet
+                    disabled={busy}
+                    onPress={() =>
+                      void run(async () => {
+                        check(await client!.auth.signOut());
+                        setPassword("");
+                      })
+                    }
+                  />
+                </View>
+              ) : (
+                <View style={s.card}>
+                  {authMode === "register" && (
+                    <Input
+                      label="Navnet ditt"
+                      value={name}
+                      onChangeText={setName}
+                      autoComplete="name"
+                    />
+                  )}
+                  <Input
+                    label="E-post"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                  />
+                  {authMode !== "reset" && (
+                    <Input
+                      label="Passord (minst 8 tegn)"
+                      value={password}
+                      onChangeText={setPassword}
+                      secureTextEntry
+                      autoCapitalize="none"
+                      autoComplete={
+                        authMode === "register"
+                          ? "new-password"
+                          : "current-password"
+                      }
+                    />
+                  )}
+                  <Button
+                    title={
+                      authMode === "login"
+                        ? "Logg inn"
+                        : authMode === "register"
+                          ? "Opprett konto"
+                          : "Send tilbakestillingslenke"
+                    }
+                    disabled={busy}
+                    onPress={() =>
+                      void run(async () => {
+                        if (!email.trim())
+                          throw new Error("Skriv e-postadressen din.");
+                        const portal = process.env.EXPO_PUBLIC_PORTAL_URL;
+                        if (authMode === "login") {
+                          check(
+                            await client!.auth.signInWithPassword({
+                              email: email.trim(),
+                              password,
+                            }),
+                          );
+                          setPassword("");
+                          setTab("Utforsk");
+                        } else if (authMode === "register") {
+                          if (password.length < 8 || !name.trim())
+                            throw new Error(
+                              "Skriv navn og et passord på minst 8 tegn.",
+                            );
+                          if (!portal)
+                            throw new Error(
+                              "Sett EXPO_PUBLIC_PORTAL_URL for e-postbekreftelse.",
+                            );
+                          check(
+                            await client!.auth.signUp({
+                              email: email.trim(),
+                              password,
+                              options: {
+                                data: { display_name: name.trim() },
+                                emailRedirectTo: portal,
+                              },
+                            }),
+                          );
+                          setPassword("");
+                          setNotice(
+                            "Sjekk e-posten og bekreft kontoen. Deretter kan du logge inn her.",
+                          );
+                        } else {
+                          if (!portal)
+                            throw new Error(
+                              "Sett EXPO_PUBLIC_PORTAL_URL for passordtilbakestilling.",
+                            );
+                          check(
+                            await client!.auth.resetPasswordForEmail(
+                              email.trim(),
+                              { redirectTo: portal + "/?recovery=1" },
+                            ),
+                          );
+                          setNotice(
+                            "Hvis kontoen finnes, får du en e-post. Velg nytt passord i nettleseren, og logg deretter inn her.",
+                          );
+                        }
+                      })
+                    }
+                  />
+                  <Button
+                    title={
+                      authMode === "register"
+                        ? "Til innlogging"
+                        : "Opprett en konto"
+                    }
+                    quiet
+                    onPress={() =>
+                      setAuthMode(
+                        authMode === "register" ? "login" : "register",
+                      )
+                    }
+                  />
+                  <Button
+                    title={
+                      authMode === "reset" ? "Til innlogging" : "Glemt passord?"
+                    }
+                    quiet
+                    onPress={() =>
+                      setAuthMode(authMode === "reset" ? "login" : "reset")
+                    }
+                  />
+                </View>
+              )}
+            </>
+          ) : tab === "Mine koder" ? (
+            <>
+              <Text style={ui.eyebrow}>KLAR TIL NESTE BESØK</Text>
+              <Text style={s.h1}>Dine vennepriser</Text>
+              <Text style={ui.muted}>
+                Vis en kode i kassen. Hver innløsning gjør en forskjell lokalt.
+              </Text>
+              {!session ? (
+                <Button
+                  title="Logg inn for å se kodene dine"
+                  onPress={() => setTab("Meg")}
+                />
+              ) : !codes.length ? (
+                <Text style={s.muted}>
+                  Du har ikke hentet noen koder ennå. Finn en vennepris under
+                  Utforsk.
+                </Text>
+              ) : (
+                codes.map((r) => (
+                  <Pressable
+                    accessibilityRole="button"
+                    key={r.id}
+                    style={s.card}
+                    onPress={() => setCode(r)}
+                  >
+                    <Text style={s.h2}>
+                      {deals.find((d) => d.id === r.deal_id)?.title ??
+                        "Hentet vennepris"}
+                    </Text>
+                    <View style={ui.row}>
+                      <Icon
+                        name={r.status === "redeemed" ? "check" : "qr"}
+                        size={17}
+                      />
+                      <Text style={ui.tag}>{redemptionStatus(r, now)}</Text>
+                    </View>
+                    <Text style={s.small}>
+                      Gyldig til{" "}
+                      {new Date(r.expires_at).toLocaleString("nb-NO")}
+                    </Text>
+                  </Pressable>
+                ))
+              )}
+            </>
+          ) : (
+            <>
+              <Explore
+                businesses={businesses}
+                deals={deals}
+                categories={categories}
+                events={events}
+                news={news}
+                city={city}
+                setCity={setCity}
+                category={category}
+                setCategory={setCategory}
+                search={search}
+                setSearch={setSearch}
+                mode={tab === "Favoritter" ? "favorites" : "explore"}
+                name={firstName}
+                now={now}
+                busy={busy}
+                isFavorite={favorite}
+                onFavorite={toggleFavorite}
+                onDeal={setDeal}
+                onBusiness={setBusiness}
+                onEvent={setSelectedEvent}
+                onNews={setSelectedNews}
+                onMap={() => openMap()}
+              />
+              {tab === "Favoritter" && !session && (
+                <Button
+                  title="Logg inn for å se favorittene dine"
+                  onPress={() => setTab("Meg")}
+                />
+              )}
+              <Button
+                title="Oppdater"
+                quiet
+                disabled={busy}
+                onPress={() =>
+                  void run(async () => {
+                    await loadCatalog();
+                    if (session) await loadPrivate(session.user.id);
+                  })
+                }
+              />
+            </>
+          )}
+        </ScrollView>
+      )}
       <View style={s.tabs}>
-        {["Utforsk", "Favoritter", "Mine koder", "Meg"].map((t, i) => (
+        {["Utforsk", "Kart", "Favoritter", "Mine koder", "Meg"].map((t, i) => (
           <Pressable
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === t }}
@@ -630,34 +618,28 @@ function AppBody() {
             onPress={() => setTab(t)}
           >
             <View style={s.tabIconSlot} accessible={false}>
-              <Text style={s.tabIcon} allowFontScaling={false}>
-                {["⌂", "♡", "▦", "☺"][i]}
-              </Text>
+              <Icon
+                name={["home", "map", "heart", "qr", "user"][i]}
+                size={23}
+                color={tab === t ? palette.ink : palette.muted}
+              />
             </View>
-            <Text style={s.tabText}>{t}</Text>
+            <Text style={s.tabText} numberOfLines={1}>
+              {t}
+            </Text>
           </Pressable>
         ))}
       </View>
       <Modal
-        visible={!!deal || !!business || !!code}
+        visible={
+          !!deal || !!business || !!code || !!selectedEvent || !!selectedNews
+        }
         animationType="slide"
-        onRequestClose={() => {
-          setDeal(null);
-          setBusiness(null);
-          setCode(null);
-        }}
+        onRequestClose={closeDetails}
       >
         <SafeAreaView style={s.safe}>
           <ScrollView contentContainerStyle={s.content}>
-            <Button
-              title="← Tilbake"
-              quiet
-              onPress={() => {
-                setDeal(null);
-                setBusiness(null);
-                setCode(null);
-              }}
-            />
+            <Button title="← Tilbake" quiet onPress={closeDetails} />
             {error ? (
               <Text accessibilityRole="alert" style={s.alert}>
                 {error}
@@ -667,6 +649,10 @@ function AppBody() {
             {code ? (
               <View style={s.card}>
                 <Text style={s.eyebrow}>DIN VENNEPRIS</Text>
+                <Text style={ui.h2}>
+                  {deals.find((d) => d.id === code.deal_id)?.title ??
+                    "En fordel hos en lokal venn"}
+                </Text>
                 <Text style={s.h1}>{redemptionStatus(code, now)}</Text>
                 {redemptionStatus(code, now) === "Klar til bruk" ? (
                   <>
@@ -713,6 +699,27 @@ function AppBody() {
                   </Text>
                 )}
               </View>
+            ) : selectedEvent || selectedNews ? (
+              <ContentDetails
+                event={selectedEvent}
+                post={selectedNews}
+                business={currentBusiness ?? undefined}
+                onBusiness={() => {
+                  if (currentBusiness) {
+                    setBusiness(currentBusiness);
+                    setSelectedEvent(null);
+                    setSelectedNews(null);
+                  }
+                }}
+                isFavorite={
+                  !!selectedEvent && favorite("event", selectedEvent.id)
+                }
+                onFavorite={() => {
+                  if (selectedEvent) toggleFavorite("event", selectedEvent.id);
+                }}
+                busy={busy}
+                onError={(e) => setError(message(e))}
+              />
             ) : deal ? (
               <>
                 {deal.image_url && (
@@ -765,53 +772,21 @@ function AppBody() {
                 )}
               </>
             ) : business ? (
-              <>
-                {business.cover_url && (
-                  <Image source={{ uri: business.cover_url }} style={s.cover} />
-                )}
-                <Text style={s.h1}>{business.name}</Text>
-                <Text style={s.text}>{business.description}</Text>
-                <Text style={s.muted}>
-                  {business.address}, {business.postal_code} {business.city}
-                </Text>
-                {business.phone && (
-                  <Text selectable style={s.text}>
-                    Telefon: {business.phone}
-                  </Text>
-                )}
-                {business.email && (
-                  <Text selectable style={s.text}>
-                    E-post: {business.email}
-                  </Text>
-                )}
-                {business.website && /^https?:\/\//i.test(business.website) && (
-                  <Button
-                    title="Besøk nettside ↗"
-                    quiet
-                    onPress={() =>
-                      void run(async () => {
-                        await Linking.openURL(business.website!);
-                      })
-                    }
-                  />
-                )}
-                <Button
-                  title={
-                    favorite("business", business.id)
-                      ? "♥ Fjern favoritt"
-                      : "♡ Lagre bedrift"
-                  }
-                  quiet
-                  disabled={busy}
-                  onPress={() => toggleFavorite("business", business.id)}
-                />
-                <Text style={s.h2}>Vennepriser hos oss</Text>
-                {deals
-                  .filter((d) => d.business_id === business.id)
-                  .map((d) => (
-                    <DealCard item={d} key={d.id} />
-                  ))}
-              </>
+              <BusinessDetails
+                business={business}
+                deals={deals}
+                events={events}
+                news={news}
+                categories={categories}
+                onDeal={setDeal}
+                onEvent={setSelectedEvent}
+                onNews={setSelectedNews}
+                onMap={() => openMap(business)}
+                isFavorite={favorite("business", business.id)}
+                onFavorite={() => toggleFavorite("business", business.id)}
+                busy={busy}
+                onError={(e) => setError(message(e))}
+              />
             ) : null}
           </ScrollView>
         </SafeAreaView>
@@ -828,24 +803,44 @@ export default function App() {
 }
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.cream },
+  accountHeading: { flexDirection: "row", alignItems: "center", gap: 14 },
+  avatar: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: palette.peach,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: { fontSize: 23, fontWeight: "800", color: palette.ink },
+  accountStats: { flexDirection: "row", gap: 12, marginVertical: 16 },
+  accountStat: {
+    flex: 1,
+    alignItems: "center",
+    gap: 7,
+    backgroundColor: palette.cream,
+    padding: 16,
+    borderRadius: 15,
+  },
+  accountNumber: { fontSize: 26, fontWeight: "800", color: palette.ink },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 22,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
   brandGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
   brandLogo: { width: 44, height: 44, borderRadius: 11 },
   brand: {
-    fontSize: 30,
+    fontSize: 27,
     fontWeight: "800",
     color: colors.ink,
     letterSpacing: -1.5,
   },
-  content: { padding: 22, gap: 16, paddingBottom: 40 },
+  content: { padding: 20, gap: 17, paddingBottom: 32 },
   h1: {
     fontSize: 34,
     lineHeight: 40,
