@@ -167,8 +167,16 @@ test("admin kan godkjenne og suspendere bedrift", async ({ page }) => {
   await page.getByRole("button", { name: "Godkjenning", exact: true }).click();
   await page.getByRole("button", { name: "Godkjenn", exact: true }).click();
   await expect(page.getByText("Godkjent", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Godkjenn", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Suspender", exact: true }).click();
   await expect(page.getByText("Suspendert", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Suspender", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Godkjenn", exact: true }).click();
+  await expect(page.getByText("Godkjent", { exact: true })).toBeVisible();
 });
 test("innloggingsfeil og glemt passord gir forståelig tilbakemelding", async ({
   page,

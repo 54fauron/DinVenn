@@ -269,9 +269,15 @@ function AppBody() {
     <SafeAreaView style={s.safe}>
       <StatusBar style="dark" />
       <View style={s.header}>
-        <Text style={s.brand}>
-          DinVenn<Text style={{ color: "#c65a4d" }}> ♥</Text>
-        </Text>
+        <View style={s.brandGroup}>
+          <Image
+            source={require("../assets/dinvenn-logo.png")}
+            style={s.brandLogo}
+            resizeMode="contain"
+            accessible={false}
+          />
+          <Text style={s.brand}>DinVenn</Text>
+        </View>
         <Text style={s.small}>HEIA DE LOKALE</Text>
       </View>
       <ScrollView
@@ -623,7 +629,11 @@ function AppBody() {
             style={[s.tab, tab === t && { backgroundColor: colors.peach }]}
             onPress={() => setTab(t)}
           >
-            <Text style={s.tabIcon}>{["⌂", "♡", "▦", "☺"][i]}</Text>
+            <View style={s.tabIconSlot} accessible={false}>
+              <Text style={s.tabIcon} allowFontScaling={false}>
+                {["⌂", "♡", "▦", "☺"][i]}
+              </Text>
+            </View>
             <Text style={s.tabText}>{t}</Text>
           </Pressable>
         ))}
@@ -827,6 +837,8 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
+  brandGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
+  brandLogo: { width: 44, height: 44, borderRadius: 11 },
   brand: {
     fontSize: 30,
     fontWeight: "800",
@@ -948,8 +960,21 @@ const s = StyleSheet.create({
     paddingVertical: 7,
     gap: 3,
   },
-  tabIcon: { fontSize: 23, color: colors.ink },
-  tabText: { fontSize: 10, color: colors.ink, fontWeight: "600" },
+  tabIconSlot: { height: 32, alignItems: "center", justifyContent: "center" },
+  tabIcon: {
+    fontSize: 23,
+    lineHeight: 30,
+    includeFontPadding: false,
+    color: colors.ink,
+  },
+  tabText: {
+    fontSize: 10,
+    lineHeight: 14,
+    includeFontPadding: false,
+    color: colors.ink,
+    fontWeight: "600",
+    textAlign: "center",
+  },
   cover: { width: "100%", height: 190, borderRadius: 16 },
   qr: {
     backgroundColor: "#fff",
