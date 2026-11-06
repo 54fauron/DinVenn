@@ -237,3 +237,9 @@ run_maintenance()          (cron) markerer utløpte koder, tilbud og arrangement
 - **Betalte funksjoner:** Skal lynsalg og lojalitetsprogram kun være i `plus`-abonnementet? Det er enkelt å håndheve i en trigger, men ikke gjort ennå.
 - **Navn på anmeldelser:** I dag vises `display_name`. For ungdom kan det være bedre å vise bare fornavn eller initialer.
 - **Aldersgrense:** `birth_year` finnes, men ingenting begrenser funksjoner for under 18 år. Det bør vurderes juridisk (GDPR/samtykke).
+
+## Pilotintegrasjon (november 2026)
+
+Kjørbare, versjonerte kopier av SQL-filene over ligger nå i `supabase/migrations/`. Den sjuende migrasjonen legger til bilde-bucket med medlemsbaserte skriverettigheter, validering av rabatter/datoer/grenser og eksplisitte RPC-rettigheter. `redeem_deal` låser tilbudet før innløsningen, kontrollerer godkjent bedrift og sjekker gjeldende grenser på nytt.
+
+For en tom database kan hele `supabase/setup.sql` kjøres én gang. Se [README](../README.md) for oppsett, adminrolle, migrasjonshistorikk og testbegrensninger. De eldre SQL-filene i denne mappen bevares som referanse; videre endringer skal skje som nye migrasjoner.
