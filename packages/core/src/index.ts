@@ -289,3 +289,13 @@ export type { Session } from "@supabase/supabase-js";
 export function check(result: { error: { message: string } | null }) {
   if (result.error) throw new Error(result.error.message);
 }
+
+export {
+  validPoint,
+  storedPoint,
+  chooseAddressPoint,
+  addressSearchUrl,
+  directionsUrl,
+  addressIdentity,
+} from "./geo.ts";
+export type { Point, AddressHit } from "./geo.ts";

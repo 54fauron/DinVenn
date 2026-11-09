@@ -119,3 +119,9 @@ Bedrifter med gyldig `lat`/`lng` vises direkte. Andre norske gateadresser slås 
 Ingen brukerposisjon samles inn eller etterspørres. Kun bedriftenes offentlige adresser sendes til adresse-API-et. Nye koordinater mellomlagres i appens minne; ingen SQL-endringer er nødvendige. Kartet trenger nettverk. Hvis en adresse ikke vises, bruk «Vis liste» eller «Prøv igjen».
 
 Etter denne oppdateringen: stopp Expo-serveren med Ctrl+C og kjør `npm run mobile` igjen, og last prosjektet på nytt i Expo Go. Bruk `npm ci` først på andre maskiner for å få de nye avhengighetene.
+
+### Kontroller kartpinnen i bedriftsprofilen
+
+Bedriftsprofilen har nå et kart med automatisk adresseoppslag etter at gateadresse og by/postnummer er skrevet inn. Dra pinnen eller trykk i kartet for å korrigere plasseringen, og trykk **Lagre profil**. De lagrede `lat`/`lng`-feltene brukes direkte av mobilappen. «Søk opp adressen på nytt» erstatter manuell plassering med et nytt adresseoppslag. Hvis adressen endres, fjernes gammel pinne slik at den ikke blir lagret sammen med feil adresse.
+
+Webkartet bruker Leaflet og OpenStreetMap-kartfliser med synlig kildehenvisning. Adresseoppslaget deles med mobilappen og bruker Kartverket. Ved manglende eller tvetydig treff kan pinnen settes manuelt. Ingen nye API-nøkler eller SQL-migrasjoner er nødvendige. Kartbakgrunn og adresseoppslag krever nettverk.

@@ -12,6 +12,9 @@ import {
   unwrap,
   validateDeal,
   discount,
+  addressIdentity,
+  storedPoint,
+  type Point,
   type Business,
   type Category,
   type Client,
@@ -29,6 +32,7 @@ import {
 } from "./content";
 import { Dashboard, NavIcon } from "./dashboard";
 import "./style.css";
+const AddressMap = React.lazy(() => import("./AddressMap"));
 const configured =
   !!import.meta.env.VITE_SUPABASE_URL &&
   !!import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
@@ -252,6 +256,15 @@ function BusinessForm({
     category_id: String(business?.category_id ?? ""),
   });
   const [cover, setCover] = useState<File | null>(null);
+  const [pin, setPin] = useState<{ address: string; point: Point | null }>(
+    () => ({
+      address: addressIdentity(form),
+      point: business ? storedPoint(business) : null,
+    }),
+  );
+  const addressKey = addressIdentity(form);
+  const point = pin.address === addressKey ? pin.point : null;
+
   const change = (key: keyof typeof form, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
   return (
@@ -264,6 +277,8 @@ function BusinessForm({
           void run(async () => {
             const values = {
               ...form,
+              lat: point?.latitude ?? null,
+              lng: point?.longitude ?? null,
               name: form.name.trim(),
               category_id: form.category_id ? Number(form.category_id) : null,
             };
@@ -308,75 +323,90 @@ function BusinessForm({
           });
         }}
       >
-        <div className="formgrid">
-          {(
-            [
-              "name",
-              "city",
-              "address",
-              "postal_code",
-              "phone",
-              "email",
-              "website",
-            ] as const
-          ).map((key, i) => (
-            <Field
-              key={key}
-              label={
+        <div className="business-profile-layout">
+          <div className="business-profile-fields">
+            <div className="formgrid">
+              {(
                 [
-                  "Bedriftsnavn",
-                  "By",
-                  "Adresse",
-                  "Postnummer",
-                  "Telefon",
-                  "E-post",
-                  "Nettside",
-                ][i]
-              }
-              value={form[key]}
-              type={
-                key === "email" ? "email" : key === "website" ? "url" : "text"
-              }
-              required={key === "name" || key === "city"}
-              onChange={(e) => change(key, e.target.value)}
-            />
-          ))}
-          <label>
-            Kategori
-            <select
-              value={form.category_id}
-              required
-              onChange={(e) => change("category_id", e.target.value)}
-            >
-              <option value="">Velg kategori</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
+                  "name",
+                  "city",
+                  "address",
+                  "postal_code",
+                  "phone",
+                  "email",
+                  "website",
+                ] as const
+              ).map((key, i) => (
+                <Field
+                  key={key}
+                  label={
+                    [
+                      "Bedriftsnavn",
+                      "By",
+                      "Adresse",
+                      "Postnummer",
+                      "Telefon",
+                      "E-post",
+                      "Nettside",
+                    ][i]
+                  }
+                  value={form[key]}
+                  type={
+                    key === "email"
+                      ? "email"
+                      : key === "website"
+                        ? "url"
+                        : "text"
+                  }
+                  required={key === "name" || key === "city"}
+                  onChange={(e) => change(key, e.target.value)}
+                />
               ))}
-            </select>
-          </label>
+              <label>
+                Kategori
+                <select
+                  value={form.category_id}
+                  required
+                  onChange={(e) => change("category_id", e.target.value)}
+                >
+                  <option value="">Velg kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label>
+              Om bedriften
+              <textarea
+                value={form.description}
+                onChange={(e) => change("description", e.target.value)}
+              />
+            </label>
+            {business?.cover_url && (
+              <img
+                className="cover"
+                src={business.cover_url}
+                alt="Bedriftens forsidebilde"
+              />
+            )}
+            <Field
+              label="Forsidebilde (JPG, PNG eller WebP, maks 5 MB)"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={(e) => setCover(e.target.files?.[0] ?? null)}
+            />
+          </div>
+          <React.Suspense fallback={<p role="status">Laster kart …</p>}>
+            <AddressMap
+              address={form}
+              point={point}
+              onChange={(next) => setPin({ address: addressKey, point: next })}
+            />
+          </React.Suspense>
         </div>
-        <label>
-          Om bedriften
-          <textarea
-            value={form.description}
-            onChange={(e) => change("description", e.target.value)}
-          />
-        </label>
-        {business?.cover_url && (
-          <img
-            className="cover"
-            src={business.cover_url}
-            alt="Bedriftens forsidebilde"
-          />
-        )}
-        <Field
-          label="Forsidebilde (JPG, PNG eller WebP, maks 5 MB)"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={(e) => setCover(e.target.files?.[0] ?? null)}
-        />
         <button type="submit">
           {business ? "Lagre profil" : "Send til godkjenning"}
         </button>
