@@ -273,12 +273,14 @@ function AppBody() {
       <StatusBar style="dark" />
       <View style={s.header}>
         <View style={s.brandGroup}>
-          <Image
-            source={require("../assets/dinvenn-logo.png")}
-            style={s.brandLogo}
-            resizeMode="contain"
-            accessible={false}
-          />
+          <View style={s.brandLogoFrame}>
+            <Image
+              source={require("../assets/dinvenn-logo.png")}
+              style={s.brandLogo}
+              resizeMode="contain"
+              accessible={false}
+            />
+          </View>
           <Text style={s.brand}>DinVenn</Text>
         </View>
         <Text style={s.small}>HEIA DE LOKALE</Text>
@@ -833,7 +835,13 @@ const s = StyleSheet.create({
     borderColor: colors.border,
   },
   brandGroup: { flexDirection: "row", alignItems: "center", gap: 10 },
-  brandLogo: { width: 44, height: 44, borderRadius: 11 },
+  brandLogoFrame: {
+    width: 44,
+    height: 44,
+    borderRadius: 11,
+    overflow: "hidden",
+  },
+  brandLogo: { width: 44, height: 44, transform: [{ scale: 1.4 }] },
   brand: {
     fontSize: 27,
     fontWeight: "800",

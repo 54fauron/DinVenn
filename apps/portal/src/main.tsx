@@ -792,6 +792,10 @@ function App() {
     if (selected)
       void loadBusiness(selected).catch((e) => setError(message(e)));
   }, [selected]);
+  function navigate(next: string) {
+    setNotice("");
+    setTab(next);
+  }
   async function reload() {
     await load();
     if (selected) await loadBusiness(selected);
@@ -800,7 +804,9 @@ function App() {
     <>
       <header>
         <a className="brand" href="/">
-          <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+          <span className="brand-logo-frame">
+            <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+          </span>
           <span>DinVenn</span>
         </a>
         <span>FOR LOKALE BEDRIFTER</span>
@@ -827,8 +833,16 @@ function App() {
           </div>
         )}
         {notice && (
-          <div className="notice" role="status">
-            {notice}
+          <div className="notice dismissible-notice" role="status">
+            <span>{notice}</span>
+            <button
+              type="button"
+              className="notice-close"
+              aria-label="Lukk bekreftelse"
+              onClick={() => setNotice("")}
+            >
+              ×
+            </button>
           </div>
         )}
         {busy && <p role="status">Jobber …</p>}
@@ -870,7 +884,7 @@ function App() {
                   value={selected}
                   onChange={(e) => {
                     setSelected(e.target.value);
-                    setTab("overview");
+                    navigate("overview");
                   }}
                 >
                   {!businesses.length && (
@@ -901,7 +915,7 @@ function App() {
                     className={tab === key ? "nav active" : "nav"}
                     key={key}
                     onClick={() => {
-                      setTab(key);
+                      navigate(key);
                       setEditing(null);
                       setScanning(false);
                     }}
@@ -1164,16 +1178,16 @@ function App() {
                   events={events}
                   news={news}
                   onNewDeal={() => {
-                    setTab("deals");
+                    navigate("deals");
                     setEditing("new");
                   }}
-                  onDeals={() => setTab("deals")}
+                  onDeals={() => navigate("deals")}
                   onEditDeal={(deal) => {
-                    setTab("deals");
+                    navigate("deals");
                     setEditing(deal);
                   }}
-                  onEvents={() => setTab("events")}
-                  onNews={() => setTab("news")}
+                  onEvents={() => navigate("events")}
+                  onNews={() => navigate("news")}
                 />
               )}
             </div>

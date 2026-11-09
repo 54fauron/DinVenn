@@ -194,7 +194,14 @@ test("bedrift kan redigere profil, publisere/pause tilbud og løse inn kode", as
   await page.getByLabel("Adresse", { exact: true }).fill("Storgata 2");
   await page.getByRole("button", { name: "Lagre profil" }).click();
   await expect(page.getByText("Profilen er lagret.")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Lukk bekreftelse", exact: true })
+    .click();
+  await expect(page.getByText("Profilen er lagret.")).toHaveCount(0);
+  await page.getByRole("button", { name: "Lagre profil" }).click();
+  await expect(page.getByText("Profilen er lagret.")).toBeVisible();
   await page.getByRole("button", { name: "Vennepriser", exact: true }).click();
+  await expect(page.getByText("Profilen er lagret.")).toHaveCount(0);
   await page.getByRole("button", { name: "+ Ny vennepris" }).click();
   await page.getByLabel("Tittel", { exact: true }).fill("20 % på kaffe");
   await page
