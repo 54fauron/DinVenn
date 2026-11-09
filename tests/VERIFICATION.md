@@ -26,3 +26,7 @@ Dashboardoppdatering: nettlesertestene dekker oppretting, redigering, publiserin
 Mobiloppdatering: 6 React Native-skjermtester med mock av native kart, Supabase og Expo-kontekst dekker fem bunnfaner, forsideinnhold, arrangementsdetaljer, innloggingskrav ved lagring, kartmarkører, søk, valgt by og ukjente adresser. 6 nye rene tester dekker koordinater, entydige adresser, veibeskrivelse og nedtelling. Kartverkets offentlige API er kontrollert med en ekte offentlig adresse. Native karttegning og faktiske trykk/zoom på fysisk iPhone/Android er ikke testet her; ingen simulator var startet. JavaScript-pakkene for begge plattformer er eksportert uten feil.
 
 Den utvidede lokale Supabase-testen bekrefter også katalogspørringene som mobilappen faktisk bruker, lagring av arrangementfavoritter, og at pauset/avsluttet innhold og fremtidige nyheter utelates.
+
+## Kart i bedriftsprofil – 9. november 2026
+
+Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag, lagring og gjeninnlasting av koordinater, at adresseendring fjerner gammel pinne, og manuell flytting før lagring. Desktop-testen drar selve Leaflet-markøren, mens mobilvisningen setter pinnen ved karttrykk. Kartverkets svar og kartfliser er simulerte i nettlesertestene; Leaflet-kartet og interaksjonene kjører i nettleseren. Delte adressefunksjoner testes også av de eksisterende logikktestene.

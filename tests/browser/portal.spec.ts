@@ -1,7 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
 const ownerId = "00000000-0000-4000-8000-000000000001";
 const businessId = "00000000-0000-4000-8000-000000000002";
-async function backend(page: Page, admin = false) {
+async function backend(
+  page: Page,
+  admin = false,
+  coordinates?: { lat: number; lng: number },
+) {
   let business = {
     id: businessId,
     owner_id: ownerId,
@@ -16,6 +20,8 @@ async function backend(page: Page, admin = false) {
     website: "",
     cover_url: null,
     category_id: 1,
+    lat: coordinates?.lat ?? null,
+    lng: coordinates?.lng ?? null,
     status: "pending",
   };
   let deals: Record<string, unknown>[] = [];
@@ -34,6 +40,35 @@ async function backend(page: Page, admin = false) {
     created_at: new Date().toISOString(),
   };
   const jwt = `${Buffer.from('{"alg":"HS256"}').toString("base64url")}.${Buffer.from(JSON.stringify({ sub: ownerId, exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test`;
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6ioAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    }),
+  );
+  await page.route("https://ws.geonorge.no/adresser/v1/**", (route) => {
+    const query = new URL(route.request().url()).searchParams.get("sok") ?? "";
+    return route.fulfill({
+      contentType: "application/json",
+      headers: { "access-control-allow-origin": "*" },
+      body: JSON.stringify({
+        adresser: query.includes("Markens gate 12A")
+          ? [
+              {
+                adressetekst: "Markens gate 12A",
+                postnummer: "4611",
+                poststed: "KRISTIANSAND S",
+                kommunenavn: "KRISTIANSAND",
+                representasjonspunkt: { lat: 58.145, lon: 7.995 },
+              },
+            ]
+          : [],
+      }),
+    });
+  });
   await page.route("https://dinvenn-test.supabase.co/**", async (route) => {
     const req = route.request(),
       url = new URL(req.url());
@@ -387,4 +422,115 @@ test("abonnement viser tydelige prisforslag uten aktiv betaling", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBeTruthy();
+});
+
+test("bedriftsprofil slår opp adresse, lagrer kartpinne og viser den etter ny innlasting", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await page.getByLabel("Adresse", { exact: true }).fill("Markens gate 12A");
+  await expect(page.getByLabel("Kartkoordinater")).toHaveText(
+    "58.145000, 7.995000",
+  );
+  await expect(page.getByTitle("Bedriftens kartpinne")).toBeVisible();
+  const request = page.waitForRequest(
+    (r) =>
+      r.method() === "PATCH" &&
+      new URL(r.url()).pathname.endsWith("/businesses"),
+  );
+  await page.getByRole("button", { name: "Lagre profil" }).click();
+  const payload = (await request).postDataJSON();
+  expect(payload.lat).toBe(58.145);
+  expect(payload.lng).toBe(7.995);
+  await expect(page.getByText("Profilen er lagret.")).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(page.getByLabel("Kartkoordinater")).toHaveText(
+    "58.145000, 7.995000",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBeTruthy();
+});
+test("adresseendring fjerner gammel kartpinne når ny adresse ikke finnes", async ({
+  page,
+}) => {
+  await backend(page, false, { lat: 58.145, lng: 7.995 });
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(page.getByLabel("Kartkoordinater")).toHaveText(
+    "58.145000, 7.995000",
+  );
+  await page.getByLabel("Adresse", { exact: true }).fill("Finnes ikke 99");
+  await expect(
+    page.getByText("Fant ingen entydig adresse.", { exact: false }),
+  ).toBeVisible();
+  await expect(page.getByTitle("Bedriftens kartpinne")).toHaveCount(0);
+  const request = page.waitForRequest(
+    (r) =>
+      r.method() === "PATCH" &&
+      new URL(r.url()).pathname.endsWith("/businesses"),
+  );
+  await page.getByRole("button", { name: "Lagre profil" }).click();
+  const payload = (await request).postDataJSON();
+  expect(payload.lat).toBeNull();
+  expect(payload.lng).toBeNull();
+});
+test("kartpinne kan flyttes manuelt og korrigerte koordinater lagres", async ({
+  page,
+}) => {
+  await backend(page, false, { lat: 58.145, lng: 7.995 });
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(page.getByLabel("Kartkoordinater")).toHaveText(
+    "58.145000, 7.995000",
+  );
+  if (test.info().project.name === "desktop") {
+    const marker = page.getByTitle("Bedriftens kartpinne");
+    await marker.scrollIntoViewIfNeeded();
+    const box = (await marker.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(
+      box.x + box.width / 2 + 45,
+      box.y + box.height / 2 - 30,
+      { steps: 10 },
+    );
+    await page.mouse.up();
+  } else {
+    await page
+      .getByRole("region", { name: "Kart for bedriftsadressen", exact: true })
+      .click({ position: { x: 120, y: 240 } });
+  }
+  await expect(page.getByLabel("Kartkoordinater")).not.toHaveText(
+    "58.145000, 7.995000",
+  );
+  const [lat, lng] = (await page.getByLabel("Kartkoordinater").textContent())!
+    .split(",")
+    .map(Number);
+  const request = page.waitForRequest(
+    (r) =>
+      r.method() === "PATCH" &&
+      new URL(r.url()).pathname.endsWith("/businesses"),
+  );
+  await page.getByRole("button", { name: "Lagre profil" }).click();
+  const payload = (await request).postDataJSON();
+  expect(payload.lat).toBeCloseTo(lat, 5);
+  expect(payload.lng).toBeCloseTo(lng, 5);
+  await page.screenshot({
+    path: test.info().outputPath("profile-map.png"),
+    fullPage: true,
+  });
 });
