@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 import { useEffect, useState } from "react";
 import {
   api,
@@ -36,19 +37,19 @@ export function localDate(value: string) {
 }
 export function dateLabel(value: string | null) {
   return value
-    ? new Date(value).toLocaleString("nb-NO", {
+    ? new Date(value).toLocaleString(locale(), {
         day: "numeric",
         month: "short",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "Ingen sluttdato";
+    : t("Ingen sluttdato");
 }
 export function Status({ status }: { status: ContentStatus }) {
   return (
     <span className={`content-status ${status}`}>
-      {contentStatusLabels[status]}
+      {t(contentStatusLabels[status])}
     </span>
   );
 }
@@ -99,16 +100,16 @@ function ContentEditor({
   const [place, setPlace] = useState(
     event?.location_text ?? business.address ?? "",
   );
-  const [price, setPrice] = useState(event?.price_text ?? "Gratis");
+  const [price, setPrice] = useState(event?.price_text ?? t("Gratis"));
   const [ticket, setTicket] = useState(event?.ticket_url ?? "");
   const [file, setFile] = useState<File | null>(null);
   const previewImage = useImagePreview(file, item?.image_url ?? null);
   const [status, setStatus] = useState<ContentStatus>(item?.status ?? "draft");
   async function save() {
-    if (!title.trim()) throw new Error("Skriv en tittel.");
+    if (!title.trim()) throw new Error(t("Skriv en tittel."));
     if (!body.trim())
       throw new Error(
-        isEvent ? "Beskriv arrangementet." : "Skriv nyhetsteksten.",
+        isEvent ? t("Beskriv arrangementet.") : t("Skriv nyhetsteksten."),
       );
     if (
       isEvent &&
@@ -118,9 +119,9 @@ function ContentEditor({
           (!Number.isFinite(Date.parse(end)) ||
             Date.parse(end) <= Date.parse(start))))
     )
-      throw new Error("Velg gyldig starttid. Slutt må være etter start.");
+      throw new Error(t("Velg gyldig starttid. Slutt må være etter start."));
     if (ticket && !/^https?:\/\//i.test(ticket))
-      throw new Error("Billettlenken må starte med https:// eller http://.");
+      throw new Error(t("Billettlenken må starte med https:// eller http://."));
     const image_url = file
       ? await api(db).upload(business.id, file)
       : (item?.image_url ?? null);
@@ -132,7 +133,7 @@ function ContentEditor({
         starts_at: new Date(start).toISOString(),
         ends_at: end ? new Date(end).toISOString() : null,
         location_text: place.trim() || business.address,
-        price_text: price.trim() || "Gratis",
+        price_text: price.trim() || t("Gratis"),
         ticket_url: ticket.trim() || null,
         image_url,
         status,
@@ -178,15 +179,16 @@ function ContentEditor({
       <div className="section-heading">
         <div>
           <span className="eyebrow">
-            {isEvent ? "SAMLE FOLK" : "HOLD KONTAKTEN"}
+            {isEvent ? t("SAMLE FOLK") : t("HOLD KONTAKTEN")}
           </span>
           <h2>
-            {item ? "Rediger" : isEvent ? "Nytt" : "Ny"}{" "}
+            {item ? t("Rediger") : isEvent ? t("Nytt") : t("Ny")}{" "}
             {isEvent ? "arrangement" : "nyhet"}
           </h2>
         </div>
         <button className="quiet" onClick={cancel} disabled={busy}>
-          ← Tilbake
+          {" "}
+          {t("← Tilbake")}{" "}
         </button>
       </div>
       <div className="editor-layout">
@@ -198,19 +200,19 @@ function ContentEditor({
         >
           <fieldset disabled={busy}>
             <Field
-              label="Tittel"
+              label={t("Tittel")}
               value={title}
               maxLength={160}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={
                 isEvent
                   ? "F.eks. latte art-workshop"
-                  : "F.eks. møt den nye lunsjmenyen"
+                  : t("F.eks. møt den nye lunsjmenyen")
               }
               required
             />
             <label>
-              {isEvent ? "Beskrivelse" : "Nyhetstekst"}
+              {isEvent ? t("Beskrivelse") : t("Nyhetstekst")}
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
@@ -218,8 +220,10 @@ function ContentEditor({
                 required
                 placeholder={
                   isEvent
-                    ? "Hva skjer, og hvem passer det for?"
-                    : "Fortell om nye retter, nye åpningstider eller andre oppdateringer."
+                    ? t("Hva skjer, og hvem passer det for?")
+                    : t(
+                        "Fortell om nye retter, nye åpningstider eller andre oppdateringer.",
+                      )
                 }
               />
             </label>
@@ -227,33 +231,33 @@ function ContentEditor({
               <>
                 <div className="formgrid">
                   <Field
-                    label="Starter (lokal tid)"
+                    label={t("Starter (lokal tid)")}
                     type="datetime-local"
                     value={start}
                     onChange={(e) => setStart(e.target.value)}
                     required
                   />
                   <Field
-                    label="Slutter (valgfritt)"
+                    label={t("Slutter (valgfritt)")}
                     type="datetime-local"
                     value={end}
                     onChange={(e) => setEnd(e.target.value)}
                   />
                 </div>
                 <Field
-                  label="Sted / adresse"
+                  label={t("Sted / adresse")}
                   value={place}
                   onChange={(e) => setPlace(e.target.value)}
                 />
                 <div className="formgrid">
                   <Field
-                    label="Pris"
+                    label={t("Pris")}
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    placeholder="Gratis / 150 kr"
+                    placeholder={t("Gratis / 150 kr")}
                   />
                   <Field
-                    label="Billettlenke (valgfritt)"
+                    label={t("Billettlenke (valgfritt)")}
                     type="url"
                     value={ticket}
                     onChange={(e) => setTicket(e.target.value)}
@@ -262,47 +266,60 @@ function ContentEditor({
               </>
             )}
             <Field
-              label="Bilde (JPG, PNG eller WebP, maks 5 MB)"
+              label={t("Bilde (JPG, PNG eller WebP, maks 5 MB)")}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             />
-            {file && <p className="muted">Valgt bilde: {file.name}</p>}
+            {file && (
+              <p className="muted">
+                {t("Valgt bilde:")} {file.name}
+              </p>
+            )}
             <label>
-              Status
+              {" "}
+              {t("Status")}{" "}
               <select
-                aria-label="Status"
+                aria-label={t("Status")}
                 value={status}
                 onChange={(e) => setStatus(e.target.value as ContentStatus)}
               >
-                <option value="draft">Utkast</option>
-                <option value="active">Publisert</option>
-                <option value="paused">Pauset</option>
-                <option value="expired">Utløpt</option>
+                <option value="draft">{t("Utkast")}</option>
+                <option value="active">{t("Publisert")}</option>
+                <option value="paused">{t("Pauset")}</option>
+                <option value="expired">{t("Utløpt")}</option>
               </select>
             </label>
             {business.status !== "approved" && (
               <p className="notice">
-                Innholdet blir synlig først når bedriften er godkjent.
+                {" "}
+                {t(
+                  "Innholdet blir synlig først når bedriften er godkjent.",
+                )}{" "}
               </p>
             )}
             <div className="actions">
               <button type="submit">
                 {status === "active"
-                  ? "Lagre og publiser"
-                  : "Lagre " + (isEvent ? "arrangement" : "nyhet")}
+                  ? t("Lagre og publiser")
+                  : t("Lagre ") + (isEvent ? "arrangement" : "nyhet")}
               </button>
               <button type="button" className="quiet" onClick={cancel}>
-                Avbryt
+                {" "}
+                {t("Avbryt")}{" "}
               </button>
             </div>
           </fieldset>
         </form>
         <section className="preview-panel">
-          <span className="eyebrow">FORHÅNDSVISNING</span>
+          <span className="eyebrow">{t("FORHÅNDSVISNING")}</span>
           <article className="content-preview">
             {previewImage ? (
-              <img src={previewImage} className="cover" alt="Innholdsbilde" />
+              <img
+                src={previewImage}
+                className="cover"
+                alt={t("Innholdsbilde")}
+              />
             ) : (
               <div
                 className={`preview-placeholder ${isEvent ? "event" : "news"}`}
@@ -315,20 +332,22 @@ function ContentEditor({
               <span className="eyebrow">{business.name}</span>
               <h3>
                 {title ||
-                  (isEvent ? "Ditt neste arrangement" : "En nyhet fra dere")}
+                  (isEvent
+                    ? t("Ditt neste arrangement")
+                    : t("En nyhet fra dere"))}
               </h3>
               <p className="preserve-lines">
-                {body || "Teksten du skriver vises her."}
+                {body || t("Teksten du skriver vises her.")}
               </p>
               {isEvent && (
                 <>
                   <p>
                     {start
                       ? dateLabel(new Date(start).toISOString())
-                      : "Velg tidspunkt"}
+                      : t("Velg tidspunkt")}
                   </p>
                   <small>
-                    {place} · {price || "Gratis"}
+                    {place} · {price || t("Gratis")}
                   </small>
                 </>
               )}
@@ -336,8 +355,10 @@ function ContentEditor({
             </div>
           </article>
           <p className="muted">
-            Innholdet lagres i bedriftens felles database. Dette er en
-            forhåndsvisning av teksten og bildet.
+            {" "}
+            {t(
+              "Innholdet lagres i bedriftens felles database. Dette er en forhåndsvisning av teksten og bildet.",
+            )}{" "}
           </p>
         </section>
       </div>
@@ -394,28 +415,29 @@ export function ContentManager({
     <section className="card">
       <div className="section-heading">
         <div>
-          <h2>{isEvent ? "Arrangementer" : "Nyheter"}</h2>
+          <h2>{isEvent ? t("Arrangementer") : t("Nyheter")}</h2>
           <p>
             {isEvent
-              ? "Gi folk noe å glede seg til."
-              : "Små oppdateringer som holder kundene nær."}
+              ? t("Gi folk noe å glede seg til.")
+              : t("Små oppdateringer som holder kundene nær.")}
           </p>
         </div>
         <button disabled={busy} onClick={() => setEditing("new")}>
-          + {isEvent ? "Nytt arrangement" : "Ny nyhet"}
+          + {isEvent ? t("Nytt arrangement") : t("Ny nyhet")}
         </button>
       </div>
       <div className="list-toolbar">
         <Field
-          label={isEvent ? "Søk i arrangementer" : "Søk i nyheter"}
+          label={isEvent ? t("Søk i arrangementer") : t("Søk i nyheter")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Søk etter tittel eller tekst …"
+          placeholder={t("Søk etter tittel eller tekst …")}
         />
         <label>
-          Vis status
+          {" "}
+          {t("Vis status")}{" "}
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">Alle</option>
+            <option value="all">{t("Alle")}</option>
             {Object.entries(contentStatusLabels).map(([key, label]) => (
               <option key={key} value={key}>
                 {label}
@@ -431,17 +453,21 @@ export function ContentManager({
           </div>
           <h3>
             {items.length
-              ? "Ingen treff"
+              ? t("Ingen treff")
               : isEvent
-                ? "Inviter til noe hyggelig"
-                : "Hva er nytt hos dere?"}
+                ? t("Inviter til noe hyggelig")
+                : t("Hva er nytt hos dere?")}
           </h3>
           <p>
             {items.length
-              ? "Prøv et annet søk eller statusfilter."
+              ? t("Prøv et annet søk eller statusfilter.")
               : isEvent
-                ? "En workshop, en konsert eller en kveld litt utenom det vanlige."
-                : "Del en ny rett, oppdaterte priser eller en liten historie fra bedriften."}
+                ? t(
+                    "En workshop, en konsert eller en kveld litt utenom det vanlige.",
+                  )
+                : t(
+                    "Del en ny rett, oppdaterte priser eller en liten historie fra bedriften.",
+                  )}
           </p>
         </div>
       ) : (
@@ -465,8 +491,8 @@ export function ContentManager({
                 </p>
                 <small>
                   {"starts_at" in item
-                    ? `${dateLabel(item.starts_at)} · ${item.location_text ?? business.address ?? ""} · ${item.price_text ?? "Gratis"}`
-                    : `Publiseringsdato: ${dateLabel(item.published_at)}`}
+                    ? `${dateLabel(item.starts_at)} · ${item.location_text ?? business.address ?? ""} · ${item.price_text ?? t("Gratis")}`
+                    : t("Publiseringsdato: {0}", dateLabel(item.published_at))}
                 </small>
               </div>
               <Status status={item.status} />
@@ -476,7 +502,8 @@ export function ContentManager({
                   disabled={busy}
                   onClick={() => setEditing(item)}
                 >
-                  Rediger
+                  {" "}
+                  {t("Rediger")}{" "}
                 </button>
                 <button
                   className="quiet small-button"
@@ -504,7 +531,7 @@ export function ContentManager({
                     })
                   }
                 >
-                  {item.status === "active" ? "Pause" : "Publiser"}
+                  {item.status === "active" ? t("Pause") : t("Publiser")}
                 </button>
               </div>
             </article>
@@ -521,75 +548,81 @@ export function SubscriptionPage({
 }) {
   const status =
     subscription?.status === "trialing"
-      ? "Prøveperiode"
+      ? t("Prøveperiode")
       : subscription?.status === "active"
-        ? "Aktivt"
+        ? t("Aktivt")
         : subscription?.status === "canceled"
-          ? "Avsluttet"
+          ? t("Avsluttet")
           : subscription?.status === "past_due"
-            ? "Forfalt"
+            ? t("Forfalt")
             : subscription?.status
-              ? "Ikke aktivt"
-              : "Ikke opprettet";
+              ? t("Ikke aktivt")
+              : t("Ikke opprettet");
   return (
     <>
       <section className="subscription-intro">
-        <span className="eyebrow">VOKS SAMMEN MED OSS</span>
+        <span className="eyebrow">{t("VOKS SAMMEN MED OSS")}</span>
         <h2>
-          Små bedrifter.
-          <br />
-          Store muligheter.
+          {" "}
+          {t("Små bedrifter.")} <br /> {t("Store muligheter.")}{" "}
         </h2>
         <p>
-          DinVenn skal gjøre det enkelt å bli oppdaget, få besøk og bygge et
-          lokalt fellesskap.
+          {" "}
+          {t(
+            "DinVenn skal gjøre det enkelt å bli oppdaget, få besøk og bygge et lokalt fellesskap.",
+          )}{" "}
         </p>
       </section>
       <section className="card subscription-current">
         <div>
-          <span className="eyebrow">REGISTRERT ABONNEMENT</span>
+          <span className="eyebrow">{t("REGISTRERT ABONNEMENT")}</span>
           <h3>
             {subscription
               ? subscription.plan === "plus"
-                ? "Pluss"
-                : "Basis"
-              : "Ingen abonnement registrert"}
+                ? t("Pluss")
+                : t("Basis")
+              : t("Ingen abonnement registrert")}
           </h3>
           <p>
             {status}
             {subscription?.current_period_end
-              ? ` · Periode til ${dateLabel(subscription.current_period_end)}`
+              ? t(
+                  " · Periode til {0}",
+                  dateLabel(subscription.current_period_end),
+                )
               : ""}
           </p>
         </div>
-        <span className="content-status draft">Pilot</span>
+        <span className="content-status draft">{t("Pilot")}</span>
       </section>
       <div className="notice">
-        Prisene og pakkene under er forslag. Betaling er ikke åpnet, og du blir
-        ikke belastet. Funksjonsgrenser er ikke aktivert i piloten.
+        {" "}
+        {t(
+          "Prisene og pakkene under er forslag. Betaling er ikke åpnet, og du blir ikke belastet. Funksjonsgrenser er ikke aktivert i piloten.",
+        )}{" "}
       </div>
       <div className="pricing-grid">
         {[
           {
-            name: "Basis",
+            name: t("Basis"),
             price: 199,
-            caption: "Et godt sted å begynne",
+            caption: t("Et godt sted å begynne"),
             features: [
-              "Bedriftsprofil med bilder",
-              "Forslag: 2 aktive vennepriser",
-              "Arrangementer og nyheter",
-              "QR-innløsning",
+              t("Bedriftsprofil med bilder"),
+              t("Forslag: 2 aktive vennepriser"),
+              t("Arrangementer og nyheter"),
+              t("QR-innløsning"),
             ],
           },
           {
-            name: "Pluss",
+            name: t("Pluss"),
             price: 399,
-            caption: "Mer plass til å vokse",
+            caption: t("Mer plass til å vokse"),
             features: [
-              "Alt i Basis",
-              "Forslag: ubegrenset antall vennepriser",
-              "Forslag: fremhevet plassering",
-              "Forslag: utvidet statistikk",
+              t("Alt i Basis"),
+              t("Forslag: ubegrenset antall vennepriser"),
+              t("Forslag: fremhevet plassering"),
+              t("Forslag: utvidet statistikk"),
             ],
           },
         ].map((plan, i) => (
@@ -598,29 +631,33 @@ export function SubscriptionPage({
             className={`card price-card ${i ? "featured-plan" : ""}`}
           >
             <span className="eyebrow">
-              {i ? "FOR DEG SOM VIL MER" : "DIN LOKALE START"}
+              {i ? t("FOR DEG SOM VIL MER") : t("DIN LOKALE START")}
             </span>
             <h3>{plan.name}</h3>
             <p>{plan.caption}</p>
             <div className="price">
               {plan.price}
-              <span> kr / måned</span>
+              <span> {t("kr / måned")}</span>
             </div>
-            <small>Prisforslag · avgiftsbehandling fastsettes før salg</small>
+            <small>
+              {t("Prisforslag · avgiftsbehandling fastsettes før salg")}
+            </small>
             <ul>
               {plan.features.map((f) => (
                 <li key={f}>{f}</li>
               ))}
             </ul>
-            <button disabled>Kommer senere</button>
+            <button disabled>{t("Kommer senere")}</button>
           </section>
         ))}
       </div>
       <section className="card">
-        <h3>Ingen betaling i piloten</h3>
+        <h3>{t("Ingen betaling i piloten")}</h3>
         <p>
-          Du kan teste publisering og innløsning nå. Endelige priser, vilkår og
-          en betalingsløsning settes opp før betalte abonnementer åpnes.
+          {" "}
+          {t(
+            "Du kan teste publisering og innløsning nå. Endelige priser, vilkår og en betalingsløsning settes opp før betalte abonnementer åpnes.",
+          )}{" "}
         </p>
       </section>
     </>

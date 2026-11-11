@@ -1,3 +1,5 @@
+import { LanguageSettings, useLanguage } from "./LanguageSettings";
+import { t, locale } from "@dinvenn/core";
 import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
@@ -86,6 +88,7 @@ function Input({
   );
 }
 function AppBody() {
+  useLanguage();
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [tab, setTab] = useState("Utforsk");
@@ -223,7 +226,7 @@ function AppBody() {
     setSelectedNews(null);
     setCode(null);
     setTab("Meg");
-    setNotice("Logg inn for å lagre favoritter og hente vennepriser.");
+    setNotice(t("Logg inn for å lagre favoritter og hente vennepriser."));
     return false;
   }
   function toggleFavorite(type: "deal" | "business" | "event", id: string) {
@@ -283,7 +286,7 @@ function AppBody() {
           </View>
           <Text style={s.brand}>DinVenn</Text>
         </View>
-        <Text style={s.small}>HEIA DE LOKALE</Text>
+        <Text style={s.small}>{t("HEIA DE LOKALE")}</Text>
       </View>
       {tab === "Kart" && configured ? (
         <>
@@ -299,7 +302,7 @@ function AppBody() {
           />
           {error ? (
             <Text accessibilityRole="alert" style={s.alert}>
-              {error}
+              {t(error)}
             </Text>
           ) : null}
         </>
@@ -321,32 +324,45 @@ function AppBody() {
         >
           {error ? (
             <View accessibilityRole="alert" style={s.alert}>
-              <Text style={s.text}>{error}</Text>
-              <Button title="Lukk melding" quiet onPress={() => setError("")} />
+              <Text style={s.text}>{t(error)}</Text>
+              <Button
+                title={t("Lukk melding")}
+                quiet
+                onPress={() => setError("")}
+              />
             </View>
           ) : null}
           {notice ? (
             <View style={s.notice}>
-              <Text style={s.text}>{notice}</Text>
+              <Text style={s.text}>{t(notice)}</Text>
             </View>
           ) : null}
           {busy && (
-            <ActivityIndicator accessibilityLabel="Jobber" color={colors.ink} />
+            <ActivityIndicator
+              accessibilityLabel={t("Jobber")}
+              color={colors.ink}
+            />
           )}
           {!configured ? (
             <View style={s.hero}>
-              <Text style={s.eyebrow}>DINVENN PILOT</Text>
-              <Text style={s.h1}>Gode steder.{`\n`}Fine vennepriser.</Text>
+              <Text style={s.eyebrow}>{t("DINVENN PILOT")}</Text>
+              <Text style={s.h1}>
+                {t("Gode steder.")}
+                {`\n`}
+                {t("Fine vennepriser.")}
+              </Text>
               <Text style={s.text}>
-                Appen trenger Supabase-tilkobling. Kopier
-                apps/mobile/.env.example til .env og fyll inn URL og offentlig
-                nøkkel. Se README.
+                {" "}
+                {t(
+                  "Appen trenger Supabase-tilkobling. Kopier apps/mobile/.env.example til .env og fyll inn URL og offentlig nøkkel. Se README.",
+                )}{" "}
               </Text>
             </View>
           ) : tab === "Meg" ? (
             <>
+              <LanguageSettings />
               <Text style={s.h1}>
-                {session ? `Hei, ${firstName}!` : "Bli en lokal venn"}
+                {session ? t("Hei, {0}!", firstName) : t("Bli en lokal venn")}
               </Text>
               {!authReady ? (
                 <ActivityIndicator />
@@ -364,7 +380,8 @@ function AppBody() {
                     </View>
                   </View>
                   <Text style={s.muted}>
-                    Favorittene og kodene dine følger kontoen din.
+                    {" "}
+                    {t("Favorittene og kodene dine følger kontoen din.")}{" "}
                   </Text>
                   <View style={s.accountStats}>
                     <Pressable
@@ -374,7 +391,7 @@ function AppBody() {
                     >
                       <Icon name="heart" />
                       <Text style={s.accountNumber}>{favorites.length}</Text>
-                      <Text style={s.small}>Favoritter</Text>
+                      <Text style={s.small}>{t("Favoritter")}</Text>
                     </Pressable>
                     <Pressable
                       accessibilityRole="button"
@@ -383,11 +400,11 @@ function AppBody() {
                     >
                       <Icon name="qr" />
                       <Text style={s.accountNumber}>{codes.length}</Text>
-                      <Text style={s.small}>Dine koder</Text>
+                      <Text style={s.small}>{t("Dine koder")}</Text>
                     </Pressable>
                   </View>
                   <Button
-                    title="Logg ut"
+                    title={t("Logg ut")}
                     quiet
                     disabled={busy}
                     onPress={() =>
@@ -402,14 +419,14 @@ function AppBody() {
                 <View style={s.card}>
                   {authMode === "register" && (
                     <Input
-                      label="Navnet ditt"
+                      label={t("Navnet ditt")}
                       value={name}
                       onChangeText={setName}
                       autoComplete="name"
                     />
                   )}
                   <Input
-                    label="E-post"
+                    label={t("E-post")}
                     value={email}
                     onChangeText={setEmail}
                     keyboardType="email-address"
@@ -418,7 +435,7 @@ function AppBody() {
                   />
                   {authMode !== "reset" && (
                     <Input
-                      label="Passord (minst 8 tegn)"
+                      label={t("Passord (minst 8 tegn)")}
                       value={password}
                       onChangeText={setPassword}
                       secureTextEntry
@@ -433,16 +450,16 @@ function AppBody() {
                   <Button
                     title={
                       authMode === "login"
-                        ? "Logg inn"
+                        ? t("Logg inn")
                         : authMode === "register"
-                          ? "Opprett konto"
-                          : "Send tilbakestillingslenke"
+                          ? t("Opprett konto")
+                          : t("Send tilbakestillingslenke")
                     }
                     disabled={busy}
                     onPress={() =>
                       void run(async () => {
                         if (!email.trim())
-                          throw new Error("Skriv e-postadressen din.");
+                          throw new Error(t("Skriv e-postadressen din."));
                         const portal = process.env.EXPO_PUBLIC_PORTAL_URL;
                         if (authMode === "login") {
                           check(
@@ -456,11 +473,13 @@ function AppBody() {
                         } else if (authMode === "register") {
                           if (password.length < 8 || !name.trim())
                             throw new Error(
-                              "Skriv navn og et passord på minst 8 tegn.",
+                              t("Skriv navn og et passord på minst 8 tegn."),
                             );
                           if (!portal)
                             throw new Error(
-                              "Sett EXPO_PUBLIC_PORTAL_URL for e-postbekreftelse.",
+                              t(
+                                "Sett EXPO_PUBLIC_PORTAL_URL for e-postbekreftelse.",
+                              ),
                             );
                           check(
                             await client!.auth.signUp({
@@ -474,12 +493,16 @@ function AppBody() {
                           );
                           setPassword("");
                           setNotice(
-                            "Sjekk e-posten og bekreft kontoen. Deretter kan du logge inn her.",
+                            t(
+                              "Sjekk e-posten og bekreft kontoen. Deretter kan du logge inn her.",
+                            ),
                           );
                         } else {
                           if (!portal)
                             throw new Error(
-                              "Sett EXPO_PUBLIC_PORTAL_URL for passordtilbakestilling.",
+                              t(
+                                "Sett EXPO_PUBLIC_PORTAL_URL for passordtilbakestilling.",
+                              ),
                             );
                           check(
                             await client!.auth.resetPasswordForEmail(
@@ -488,7 +511,9 @@ function AppBody() {
                             ),
                           );
                           setNotice(
-                            "Hvis kontoen finnes, får du en e-post. Velg nytt passord i nettleseren, og logg deretter inn her.",
+                            t(
+                              "Hvis kontoen finnes, får du en e-post. Velg nytt passord i nettleseren, og logg deretter inn her.",
+                            ),
                           );
                         }
                       })
@@ -497,8 +522,8 @@ function AppBody() {
                   <Button
                     title={
                       authMode === "register"
-                        ? "Til innlogging"
-                        : "Opprett en konto"
+                        ? t("Til innlogging")
+                        : t("Opprett en konto")
                     }
                     quiet
                     onPress={() =>
@@ -509,7 +534,9 @@ function AppBody() {
                   />
                   <Button
                     title={
-                      authMode === "reset" ? "Til innlogging" : "Glemt passord?"
+                      authMode === "reset"
+                        ? t("Til innlogging")
+                        : t("Glemt passord?")
                     }
                     quiet
                     onPress={() =>
@@ -521,20 +548,25 @@ function AppBody() {
             </>
           ) : tab === "Mine koder" ? (
             <>
-              <Text style={ui.eyebrow}>KLAR TIL NESTE BESØK</Text>
-              <Text style={s.h1}>Dine vennepriser</Text>
+              <Text style={ui.eyebrow}>{t("KLAR TIL NESTE BESØK")}</Text>
+              <Text style={s.h1}>{t("Dine vennepriser")}</Text>
               <Text style={ui.muted}>
-                Vis en kode i kassen. Hver innløsning gjør en forskjell lokalt.
+                {" "}
+                {t(
+                  "Vis en kode i kassen. Hver innløsning gjør en forskjell lokalt.",
+                )}{" "}
               </Text>
               {!session ? (
                 <Button
-                  title="Logg inn for å se kodene dine"
+                  title={t("Logg inn for å se kodene dine")}
                   onPress={() => setTab("Meg")}
                 />
               ) : !codes.length ? (
                 <Text style={s.muted}>
-                  Du har ikke hentet noen koder ennå. Finn en vennepris under
-                  Utforsk.
+                  {" "}
+                  {t(
+                    "Du har ikke hentet noen koder ennå. Finn en vennepris under Utforsk.",
+                  )}{" "}
                 </Text>
               ) : (
                 codes.map((r) => (
@@ -546,18 +578,19 @@ function AppBody() {
                   >
                     <Text style={s.h2}>
                       {deals.find((d) => d.id === r.deal_id)?.title ??
-                        "Hentet vennepris"}
+                        t("Hentet vennepris")}
                     </Text>
                     <View style={ui.row}>
                       <Icon
                         name={r.status === "redeemed" ? "check" : "qr"}
                         size={17}
                       />
-                      <Text style={ui.tag}>{redemptionStatus(r, now)}</Text>
+                      <Text style={ui.tag}>{t(redemptionStatus(r, now))}</Text>
                     </View>
                     <Text style={s.small}>
-                      Gyldig til{" "}
-                      {new Date(r.expires_at).toLocaleString("nb-NO")}
+                      {" "}
+                      {t("Gyldig til")}{" "}
+                      {new Date(r.expires_at).toLocaleString(locale())}
                     </Text>
                   </Pressable>
                 ))
@@ -591,12 +624,12 @@ function AppBody() {
               />
               {tab === "Favoritter" && !session && (
                 <Button
-                  title="Logg inn for å se favorittene dine"
+                  title={t("Logg inn for å se favorittene dine")}
                   onPress={() => setTab("Meg")}
                 />
               )}
               <Button
-                title="Oppdater"
+                title={t("Oppdater")}
                 quiet
                 disabled={busy}
                 onPress={() =>
@@ -611,26 +644,31 @@ function AppBody() {
         </ScrollView>
       )}
       <View style={s.tabs}>
-        {["Utforsk", "Kart", "Favoritter", "Mine koder", "Meg"].map((t, i) => (
-          <Pressable
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === t }}
-            key={t}
-            style={[s.tab, tab === t && { backgroundColor: colors.peach }]}
-            onPress={() => setTab(t)}
-          >
-            <View style={s.tabIconSlot} accessible={false}>
-              <Icon
-                name={["home", "map", "heart", "qr", "user"][i]}
-                size={23}
-                color={tab === t ? palette.ink : palette.muted}
-              />
-            </View>
-            <Text style={s.tabText} numberOfLines={1}>
-              {t}
-            </Text>
-          </Pressable>
-        ))}
+        {["Utforsk", "Kart", "Favoritter", "Mine koder", "Meg"].map(
+          (tabName, i) => (
+            <Pressable
+              accessibilityRole="tab"
+              accessibilityState={{ selected: tab === tabName }}
+              key={tabName}
+              style={[
+                s.tab,
+                tab === tabName && { backgroundColor: colors.peach },
+              ]}
+              onPress={() => setTab(tabName)}
+            >
+              <View style={s.tabIconSlot} accessible={false}>
+                <Icon
+                  name={["home", "map", "heart", "qr", "user"][i]}
+                  size={23}
+                  color={tab === tabName ? palette.ink : palette.muted}
+                />
+              </View>
+              <Text style={s.tabText} numberOfLines={1}>
+                {t(tabName)}
+              </Text>
+            </Pressable>
+          ),
+        )}
       </View>
       <Modal
         visible={
@@ -641,22 +679,22 @@ function AppBody() {
       >
         <SafeAreaView style={s.safe}>
           <ScrollView contentContainerStyle={s.content}>
-            <Button title="← Tilbake" quiet onPress={closeDetails} />
+            <Button title={t("← Tilbake")} quiet onPress={closeDetails} />
             {error ? (
               <Text accessibilityRole="alert" style={s.alert}>
-                {error}
+                {t(error)}
               </Text>
             ) : null}
             {busy && <ActivityIndicator />}
             {code ? (
               <View style={s.card}>
-                <Text style={s.eyebrow}>DIN VENNEPRIS</Text>
+                <Text style={s.eyebrow}>{t("DIN VENNEPRIS")}</Text>
                 <Text style={ui.h2}>
                   {deals.find((d) => d.id === code.deal_id)?.title ??
-                    "En fordel hos en lokal venn"}
+                    t("En fordel hos en lokal venn")}
                 </Text>
-                <Text style={s.h1}>{redemptionStatus(code, now)}</Text>
-                {redemptionStatus(code, now) === "Klar til bruk" ? (
+                <Text style={s.h1}>{t(redemptionStatus(code, now))}</Text>
+                {redemptionStatus(code, now) === t("Klar til bruk") ? (
                   <>
                     <View style={s.qr}>
                       <QRCode value={code.token} size={230} />
@@ -665,21 +703,25 @@ function AppBody() {
                       {code.token}
                     </Text>
                     <Text style={s.text}>
-                      Vis QR-koden til bedriften. Den kan bare brukes én gang.
+                      {" "}
+                      {t(
+                        "Vis QR-koden til bedriften. Den kan bare brukes én gang.",
+                      )}{" "}
                     </Text>
                     <Text style={s.small}>
-                      Gyldig til{" "}
-                      {new Date(code.expires_at).toLocaleString("nb-NO")}
+                      {" "}
+                      {t("Gyldig til")}{" "}
+                      {new Date(code.expires_at).toLocaleString(locale())}
                     </Text>
                     <Text style={s.small}>
                       {Math.max(
                         0,
                         Math.ceil((Date.parse(code.expires_at) - now) / 60000),
                       )}{" "}
-                      minutter igjen
+                      {t("minutter igjen")}{" "}
                     </Text>
                     <Button
-                      title="Oppdater status"
+                      title={t("Oppdater status")}
                       quiet
                       onPress={() =>
                         void run(async () => {
@@ -696,8 +738,8 @@ function AppBody() {
                 ) : (
                   <Text style={s.text}>
                     {code.status === "redeemed"
-                      ? "Takk for at du velger lokalt! Koden er brukt."
-                      : "Denne koden kan ikke brukes lenger."}
+                      ? t("Takk for at du velger lokalt! Koden er brukt.")
+                      : t("Denne koden kan ikke brukes lenger.")}
                   </Text>
                 )}
               </View>
@@ -730,18 +772,22 @@ function AppBody() {
                 <Text style={s.discount}>{discount(deal)}</Text>
                 <Text style={s.h1}>{deal.title}</Text>
                 <Text style={s.text}>{deal.description}</Text>
-                <Text style={s.h2}>Vilkår</Text>
+                <Text style={s.h2}>{t("Vilkår")}</Text>
                 <Text style={s.text}>
-                  {deal.terms || "Ingen ekstra vilkår oppgitt."}
+                  {deal.terms || t("Ingen ekstra vilkår oppgitt.")}
                 </Text>
                 <Text style={s.small}>
-                  Maks {deal.max_per_user} per bruker.{" "}
+                  {" "}
+                  {t("Maks")} {deal.max_per_user} {t("per bruker.")}{" "}
                   {deal.ends_at
-                    ? `Til ${new Date(deal.ends_at).toLocaleString("nb-NO")}.`
-                    : "Ingen fast sluttdato."}
+                    ? t(
+                        "Til {0}.",
+                        new Date(deal.ends_at).toLocaleString(locale()),
+                      )
+                    : t("Ingen fast sluttdato.")}
                 </Text>
                 <Button
-                  title="Hent vennepris"
+                  title={t("Hent vennepris")}
                   disabled={busy}
                   onPress={() => {
                     if (!needUser()) return;
@@ -755,8 +801,8 @@ function AppBody() {
                 <Button
                   title={
                     favorite("deal", deal.id)
-                      ? "♥ Fjern fra favoritter"
-                      : "♡ Lagre favoritt"
+                      ? t("♥ Fjern fra favoritter")
+                      : t("♡ Lagre favoritt")
                   }
                   quiet
                   disabled={busy}
@@ -764,7 +810,7 @@ function AppBody() {
                 />
                 {currentBusiness && (
                   <Button
-                    title={`Om ${currentBusiness.name} →`}
+                    title={t("Om {0} →", currentBusiness.name)}
                     quiet
                     onPress={() => {
                       setBusiness(currentBusiness);

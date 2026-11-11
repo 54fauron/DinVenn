@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 import {
   Image,
   Linking,
@@ -42,7 +43,7 @@ export function CategoryChips({
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={e.chips}
     >
-      {[{ id: "", name: "Alle", slug: "" }, ...categories].map((c) => (
+      {[{ id: "", name: t("Alle"), slug: "" }, ...categories].map((c) => (
         <Pressable
           key={c.id}
           accessibilityRole="button"
@@ -51,7 +52,7 @@ export function CategoryChips({
           style={[ui.chip, value === String(c.id) && ui.chipActive]}
         >
           <Icon name={icons[c.slug] ?? "spark"} size={15} />
-          <Text style={ui.chipText}>{c.name}</Text>
+          <Text style={ui.chipText}>{t(c.name)}</Text>
         </Pressable>
       ))}
     </ScrollView>
@@ -87,7 +88,7 @@ export function BusinessCard({
         </Text>
         {count > 0 && (
           <Text style={e.inlineTag}>
-            {count} {count === 1 ? "vennepris" : "vennepriser"}
+            {count} {count === 1 ? "vennepris" : t("vennepriser")}
           </Text>
         )}
       </View>
@@ -109,22 +110,22 @@ export function EventCard({
     <Pressable accessibilityRole="button" onPress={onPress} style={e.eventRow}>
       <View style={e.dateTile}>
         <Text style={e.day}>
-          {date.toLocaleDateString("nb-NO", { day: "numeric" })}
+          {date.toLocaleDateString(locale(), { day: "numeric" })}
         </Text>
         <Text style={e.month}>
-          {date.toLocaleDateString("nb-NO", { month: "short" })}
+          {date.toLocaleDateString(locale(), { month: "short" })}
         </Text>
       </View>
       <View style={e.grow}>
         <Text style={ui.h3}>{event.title}</Text>
         <Text style={ui.muted}>
           {business?.name} ·{" "}
-          {date.toLocaleTimeString("nb-NO", {
+          {date.toLocaleTimeString(locale(), {
             hour: "2-digit",
             minute: "2-digit",
           })}
         </Text>
-        <Text style={e.inlineTag}>{event.price_text ?? "Gratis"}</Text>
+        <Text style={e.inlineTag}>{event.price_text ?? t("Gratis")}</Text>
       </View>
       <Icon name="chevron" size={18} />
     </Pressable>
@@ -147,18 +148,18 @@ export function NewsCard({
       <View style={e.newsBody}>
         <View style={ui.row}>
           <Icon name="news" size={15} />
-          <Text style={ui.eyebrow}>{business?.name ?? "LOKALT NYTT"}</Text>
+          <Text style={ui.eyebrow}>{business?.name ?? t("LOKALT NYTT")}</Text>
         </View>
         <Text style={ui.h3}>{post.title}</Text>
         <Text numberOfLines={2} style={ui.muted}>
           {post.body}
         </Text>
         <Text style={e.newsDate}>
-          {new Date(post.published_at).toLocaleDateString("nb-NO", {
+          {new Date(post.published_at).toLocaleDateString(locale(), {
             day: "numeric",
             month: "long",
           })}{" "}
-          · Les mer →
+          {t("· Les mer →")}{" "}
         </Text>
       </View>
     </Pressable>
@@ -251,37 +252,37 @@ export function Explore({
     <>
       <View style={e.location}>
         <Icon name="pin" size={16} />
-        <Text style={e.locationText}>{city || "Velg din by"}</Text>
+        <Text style={e.locationText}>{city || t("Velg din by")}</Text>
         <Pressable
           accessibilityRole="button"
           onPress={onMap}
           style={e.mapShortcut}
         >
           <Icon name="map" size={15} />
-          <Text style={ui.link}>Åpne kart</Text>
+          <Text style={ui.link}>{t("Åpne kart")}</Text>
         </Pressable>
       </View>
       <View style={e.intro}>
         <Text style={ui.eyebrow}>
           {saved
-            ? "DINE LOKALE FAVORITTER"
-            : `HEI, ${name.toLocaleUpperCase("nb-NO")}!`}
+            ? t("DINE LOKALE FAVORITTER")
+            : t("HEI, {0}!", name.toLocaleUpperCase("nb-NO"))}
         </Text>
         <Text style={ui.h1}>
           {saved
-            ? "Stedene og tilbudene\ndu vil tilbake til."
-            : "Små steder.\nGode opplevelser."}
+            ? t("Stedene og tilbudene\ndu vil tilbake til.")
+            : t("Små steder.\nGode opplevelser.")}
         </Text>
         <Text style={ui.muted}>
           {saved
-            ? "Alle hjertene dine, samlet på ett sted."
-            : "Oppdag vennepriser og det som skjer hos de lokale."}
+            ? t("Alle hjertene dine, samlet på ett sted.")
+            : t("Oppdag vennepriser og det som skjer hos de lokale.")}
         </Text>
       </View>
       <View style={e.search}>
         <Icon name="search" size={19} />
         <TextInput
-          accessibilityLabel="Søk etter tilbud, bedrift eller arrangement"
+          accessibilityLabel={t("Søk etter tilbud, bedrift eller arrangement")}
           placeholder="Kaffe, butikk, aktivitet …"
           placeholderTextColor={palette.muted}
           value={search}
@@ -291,10 +292,10 @@ export function Explore({
         {!!search && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Tøm søk"
+            accessibilityLabel={t("Tøm søk")}
             onPress={() => setSearch("")}
           >
-            <Text style={ui.link}>Tøm</Text>
+            <Text style={ui.link}>{t("Tøm")}</Text>
           </Pressable>
         )}
       </View>
@@ -319,7 +320,7 @@ export function Explore({
             onPress={() => setCity(c)}
           >
             <Text style={[e.cityLabel, city === c && { color: palette.ink }]}>
-              {c || "Alle byer"}
+              {c || t("Alle byer")}
             </Text>
           </Pressable>
         ))}
@@ -333,10 +334,15 @@ export function Explore({
         <View style={e.featureBanner}>
           <View style={e.grow}>
             <Text style={e.bannerEyebrow}>
-              EN LITEN FORDEL. ET LOKALT BESØK.
+              {" "}
+              {t("EN LITEN FORDEL. ET LOKALT BESØK.")}{" "}
             </Text>
-            <Text style={e.bannerTitle}>{"Godt for deg.\nFint for byen."}</Text>
-            <Text style={e.bannerText}>Velg lokalt neste gang du skal ut.</Text>
+            <Text style={e.bannerTitle}>
+              {t("Godt for deg.\nFint for byen.")}
+            </Text>
+            <Text style={e.bannerText}>
+              {t("Velg lokalt neste gang du skal ut.")}
+            </Text>
           </View>
           <View style={e.bannerMark}>
             <Icon name="heart" size={50} color="#a55f42" />
@@ -344,18 +350,19 @@ export function Explore({
         </View>
       )}
       <SectionHeading
-        title={saved ? "Lagrede vennepriser" : "Vennepriser nå"}
+        title={saved ? t("Lagrede vennepriser") : t("Vennepriser nå")}
       />
       {!offers.length ? (
         <View style={ui.empty}>
           <Text style={ui.h3}>
             {saved
-              ? "Ingen lagrede tilbud her ennå"
-              : "Ingen vennepriser akkurat nå"}
+              ? t("Ingen lagrede tilbud her ennå")
+              : t("Ingen vennepriser akkurat nå")}
           </Text>
           <Text style={ui.muted}>
-            Prøv en annen by eller kategori
-            {saved ? ", eller lagre et hjerte under Utforsk." : "."}
+            {" "}
+            {t("Prøv en annen by eller kategori")}{" "}
+            {saved ? t(", eller lagre et hjerte under Utforsk.") : "."}
           </Text>
         </View>
       ) : (
@@ -409,8 +416,8 @@ export function Explore({
                   accessibilityRole="button"
                   accessibilityLabel={
                     isFavorite("deal", item.id)
-                      ? `Fjern ${item.title} fra favoritter`
-                      : `Lagre ${item.title}`
+                      ? t("Fjern {0} fra favoritter", item.title)
+                      : t("Lagre {0}", item.title)
                   }
                   accessibilityState={{
                     selected: isFavorite("deal", item.id),
@@ -436,12 +443,14 @@ export function Explore({
           })}
         </ScrollView>
       )}
-      <SectionHeading title={saved ? "Lagrede arrangementer" : "Hva skjer?"} />
+      <SectionHeading
+        title={saved ? t("Lagrede arrangementer") : t("Hva skjer?")}
+      />
       {!agenda.length ? (
         <Text style={ui.muted}>
           {saved
-            ? "Lagre et arrangement for å finne det igjen her."
-            : "Ingen publiserte arrangementer passer filtrene akkurat nå."}
+            ? t("Lagre et arrangement for å finne det igjen her.")
+            : t("Ingen publiserte arrangementer passer filtrene akkurat nå.")}
         </Text>
       ) : (
         agenda.map((item) => (
@@ -455,10 +464,11 @@ export function Explore({
       )}
       {!saved && (
         <>
-          <SectionHeading title="Nytt fra de lokale" />
+          <SectionHeading title={t("Nytt fra de lokale")} />
           {!posts.length ? (
             <Text style={ui.muted}>
-              Oppdateringer fra bedriftene dukker opp her.
+              {" "}
+              {t("Oppdateringer fra bedriftene dukker opp her.")}{" "}
             </Text>
           ) : (
             posts.map((item) => (
@@ -473,15 +483,15 @@ export function Explore({
         </>
       )}
       <SectionHeading
-        title={saved ? "Lagrede bedrifter" : "Bli kjent med de lokale"}
-        action="Se kart"
+        title={saved ? t("Lagrede bedrifter") : t("Bli kjent med de lokale")}
+        action={t("Se kart")}
         onPress={onMap}
       />
       {!places.length ? (
         <Text style={ui.muted}>
           {saved
-            ? "Du har ingen lagrede bedrifter som passer filtrene."
-            : "Ingen bedrifter passer søket."}
+            ? t("Du har ingen lagrede bedrifter som passer filtrene.")
+            : t("Ingen bedrifter passer søket.")}
         </Text>
       ) : (
         places.map((b) => (
@@ -525,7 +535,7 @@ export function ContentDetails({
       <View style={e.detailType}>
         <Icon name={event ? "calendar" : "news"} size={16} />
         <Text style={ui.eyebrow}>
-          {event ? "DETTE SKJER" : "NYTT FRA DE LOKALE"}
+          {event ? t("DETTE SKJER") : t("NYTT FRA DE LOKALE")}
         </Text>
       </View>
       <Text style={ui.h1}>{item.title}</Text>
@@ -544,17 +554,18 @@ export function ContentDetails({
             <Text style={[ui.text, e.grow]}>
               {event.location_text ||
                 business?.address ||
-                "Sted er ikke oppgitt"}
+                t("Sted er ikke oppgitt")}
             </Text>
           </View>
-          <Text style={ui.tag}>{event.price_text ?? "Gratis"}</Text>
+          <Text style={ui.tag}>{event.price_text ?? t("Gratis")}</Text>
         </View>
       )}
       <Text style={ui.text}>{event ? event.description : post?.body}</Text>
       {post && (
         <Text style={ui.muted}>
-          Publisert{" "}
-          {new Date(post.published_at).toLocaleDateString("nb-NO", {
+          {" "}
+          {t("Publisert")}{" "}
+          {new Date(post.published_at).toLocaleDateString(locale(), {
             day: "numeric",
             month: "long",
             year: "numeric",
@@ -570,7 +581,9 @@ export function ContentDetails({
             style={ui.button}
           >
             <Text style={ui.buttonText}>
-              {isFavorite ? "♥ Fjern fra favoritter" : "♡ Lagre arrangement"}
+              {isFavorite
+                ? t("♥ Fjern fra favoritter")
+                : t("♡ Lagre arrangement")}
             </Text>
           </Pressable>
           {event.ticket_url && /^https?:\/\//i.test(event.ticket_url) && (
@@ -581,7 +594,9 @@ export function ContentDetails({
               }}
               style={ui.button}
             >
-              <Text style={ui.buttonText}>Billetter / mer informasjon ↗</Text>
+              <Text style={ui.buttonText}>
+                {t("Billetter / mer informasjon ↗")}
+              </Text>
             </Pressable>
           )}
         </>
@@ -594,7 +609,9 @@ export function ContentDetails({
         >
           <View style={ui.row}>
             <Icon name="shop" />
-            <Text style={[ui.h3, e.grow]}>Om {business.name}</Text>
+            <Text style={[ui.h3, e.grow]}>
+              {t("Om")} {business.name}
+            </Text>
             <Icon name="chevron" />
           </View>
         </Pressable>
@@ -641,7 +658,9 @@ export function BusinessDetails({
           <Text style={e.heroInitials}>{initials(business.name)}</Text>
         </View>
       )}
-      <Text style={ui.eyebrow}>{category?.name ?? "ET LOKALT STED"}</Text>
+      <Text style={ui.eyebrow}>
+        {category ? t(category.name) : t("ET LOKALT STED")}
+      </Text>
       <Text style={ui.h1}>{business.name}</Text>
       <Text style={ui.text}>{business.description}</Text>
       <Pressable
@@ -653,11 +672,11 @@ export function BusinessDetails({
         <View style={ui.row}>
           <Icon name="heart" color={isFavorite ? "#a24c45" : palette.ink} />
           <Text style={ui.text}>
-            {isFavorite ? "Lagret som favoritt" : "Lagre dette stedet"}
+            {isFavorite ? t("Lagret som favoritt") : t("Lagre dette stedet")}
           </Text>
         </View>
       </Pressable>
-      <SectionHeading title="Vennepriser hos oss" />
+      <SectionHeading title={t("Vennepriser hos oss")} />
       {deals
         .filter((d) => d.business_id === business.id)
         .map((d) => (
@@ -670,10 +689,10 @@ export function BusinessDetails({
             <Text style={e.discount}>{discount(d)}</Text>
             <Text style={ui.h3}>{d.title}</Text>
             <Text style={ui.muted}>{remainingTime(d.ends_at)}</Text>
-            <Text style={ui.link}>Se venneprisen →</Text>
+            <Text style={ui.link}>{t("Se venneprisen →")}</Text>
           </Pressable>
         ))}
-      <SectionHeading title="Kommende" />
+      <SectionHeading title={t("Kommende")} />
       {events
         .filter((item) => item.business_id === business.id)
         .map((item) => (
@@ -684,7 +703,7 @@ export function BusinessDetails({
             onPress={() => onEvent(item)}
           />
         ))}
-      <SectionHeading title="Nyheter fra oss" />
+      <SectionHeading title={t("Nyheter fra oss")} />
       {news
         .filter((item) => item.business_id === business.id)
         .map((item) => (
@@ -695,29 +714,31 @@ export function BusinessDetails({
             onPress={() => onNews(item)}
           />
         ))}
-      <SectionHeading title="Praktisk" />
+      <SectionHeading title={t("Praktisk")} />
       <View style={ui.card}>
         <View style={ui.row}>
           <Icon name="pin" />
           <Text style={[ui.text, e.grow]}>
             {[business.address, business.postal_code, business.city]
               .filter(Boolean)
-              .join(", ") || "Adresse er ikke oppgitt"}
+              .join(", ") || t("Adresse er ikke oppgitt")}
           </Text>
         </View>
         {business.phone && (
           <Text selectable style={ui.text}>
-            Telefon: {business.phone}
+            {" "}
+            {t("Telefon:")} {business.phone}
           </Text>
         )}
         {business.email && (
           <Text selectable style={ui.text}>
-            E-post: {business.email}
+            {" "}
+            {t("E-post:")} {business.email}
           </Text>
         )}
       </View>
       <Pressable accessibilityRole="button" onPress={onMap} style={ui.button}>
-        <Text style={ui.buttonText}>Vis på kartet</Text>
+        <Text style={ui.buttonText}>{t("Vis på kartet")}</Text>
       </Pressable>
       <Pressable
         accessibilityRole="link"
@@ -728,7 +749,7 @@ export function BusinessDetails({
       >
         <View style={ui.row}>
           <Icon name="arrow" />
-          <Text style={ui.h3}>Åpne veibeskrivelse</Text>
+          <Text style={ui.h3}>{t("Åpne veibeskrivelse")}</Text>
         </View>
       </Pressable>
       {business.website && /^https?:\/\//i.test(business.website) && (
@@ -737,7 +758,7 @@ export function BusinessDetails({
           onPress={() => void Linking.openURL(business.website!).catch(onError)}
           style={ui.card}
         >
-          <Text style={ui.h3}>Besøk nettsiden ↗</Text>
+          <Text style={ui.h3}>{t("Besøk nettsiden ↗")}</Text>
         </Pressable>
       )}
     </>

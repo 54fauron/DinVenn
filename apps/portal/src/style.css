@@ -54,8 +54,12 @@ header > span {
   font-size: 11px;
   letter-spacing: 2px;
 }
-header button {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-left: auto;
+  flex-shrink: 0;
 }
 .brand {
   font-family: Manrope, sans-serif;
@@ -1361,4 +1365,23 @@ fieldset {
 }
 .notice-close:hover {
   background: #3b2a3a0c;
+}
+
+.language-picker {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.language-picker button {
+  min-height: 44px;
+  padding: 8px 12px;
+}
+.language-picker span {
+  font-size: 20px;
+}
+@media (max-width: 600px) {
+  header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 }

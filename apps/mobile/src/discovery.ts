@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 export {
   validPoint,
   storedPoint,
@@ -7,16 +8,17 @@ export {
 } from "@dinvenn/core";
 export type { Point, AddressHit } from "@dinvenn/core";
 export function remainingTime(ends: string | null, now = Date.now()): string {
-  if (!ends) return "Ingen fast sluttdato";
+  if (!ends) return t("Ingen fast sluttdato");
   const diff = Date.parse(ends) - now;
-  if (!Number.isFinite(diff) || diff <= 0) return "Utløpt";
+  if (!Number.isFinite(diff) || diff <= 0) return t("Utløpt");
   const mins = Math.ceil(diff / 60000);
-  if (mins < 60) return `${mins} min igjen`;
-  if (mins < 1440) return `${Math.floor(mins / 60)} t ${mins % 60} min igjen`;
-  return `${Math.ceil(mins / 1440)} dager igjen`;
+  if (mins < 60) return t("{0} min igjen", mins);
+  if (mins < 1440)
+    return t("{0} t {1} min igjen", Math.floor(mins / 60), mins % 60);
+  return t("{0} dager igjen", Math.ceil(mins / 1440));
 }
 export const eventWhen = (value: string) =>
-  new Date(value).toLocaleString("nb-NO", {
+  new Date(value).toLocaleString(locale(), {
     weekday: "short",
     day: "numeric",
     month: "short",

@@ -541,3 +541,41 @@ test("kartpinne kan flyttes manuelt og korrigerte koordinater lagres", async ({
     fullPage: true,
   });
 });
+
+test("språkvelger oversetter portalen, bevarer DinVenn og husker valget", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  const picker = page.getByRole("group", { name: "Språk", exact: true });
+  await expect(picker.getByRole("button")).toHaveCount(1);
+  await expect(picker.getByRole("button")).toHaveText("🇳🇴");
+  await page.getByRole("button", { name: "Bytt til engelsk" }).click();
+  await expect(
+    page
+      .getByRole("group", { name: "Language", exact: true })
+      .getByRole("button"),
+  ).toHaveText("🇬🇧");
+  await expect(
+    page.getByRole("button", { name: "Overview", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(
+    page.getByRole("link", { name: "DinVenn", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Business profile", exact: true })
+    .click();
+  await expect(page.getByLabel("Business name", { exact: true })).toHaveValue(
+    "Hjørnekafeen",
+  );
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Overview", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Switch to Norwegian" }).click();
+  await expect(
+    page.getByRole("button", { name: "Oversikt", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "nb");
+});

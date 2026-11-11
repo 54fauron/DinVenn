@@ -125,3 +125,9 @@ Etter denne oppdateringen: stopp Expo-serveren med Ctrl+C og kjør `npm run mobi
 Bedriftsprofilen har nå et kart med automatisk adresseoppslag etter at gateadresse og by/postnummer er skrevet inn. Dra pinnen eller trykk i kartet for å korrigere plasseringen, og trykk **Lagre profil**. De lagrede `lat`/`lng`-feltene brukes direkte av mobilappen. «Søk opp adressen på nytt» erstatter manuell plassering med et nytt adresseoppslag. Hvis adressen endres, fjernes gammel pinne slik at den ikke blir lagret sammen med feil adresse.
 
 Webkartet bruker Leaflet og OpenStreetMap-kartfliser med synlig kildehenvisning. Adresseoppslaget deles med mobilappen og bruker Kartverket. Ved manglende eller tvetydig treff kan pinnen settes manuelt. Ingen nye API-nøkler eller SQL-migrasjoner er nødvendige. Kartbakgrunn og adresseoppslag krever nettverk.
+
+### Språk
+
+Bedriftsportalen har én flaggknapp øverst (🇳🇴 / 🇬🇧) som viser valgt språk og bytter språk ved trykk. Mobilappen har samme valg under **Meg → Innstillinger → Språk**, også uten innlogging. Valget lagres på hver enhet. Grensesnitt, kategorier, statuser og datoformat følger språket. DinVenn-navnet og bedriftenes egne navn, beskrivelser, tilbud og nyheter beholdes slik de er skrevet.
+
+Felles oversettelser ligger i `packages/core/src/i18n.ts`. Nye grensesnitttekster legges i ordboken og vises med `t(...)`; bruk `locale()` for datoer. Språkvalget krever ingen databaseendring.
