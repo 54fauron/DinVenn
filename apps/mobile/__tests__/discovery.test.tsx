@@ -344,8 +344,20 @@ test("tema byttes fra innstillinger og lagres uten å endre språk", async () =>
   fireEvent.press(screen.getByText("Meg"));
   const { themeColor } = require("../src/theme");
   expect(themeColor("#fff7f0")).toBe("#fff7f0");
+  const lightLogo = screen.getByTestId("brand-logo-light");
+  const darkLogo = screen.getByTestId("brand-logo-dark");
+  const lightSource = lightLogo.props.source;
+  const darkSource = darkLogo.props.source;
+  expect(lightLogo).toHaveStyle({ opacity: 1 });
+  expect(darkLogo).toHaveStyle({ opacity: 0 });
+  expect(lightLogo.props.fadeDuration).toBe(0);
+  expect(darkLogo.props.fadeDuration).toBe(0);
   fireEvent.press(screen.getByLabelText("Bytt til mørk modus"));
   expect(getTheme()).toBe("dark");
+  expect(screen.getByTestId("brand-logo-light")).toHaveStyle({ opacity: 0 });
+  expect(screen.getByTestId("brand-logo-dark")).toHaveStyle({ opacity: 1 });
+  expect(screen.getByTestId("brand-logo-light").props.source).toBe(lightSource);
+  expect(screen.getByTestId("brand-logo-dark").props.source).toBe(darkSource);
   expect(themeColor("#fff7f0")).toBe("#151319");
   expect(screen.getByText("Utforsk")).toHaveStyle({ color: "#f5edf4" });
   expect(screen.getByLabelText("Bytt til lys modus")).toBeTruthy();
@@ -356,6 +368,8 @@ test("tema byttes fra innstillinger og lagres uten å endre språk", async () =>
   expect(screen.getByText("Utforsk")).toBeTruthy();
   fireEvent.press(screen.getByLabelText("Bytt til lys modus"));
   expect(getTheme()).toBe("light");
+  expect(screen.getByTestId("brand-logo-light")).toHaveStyle({ opacity: 1 });
+  expect(screen.getByTestId("brand-logo-dark")).toHaveStyle({ opacity: 0 });
   expect(themeColor("#fff7f0")).toBe("#fff7f0");
 });
 test("mobilappen gjenoppretter lagret mørkt tema", async () => {
