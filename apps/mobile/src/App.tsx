@@ -283,13 +283,20 @@ function AppBody() {
       <View style={s.header}>
         <View style={s.brandGroup}>
           <View style={s.brandLogoFrame}>
+            {/* Keep both native images mounted and decoded; theme changes only visibility. */}
             <Image
-              source={
-                theme === "dark"
-                  ? require("../assets/dinvenn-logo-dark.png")
-                  : require("../assets/dinvenn-logo.png")
-              }
-              style={s.brandLogo}
+              testID="brand-logo-light"
+              source={require("../assets/dinvenn-logo.png")}
+              style={[s.brandLogo, { opacity: theme === "light" ? 1 : 0 }]}
+              fadeDuration={0}
+              resizeMode="contain"
+              accessible={false}
+            />
+            <Image
+              testID="brand-logo-dark"
+              source={require("../assets/dinvenn-logo-dark.png")}
+              style={[s.brandLogo, { opacity: theme === "dark" ? 1 : 0 }]}
+              fadeDuration={0}
               resizeMode="contain"
               accessible={false}
             />
@@ -897,7 +904,14 @@ const s = themeStyles({
     borderRadius: 11,
     overflow: "hidden",
   },
-  brandLogo: { width: 44, height: 44, transform: [{ scale: 1.4 }] },
+  brandLogo: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: 44,
+    height: 44,
+    transform: [{ scale: 1.4 }],
+  },
   brand: {
     fontSize: 27,
     fontWeight: "800",
