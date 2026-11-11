@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -84,7 +85,8 @@ export default function MapScreen({
         if (!point && url) {
           try {
             const response = await fetch(url, { signal: abort.signal });
-            if (!response.ok) throw new Error("Adresseoppslaget svarte ikke.");
+            if (!response.ok)
+              throw new Error(t("Adresseoppslaget svarte ikke."));
             const data: { adresser?: AddressHit[] } = await response.json();
             point = chooseAddressPoint(
               b,
@@ -157,22 +159,24 @@ export default function MapScreen({
       <View style={m.controls}>
         <View style={m.heading}>
           <View>
-            <Text style={ui.eyebrow}>FINN ET LOKALT STED</Text>
-            <Text style={ui.h2}>Rett rundt hjørnet</Text>
+            <Text style={ui.eyebrow}>{t("FINN ET LOKALT STED")}</Text>
+            <Text style={ui.h2}>{t("Rett rundt hjørnet")}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
             onPress={() => setShowList((v) => !v)}
             style={m.smallButton}
           >
-            <Text style={ui.link}>{showList ? "Vis kart" : "Vis liste"}</Text>
+            <Text style={ui.link}>
+              {showList ? t("Vis kart") : t("Vis liste")}
+            </Text>
           </Pressable>
         </View>
         <View style={m.search}>
           <Icon name="search" size={18} />
           <TextInput
-            accessibilityLabel="Søk på kartet"
-            placeholder="Bedrift eller gate …"
+            accessibilityLabel={t("Søk på kartet")}
+            placeholder={t("Bedrift eller gate …")}
             placeholderTextColor={palette.muted}
             value={query}
             onChangeText={setQuery}
@@ -199,7 +203,7 @@ export default function MapScreen({
               onPress={() => setCity(c)}
               style={[ui.chip, city === c && ui.chipActive]}
             >
-              <Text style={ui.chipText}>{c || "Alle byer"}</Text>
+              <Text style={ui.chipText}>{c || t("Alle byer")}</Text>
             </Pressable>
           ))}
         </ScrollView>
@@ -211,7 +215,9 @@ export default function MapScreen({
       </View>
       {showList ? (
         <ScrollView contentContainerStyle={m.list}>
-          <Text style={ui.muted}>{visible.length} lokale steder</Text>
+          <Text style={ui.muted}>
+            {visible.length} {t("lokale steder")}
+          </Text>
           {visible.map((b) => (
             <Pressable
               key={b.id}
@@ -223,11 +229,11 @@ export default function MapScreen({
               <Text style={ui.muted}>
                 {[b.address, b.city].filter(Boolean).join(", ")}
               </Text>
-              <Text style={ui.link}>Se bedrift og vennepriser →</Text>
+              <Text style={ui.link}>{t("Se bedrift og vennepriser →")}</Text>
             </Pressable>
           ))}
           {!visible.length && (
-            <Text style={ui.text}>Ingen bedrifter passer filtrene.</Text>
+            <Text style={ui.text}>{t("Ingen bedrifter passer filtrene.")}</Text>
           )}
         </ScrollView>
       ) : (
@@ -251,7 +257,7 @@ export default function MapScreen({
             }}
             showsUserLocation={false}
             showsMyLocationButton={false}
-            accessibilityLabel="Kart over lokale bedrifter"
+            accessibilityLabel={t("Kart over lokale bedrifter")}
           >
             {located.map((p) => (
               <Marker
@@ -274,7 +280,7 @@ export default function MapScreen({
           </MapView>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Vis alle bedriftsmarkører"
+            accessibilityLabel={t("Vis alle bedriftsmarkører")}
             onPress={() => {
               if (located.length)
                 map.current?.fitToCoordinates(
@@ -292,26 +298,28 @@ export default function MapScreen({
           {loading && (
             <View style={m.loading}>
               <ActivityIndicator size="small" color={palette.ink} />
-              <Text style={ui.muted}>Finner bedriftenes adresser …</Text>
+              <Text style={ui.muted}>{t("Finner bedriftenes adresser …")}</Text>
             </View>
           )}
           {!loading && !located.length && (
             <View style={m.empty}>
               <Text style={ui.h3}>
                 {visible.length
-                  ? "Ingen sikre kartplasseringer ennå"
-                  : "Ingen treff"}
+                  ? t("Ingen sikre kartplasseringer ennå")
+                  : t("Ingen treff")}
               </Text>
               <Text style={ui.muted}>
                 {visible.length
-                  ? "Åpne listen for å se bedriftene, eller prøv adresseoppslaget igjen."
-                  : "Prøv en annen by, kategori eller et annet søk."}
+                  ? t(
+                      "Åpne listen for å se bedriftene, eller prøv adresseoppslaget igjen.",
+                    )
+                  : t("Prøv en annen by, kategori eller et annet søk.")}
               </Text>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => setShowList(true)}
               >
-                <Text style={ui.link}>Se bedriftene som liste →</Text>
+                <Text style={ui.link}>{t("Se bedriftene som liste →")}</Text>
               </Pressable>
             </View>
           )}
@@ -331,7 +339,7 @@ export default function MapScreen({
                     deals.filter((d) => d.business_id === picked.business.id)
                       .length
                   }{" "}
-                  vennepriser
+                  {t("vennepriser")}{" "}
                 </Text>
               </View>
               <View style={ui.row}>
@@ -340,11 +348,14 @@ export default function MapScreen({
                   onPress={() => onBusiness(picked.business)}
                   style={[ui.button, m.grow]}
                 >
-                  <Text style={ui.buttonText}>Se bedrift</Text>
+                  <Text style={ui.buttonText}>{t("Se bedrift")}</Text>
                 </Pressable>
                 <Pressable
                   accessibilityRole="link"
-                  accessibilityLabel={`Veibeskrivelse til ${picked.business.name}`}
+                  accessibilityLabel={t(
+                    "Veibeskrivelse til {0}",
+                    picked.business.name,
+                  )}
                   onPress={() =>
                     void Linking.openURL(
                       directionsUrl(picked.business, picked.point),
@@ -364,26 +375,31 @@ export default function MapScreen({
           <View style={ui.row}>
             <Text style={[ui.muted, m.grow]}>
               {unresolved.length}{" "}
-              {unresolved.length === 1 ? "adresse kunne" : "adresser kunne"}{" "}
-              ikke plasseres sikkert.
+              {unresolved.length === 1
+                ? t("adresse kunne")
+                : t("adresser kunne")}{" "}
+              {t("ikke plasseres sikkert.")}{" "}
             </Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => setRetry((v) => v + 1)}
             >
-              <Text style={ui.link}>Prøv igjen</Text>
+              <Text style={ui.link}>{t("Prøv igjen")}</Text>
             </Pressable>
           </View>
           <Pressable
             accessibilityRole="button"
             onPress={() => setShowList(true)}
           >
-            <Text style={ui.link}>Se alle steder i listen →</Text>
+            <Text style={ui.link}>{t("Se alle steder i listen →")}</Text>
           </Pressable>
         </View>
       )}
       <Text style={m.attribution}>
-        Adresseoppslag: Kartverket · Kartet viser bedrifter, ikke din posisjon.
+        {" "}
+        {t(
+          "Adresseoppslag: Kartverket · Kartet viser bedrifter, ikke din posisjon.",
+        )}{" "}
       </Text>
     </View>
   );

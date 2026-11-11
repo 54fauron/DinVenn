@@ -194,7 +194,14 @@ test("bedrift kan redigere profil, publisere/pause tilbud og løse inn kode", as
   await page.getByLabel("Adresse", { exact: true }).fill("Storgata 2");
   await page.getByRole("button", { name: "Lagre profil" }).click();
   await expect(page.getByText("Profilen er lagret.")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Lukk bekreftelse", exact: true })
+    .click();
+  await expect(page.getByText("Profilen er lagret.")).toHaveCount(0);
+  await page.getByRole("button", { name: "Lagre profil" }).click();
+  await expect(page.getByText("Profilen er lagret.")).toBeVisible();
   await page.getByRole("button", { name: "Vennepriser", exact: true }).click();
+  await expect(page.getByText("Profilen er lagret.")).toHaveCount(0);
   await page.getByRole("button", { name: "+ Ny vennepris" }).click();
   await page.getByLabel("Tittel", { exact: true }).fill("20 % på kaffe");
   await page
@@ -533,4 +540,42 @@ test("kartpinne kan flyttes manuelt og korrigerte koordinater lagres", async ({
     path: test.info().outputPath("profile-map.png"),
     fullPage: true,
   });
+});
+
+test("språkvelger oversetter portalen, bevarer DinVenn og husker valget", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  const picker = page.getByRole("group", { name: "Språk", exact: true });
+  await expect(picker.getByRole("button")).toHaveCount(1);
+  await expect(picker.getByRole("button")).toHaveText("🇳🇴");
+  await page.getByRole("button", { name: "Bytt til engelsk" }).click();
+  await expect(
+    page
+      .getByRole("group", { name: "Language", exact: true })
+      .getByRole("button"),
+  ).toHaveText("🇬🇧");
+  await expect(
+    page.getByRole("button", { name: "Overview", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(
+    page.getByRole("link", { name: "DinVenn", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Business profile", exact: true })
+    .click();
+  await expect(page.getByLabel("Business name", { exact: true })).toHaveValue(
+    "Hjørnekafeen",
+  );
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Overview", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Switch to Norwegian" }).click();
+  await expect(
+    page.getByRole("button", { name: "Oversikt", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "nb");
 });

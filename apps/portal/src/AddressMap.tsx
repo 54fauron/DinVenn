@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import {
@@ -85,8 +86,8 @@ export default function AddressMap({
     if (!marker.current) {
       marker.current = L.marker(position, {
         draggable: true,
-        title: "Bedriftens kartpinne",
-        alt: "Bedriftens kartpinne",
+        title: t("Bedriftens kartpinne"),
+        alt: t("Bedriftens kartpinne"),
         icon: L.divIcon({
           className: "business-map-marker",
           html: '<span aria-hidden="true"></span>',
@@ -122,7 +123,7 @@ export default function AddressMap({
       timeout = setTimeout(() => abort.abort(), 10000);
       void fetch(url, { signal: abort.signal })
         .then(async (response) => {
-          if (!response.ok) throw new Error("Adresseoppslaget feilet");
+          if (!response.ok) throw new Error(t("Adresseoppslaget feilet"));
           const data: { adresser?: AddressHit[] } = await response.json();
           if (request !== epoch.current || identityRef.current !== identity)
             return;
@@ -150,35 +151,45 @@ export default function AddressMap({
   }, [identity, retry, !!point]);
   return (
     <section className="profile-location" aria-labelledby="profile-map-title">
-      <span className="eyebrow">FINN RIKTIG INNGANG</span>
-      <h3 id="profile-map-title">Plassering på kart</h3>
+      <span className="eyebrow">{t("FINN RIKTIG INNGANG")}</span>
+      <h3 id="profile-map-title">{t("Plassering på kart")}</h3>
       <p>
-        Skriv gateadresse og by eller postnummer. Sjekk at pinnen står riktig,
-        og dra den eller trykk i kartet for å flytte den.
+        {" "}
+        {t(
+          "Skriv gateadresse og by eller postnummer. Sjekk at pinnen står riktig, og dra den eller trykk i kartet for å flytte den.",
+        )}{" "}
       </p>
       <div
         ref={container}
         className="profile-map"
         role="region"
-        aria-label="Kart for bedriftsadressen"
+        aria-label={t("Kart for bedriftsadressen")}
       />
       <div className="map-lookup-status" role="status">
         {phase === "loading"
-          ? "Søker etter adressen …"
+          ? t("Søker etter adressen …")
           : phase === "ready"
-            ? "Kartpinnen er klar. Lagre profilen for å beholde plasseringen."
+            ? t(
+                "Kartpinnen er klar. Lagre profilen for å beholde plasseringen.",
+              )
             : phase === "missing"
-              ? "Fant ingen entydig adresse. Kontroller adressen, eller plasser pinnen selv i kartet."
+              ? t(
+                  "Fant ingen entydig adresse. Kontroller adressen, eller plasser pinnen selv i kartet.",
+                )
               : phase === "error"
-                ? "Adresseoppslaget svarte ikke. Prøv igjen, eller plasser pinnen selv."
-                : "Fyll inn gateadresse og by eller postnummer for å finne stedet."}
+                ? t(
+                    "Adresseoppslaget svarte ikke. Prøv igjen, eller plasser pinnen selv.",
+                  )
+                : t(
+                    "Fyll inn gateadresse og by eller postnummer for å finne stedet.",
+                  )}
       </div>
       {point ? (
-        <output className="map-coordinates" aria-label="Kartkoordinater">
+        <output className="map-coordinates" aria-label={t("Kartkoordinater")}>
           {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
         </output>
       ) : (
-        <p className="map-coordinates">Ingen kartpinne er valgt ennå.</p>
+        <p className="map-coordinates">{t("Ingen kartpinne er valgt ennå.")}</p>
       )}
       <div className="actions">
         <button
@@ -191,7 +202,8 @@ export default function AddressMap({
             setRetry((v) => v + 1);
           }}
         >
-          Søk opp adressen på nytt
+          {" "}
+          {t("Søk opp adressen på nytt")}{" "}
         </button>
         <button
           type="button"
@@ -201,17 +213,23 @@ export default function AddressMap({
             if (center) manual({ latitude: center.lat, longitude: center.lng });
           }}
         >
-          Plasser pinnen midt i kartet
+          {" "}
+          {t("Plasser pinnen midt i kartet")}{" "}
         </button>
       </div>
       {tilesFailed && (
         <p className="map-tile-warning">
-          Kartbakgrunnen kunne ikke lastes helt. Sjekk nettet før du
-          kontrollerer plasseringen.
+          {" "}
+          {t(
+            "Kartbakgrunnen kunne ikke lastes helt. Sjekk nettet før du kontrollerer plasseringen.",
+          )}{" "}
         </p>
       )}
       <small>
-        Adresseoppslag: Kartverket. Lagret pinne brukes også i mobilappen.
+        {" "}
+        {t(
+          "Adresseoppslag: Kartverket. Lagret pinne brukes også i mobilappen.",
+        )}{" "}
       </small>
     </section>
   );

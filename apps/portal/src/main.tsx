@@ -1,3 +1,5 @@
+import { LanguagePicker, useLanguage } from "./LanguagePicker";
+import { t, locale } from "@dinvenn/core";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import type { Session } from "@supabase/supabase-js";
@@ -74,11 +76,15 @@ function Auth({
   const [notice, setNotice] = useState("");
   return (
     <section className="auth card">
-      <span className="eyebrow">LOKALT ER FINT</span>
-      <h1>{recovery ? "Velg nytt passord" : "Flere kunder. Flere venner."}</h1>
+      <span className="eyebrow">{t("LOKALT ER FINT")}</span>
+      <h1>
+        {recovery ? t("Velg nytt passord") : t("Flere kunder. Flere venner.")}
+      </h1>
       <p>
-        Velkommen til bedriftsportalen. Gi folk en god grunn til å besøke
-        nettopp dere.
+        {" "}
+        {t(
+          "Velkommen til bedriftsportalen. Gi folk en god grunn til å besøke nettopp dere.",
+        )}{" "}
       </p>
       <form
         onSubmit={(e) => {
@@ -88,7 +94,7 @@ function Auth({
             if (recovery) {
               check(await db.auth.updateUser({ password }));
               setNotice(
-                "Passordet er endret. Du kan også logge inn i mobilappen.",
+                t("Passordet er endret. Du kan også logge inn i mobilappen."),
               );
               done();
             } else if (mode === "login")
@@ -105,7 +111,9 @@ function Auth({
                 }),
               );
               setNotice(
-                "Sjekk e-posten din for å bekrefte kontoen. Deretter kan du logge inn.",
+                t(
+                  "Sjekk e-posten din for å bekrefte kontoen. Deretter kan du logge inn.",
+                ),
               );
             } else {
               check(
@@ -113,14 +121,14 @@ function Auth({
                   redirectTo: location.origin + "/?recovery=1",
                 }),
               );
-              setNotice("Hvis kontoen finnes, får du en lenke på e-post.");
+              setNotice(t("Hvis kontoen finnes, får du en lenke på e-post."));
             }
           });
         }}
       >
         {!recovery && mode === "register" && (
           <Field
-            label="Navnet ditt"
+            label={t("Navnet ditt")}
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -129,7 +137,7 @@ function Auth({
         )}
         {!recovery && (
           <Field
-            label="E-post"
+            label={t("E-post")}
             type="email"
             required
             value={email}
@@ -139,7 +147,7 @@ function Auth({
         )}
         {(recovery || mode !== "reset") && (
           <Field
-            label="Passord (minst 8 tegn)"
+            label={t("Passord (minst 8 tegn)")}
             type="password"
             minLength={8}
             required
@@ -154,28 +162,30 @@ function Auth({
         )}
         <button type="submit">
           {recovery
-            ? "Lagre passord"
+            ? t("Lagre passord")
             : mode === "login"
-              ? "Logg inn"
+              ? t("Logg inn")
               : mode === "register"
-                ? "Opprett konto"
-                : "Send tilbakestillingslenke"}
+                ? t("Opprett konto")
+                : t("Send tilbakestillingslenke")}
         </button>
       </form>
-      {notice && <p role="status">{notice}</p>}
+      {notice && <p role="status">{t(notice)}</p>}
       {!recovery && (
         <div className="actions">
           <button
             className="quiet"
             onClick={() => setMode(mode === "register" ? "login" : "register")}
           >
-            {mode === "register" ? "Til innlogging" : "Ny her? Opprett konto"}
+            {mode === "register"
+              ? t("Til innlogging")
+              : t("Ny her? Opprett konto")}
           </button>
           <button
             className="quiet"
             onClick={() => setMode(mode === "reset" ? "login" : "reset")}
           >
-            {mode === "reset" ? "Til innlogging" : "Glemt passord?"}
+            {mode === "reset" ? t("Til innlogging") : t("Glemt passord?")}
           </button>
         </div>
       )}
@@ -269,8 +279,12 @@ function BusinessForm({
     setForm((f) => ({ ...f, [key]: value }));
   return (
     <section className="card">
-      <h2>{business ? "Bedriftsprofil" : "La oss bli kjent med bedriften"}</h2>
-      <p>Nye bedrifter blir synlige når DinVenn har godkjent profilen.</p>
+      <h2>
+        {business ? t("Bedriftsprofil") : t("La oss bli kjent med bedriften")}
+      </h2>
+      <p>
+        {t("Nye bedrifter blir synlige når DinVenn har godkjent profilen.")}
+      </p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -282,7 +296,7 @@ function BusinessForm({
               name: form.name.trim(),
               category_id: form.category_id ? Number(form.category_id) : null,
             };
-            if (!values.name) throw new Error("Skriv bedriftens navn.");
+            if (!values.name) throw new Error(t("Skriv bedriftens navn."));
             const b = business
               ? unwrap(
                   await db
@@ -341,13 +355,13 @@ function BusinessForm({
                   key={key}
                   label={
                     [
-                      "Bedriftsnavn",
-                      "By",
-                      "Adresse",
-                      "Postnummer",
-                      "Telefon",
-                      "E-post",
-                      "Nettside",
+                      t("Bedriftsnavn"),
+                      t("By"),
+                      t("Adresse"),
+                      t("Postnummer"),
+                      t("Telefon"),
+                      t("E-post"),
+                      t("Nettside"),
                     ][i]
                   }
                   value={form[key]}
@@ -363,23 +377,25 @@ function BusinessForm({
                 />
               ))}
               <label>
-                Kategori
+                {" "}
+                {t("Kategori")}{" "}
                 <select
                   value={form.category_id}
                   required
                   onChange={(e) => change("category_id", e.target.value)}
                 >
-                  <option value="">Velg kategori</option>
+                  <option value="">{t("Velg kategori")}</option>
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {t(c.name)}
                     </option>
                   ))}
                 </select>
               </label>
             </div>
             <label>
-              Om bedriften
+              {" "}
+              {t("Om bedriften")}{" "}
               <textarea
                 value={form.description}
                 onChange={(e) => change("description", e.target.value)}
@@ -389,17 +405,17 @@ function BusinessForm({
               <img
                 className="cover"
                 src={business.cover_url}
-                alt="Bedriftens forsidebilde"
+                alt={t("Bedriftens forsidebilde")}
               />
             )}
             <Field
-              label="Forsidebilde (JPG, PNG eller WebP, maks 5 MB)"
+              label={t("Forsidebilde (JPG, PNG eller WebP, maks 5 MB)")}
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => setCover(e.target.files?.[0] ?? null)}
             />
           </div>
-          <React.Suspense fallback={<p role="status">Laster kart …</p>}>
+          <React.Suspense fallback={<p role="status">{t("Laster kart …")}</p>}>
             <AddressMap
               address={form}
               point={point}
@@ -408,7 +424,7 @@ function BusinessForm({
           </React.Suspense>
         </div>
         <button type="submit">
-          {business ? "Lagre profil" : "Send til godkjenning"}
+          {business ? t("Lagre profil") : t("Send til godkjenning")}
         </button>
       </form>
     </section>
@@ -453,7 +469,9 @@ function DealForm({
   const previewImage = useImagePreview(image, deal?.image_url ?? null);
   return (
     <section className="card">
-      <h2>{deal ? "Rediger vennepris" : "En ny grunn til å komme innom"}</h2>
+      <h2>
+        {deal ? t("Rediger vennepris") : t("En ny grunn til å komme innom")}
+      </h2>
       <div className="editor-layout">
         <form
           onSubmit={(e) => {
@@ -498,13 +516,14 @@ function DealForm({
           }}
         >
           <Field
-            label="Tittel"
+            label={t("Tittel")}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
           />
           <label>
-            Beskrivelse
+            {" "}
+            {t("Beskrivelse")}{" "}
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -512,22 +531,23 @@ function DealForm({
           </label>
           <div className="formgrid">
             <label>
-              Type rabatt
+              {" "}
+              {t("Type rabatt")}{" "}
               <select
                 value={kind}
                 onChange={(e) =>
                   setKind(e.target.value as Deal["discount_type"])
                 }
               >
-                <option value="percent">Prosent</option>
-                <option value="amount">Kroner</option>
-                <option value="freebie">Gratis gave</option>
-                <option value="other">Annet / 2 for 1</option>
+                <option value="percent">{t("Prosent")}</option>
+                <option value="amount">{t("Kroner")}</option>
+                <option value="freebie">{t("Gratis gave")}</option>
+                <option value="other">{t("Annet / 2 for 1")}</option>
               </select>
             </label>
             {(kind === "percent" || kind === "amount") && (
               <Field
-                label="Rabatt"
+                label={t("Rabatt")}
                 type="number"
                 min="0.01"
                 max={kind === "percent" ? 100 : undefined}
@@ -538,27 +558,27 @@ function DealForm({
               />
             )}
             <Field
-              label="Starter (lokal tid)"
+              label={t("Starter (lokal tid)")}
               type="datetime-local"
               value={start}
               onChange={(e) => setStart(e.target.value)}
               required
             />
             <Field
-              label="Slutter (valgfritt)"
+              label={t("Slutter (valgfritt)")}
               type="datetime-local"
               value={end}
               onChange={(e) => setEnd(e.target.value)}
             />
             <Field
-              label="Totalt antall innløsninger (tomt = ubegrenset)"
+              label={t("Totalt antall innløsninger (tomt = ubegrenset)")}
               type="number"
               min="1"
               value={max}
               onChange={(e) => setMax(e.target.value)}
             />
             <Field
-              label="Maks per bruker"
+              label={t("Maks per bruker")}
               type="number"
               min="1"
               value={perUser}
@@ -567,50 +587,64 @@ function DealForm({
             />
           </div>
           <label>
-            Vilkår
+            {" "}
+            {t("Vilkår")}{" "}
             <textarea
               value={terms}
               onChange={(e) => setTerms(e.target.value)}
             />
           </label>
           {deal?.image_url && (
-            <img className="cover" src={deal.image_url} alt="Tilbudsbilde" />
+            <img
+              className="cover"
+              src={deal.image_url}
+              alt={t("Tilbudsbilde")}
+            />
           )}
           <Field
-            label="Tilbudsbilde (maks 5 MB)"
+            label={t("Tilbudsbilde (maks 5 MB)")}
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(e) => setImage(e.target.files?.[0] ?? null)}
           />
           <label>
-            Status
+            {" "}
+            {t("Status")}{" "}
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as Deal["status"])}
             >
-              <option value="draft">Utkast</option>
-              <option value="active">Publisert</option>
-              <option value="paused">Pauset</option>
-              <option value="expired">Utløpt</option>
+              <option value="draft">{t("Utkast")}</option>
+              <option value="active">{t("Publisert")}</option>
+              <option value="paused">{t("Pauset")}</option>
+              <option value="expired">{t("Utløpt")}</option>
             </select>
           </label>
           {business.status !== "approved" && (
             <p className="notice">
-              Tilbudet blir ikke synlig for brukere før bedriften er godkjent.
+              {" "}
+              {t(
+                "Tilbudet blir ikke synlig for brukere før bedriften er godkjent.",
+              )}{" "}
             </p>
           )}
           <div className="actions">
-            <button type="submit">Lagre vennepris</button>
+            <button type="submit">{t("Lagre vennepris")}</button>
             <button type="button" className="quiet" onClick={cancel}>
-              Avbryt
+              {" "}
+              {t("Avbryt")}{" "}
             </button>
           </div>
         </form>
         <section className="preview-panel">
-          <span className="eyebrow">FORHÅNDSVISNING</span>
+          <span className="eyebrow">{t("FORHÅNDSVISNING")}</span>
           <article className="content-preview">
             {previewImage && (
-              <img src={previewImage} className="cover" alt="Tilbudsbilde" />
+              <img
+                src={previewImage}
+                className="cover"
+                alt={t("Tilbudsbilde")}
+              />
             )}
             <div className="preview-body">
               <span className="eyebrow">{business.name}</span>
@@ -620,14 +654,14 @@ function DealForm({
                   : kind === "amount"
                     ? `${value || 0} kr`
                     : kind === "freebie"
-                      ? "En gave til deg"
-                      : "Vennepris"}
+                      ? t("En gave til deg")
+                      : t("Vennepris")}
               </p>
-              <h3>{title || "Din neste vennepris"}</h3>
+              <h3>{title || t("Din neste vennepris")}</h3>
               <p className="preserve-lines">
-                {description || "Et godt tilbud fra et lokalt sted."}
+                {description || t("Et godt tilbud fra et lokalt sted.")}
               </p>
-              <p className="muted">{terms || "Vilkårene dine vises her."}</p>
+              <p className="muted">{terms || t("Vilkårene dine vises her.")}</p>
             </div>
           </article>
         </section>
@@ -636,6 +670,7 @@ function DealForm({
   );
 }
 function App() {
+  useLanguage();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [recovery, setRecovery] = useState(
@@ -792,6 +827,10 @@ function App() {
     if (selected)
       void loadBusiness(selected).catch((e) => setError(message(e)));
   }, [selected]);
+  function navigate(next: string) {
+    setNotice("");
+    setTab(next);
+  }
   async function reload() {
     await load();
     if (selected) await loadBusiness(selected);
@@ -800,55 +839,71 @@ function App() {
     <>
       <header>
         <a className="brand" href="/">
-          <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+          <span className="brand-logo-frame">
+            <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+          </span>
           <span>DinVenn</span>
         </a>
-        <span>FOR LOKALE BEDRIFTER</span>
-        {session && (
-          <button
-            className="quiet"
-            onClick={() =>
-              void run(async () => {
-                check(await db!.auth.signOut());
-              })
-            }
-          >
-            Logg ut
-          </button>
-        )}
+        <span>{t("FOR LOKALE BEDRIFTER")}</span>
+        <div className="header-actions">
+          <LanguagePicker />
+          {session && (
+            <button
+              className="quiet"
+              onClick={() =>
+                void run(async () => {
+                  check(await db!.auth.signOut());
+                })
+              }
+            >
+              {" "}
+              {t("Logg ut")}{" "}
+            </button>
+          )}
+        </div>
       </header>
       <main aria-busy={busy}>
         {error && (
           <div className="alert" role="alert">
-            {error}
+            {t(error)}
             <button className="quiet" onClick={() => setError("")}>
-              Lukk
+              {" "}
+              {t("Lukk")}{" "}
             </button>
           </div>
         )}
         {notice && (
-          <div className="notice" role="status">
-            {notice}
+          <div className="notice dismissible-notice" role="status">
+            <span>{t(notice)}</span>
+            <button
+              type="button"
+              className="notice-close"
+              aria-label={t("Lukk bekreftelse")}
+              onClick={() => setNotice("")}
+            >
+              ×
+            </button>
           </div>
         )}
-        {busy && <p role="status">Jobber …</p>}
+        {busy && <p role="status">{t("Jobber …")}</p>}
         {!configured ? (
           <section className="card auth">
-            <span className="eyebrow">DINVENN PILOT</span>
+            <span className="eyebrow">{t("DINVENN PILOT")}</span>
             <h1>
-              En liten portal.
-              <br />
-              En stor forskjell lokalt.
+              {" "}
+              {t("En liten portal.")} <br />{" "}
+              {t("En stor forskjell lokalt.")}{" "}
             </h1>
             <p>
-              Appen er klar for tilkobling til Supabase. Kopier{" "}
-              <code>apps/portal/.env.example</code> til <code>.env</code> og
-              fyll inn prosjektets URL og offentlige nøkkel.
+              {" "}
+              {t("Appen er klar for tilkobling til Supabase. Kopier")}{" "}
+              <code>apps/portal/.env.example</code> {t("til")} <code>.env</code>{" "}
+              {t("og fyll inn prosjektets URL og offentlige nøkkel.")}{" "}
             </p>
-            <p>Se README for databaseoppsett og testkontoer.</p>
+            <p>{t("Se README for databaseoppsett og testkontoer.")}</p>
           </section>
         ) : !ready ? (
-          <p>Laster innlogging …</p>
+          <p>{t("Laster innlogging …")}</p>
         ) : !session || recovery ? (
           <Auth
             db={db!}
@@ -857,24 +912,27 @@ function App() {
             done={() => {
               setRecovery(false);
               history.replaceState(null, "", "/");
-              setNotice("Passordet er oppdatert.");
+              setNotice(t("Passordet er oppdatert."));
             }}
           />
         ) : (
           <div className="layout">
             <aside className="sidebar">
-              <p className="eyebrow">HEI, {profile?.display_name ?? "VENN"}!</p>
+              <p className="eyebrow">
+                {t("HEI,")} {profile?.display_name ?? t("VENN")}!
+              </p>
               <label>
-                Din bedrift
+                {" "}
+                {t("Din bedrift")}{" "}
                 <select
                   value={selected}
                   onChange={(e) => {
                     setSelected(e.target.value);
-                    setTab("overview");
+                    navigate("overview");
                   }}
                 >
                   {!businesses.length && (
-                    <option value="">Ingen bedrifter ennå</option>
+                    <option value="">{t("Ingen bedrifter ennå")}</option>
                   )}
                   {businesses.map((b) => (
                     <option value={b.id} key={b.id}>
@@ -885,23 +943,23 @@ function App() {
               </label>
               <nav>
                 {[
-                  ["overview", "Oversikt"],
-                  ["profile", "Bedriftsprofil"],
-                  ["deals", "Vennepriser"],
-                  ["events", "Arrangementer"],
-                  ["news", "Nyheter"],
-                  ["redeem", "Løs inn kode"],
-                  ["subscription", "Abonnement"],
-                  ["new", "Registrer bedrift"],
+                  ["overview", t("Oversikt")],
+                  ["profile", t("Bedriftsprofil")],
+                  ["deals", t("Vennepriser")],
+                  ["events", t("Arrangementer")],
+                  ["news", t("Nyheter")],
+                  ["redeem", t("Løs inn kode")],
+                  ["subscription", t("Abonnement")],
+                  ["new", t("Registrer bedrift")],
                   ...(profile?.role === "admin"
-                    ? [["admin", "Godkjenning"]]
+                    ? [["admin", t("Godkjenning")]]
                     : []),
                 ].map(([key, label]) => (
                   <button
                     className={tab === key ? "nav active" : "nav"}
                     key={key}
                     onClick={() => {
-                      setTab(key);
+                      navigate(key);
                       setEditing(null);
                       setScanning(false);
                     }}
@@ -912,22 +970,23 @@ function App() {
                 ))}
               </nav>
               <button className="quiet" onClick={() => void run(reload)}>
-                Oppdater data
+                {" "}
+                {t("Oppdater data")}{" "}
               </button>
             </aside>
             <div className="content" key={selected || "no-business"}>
               {business && (
                 <div className="pageheading">
                   <div>
-                    <span className="eyebrow">DITT LOKALE HJØRNE</span>
+                    <span className="eyebrow">{t("DITT LOKALE HJØRNE")}</span>
                     <h1>{business.name}</h1>
                   </div>
                   <span className={`badge ${business.status}`}>
                     {
                       {
-                        pending: "Venter på godkjenning",
-                        approved: "Godkjent",
-                        suspended: "Suspendert",
+                        pending: t("Venter på godkjenning"),
+                        approved: t("Godkjent"),
+                        suspended: t("Suspendert"),
                       }[business.status]
                     }
                   </span>
@@ -943,19 +1002,21 @@ function App() {
                   saved={async () => {
                     await load();
                     setTab("overview");
-                    setNotice("Bedriften er sendt til godkjenning.");
+                    setNotice(t("Bedriften er sendt til godkjenning."));
                   }}
                 />
               ) : tab === "admin" ? (
                 <section className="card">
-                  <h2>Bedriftsgodkjenning</h2>
-                  {!adminBusinesses.length && <p>Ingen bedrifter ennå.</p>}
+                  <h2>{t("Bedriftsgodkjenning")}</h2>
+                  {!adminBusinesses.length && (
+                    <p>{t("Ingen bedrifter ennå.")}</p>
+                  )}
                   {adminBusinesses.map((b) => (
                     <article className="listitem" key={b.id}>
                       <div>
                         <strong>{b.name}</strong>
                         <p>
-                          {b.city} · {businessStatusLabels[b.status]}
+                          {b.city} · {t(businessStatusLabels[b.status])}
                         </p>
                         <p>{b.description}</p>
                         <small>
@@ -981,11 +1042,13 @@ function App() {
                                       .single(),
                                   );
                                   await load();
-                                  setNotice("Bedriftsstatus oppdatert.");
+                                  setNotice(t("Bedriftsstatus oppdatert."));
                                 })
                               }
                             >
-                              {status === "approved" ? "Godkjenn" : "Suspender"}
+                              {status === "approved"
+                                ? t("Godkjenn")
+                                : t("Suspender")}
                             </button>
                           ))}
                       </div>
@@ -1005,8 +1068,8 @@ function App() {
                     await loadBusiness(selected);
                     setNotice(
                       tab === "events"
-                        ? "Arrangementet er lagret."
-                        : "Nyheten er lagret.",
+                        ? t("Arrangementet er lagret.")
+                        : t("Nyheten er lagret."),
                     );
                   }}
                 />
@@ -1022,7 +1085,7 @@ function App() {
                   run={run}
                   saved={async () => {
                     await load();
-                    setNotice("Profilen er lagret.");
+                    setNotice(t("Profilen er lagret."));
                   }}
                 />
               ) : tab === "deals" ? (
@@ -1037,21 +1100,24 @@ function App() {
                     saved={async () => {
                       await loadBusiness(selected);
                       setEditing(null);
-                      setNotice("Venneprisen er lagret.");
+                      setNotice(t("Venneprisen er lagret."));
                     }}
                   />
                 ) : (
                   <section className="card">
                     <div className="pageheading">
-                      <h2>Venneprisene dine</h2>
+                      <h2>{t("Venneprisene dine")}</h2>
                       <button onClick={() => setEditing("new")}>
-                        + Ny vennepris
+                        {" "}
+                        {t("+ Ny vennepris")}{" "}
                       </button>
                     </div>
                     {!deals.length && (
                       <p>
-                        Lag din første vennepris og gi folk en grunn til å komme
-                        innom.
+                        {" "}
+                        {t(
+                          "Lag din første vennepris og gi folk en grunn til å komme innom.",
+                        )}{" "}
                       </p>
                     )}
                     {deals.map((d) => (
@@ -1059,14 +1125,14 @@ function App() {
                         <div>
                           <strong>{d.title}</strong>
                           <p>
-                            {discount(d)} · {contentStatusLabels[d.status]} ·{" "}
+                            {discount(d)} · {t(contentStatusLabels[d.status])} ·{" "}
                             {
                               redemptions.filter(
                                 (r) =>
                                   r.deal_id === d.id && r.status === "redeemed",
                               ).length
                             }{" "}
-                            innløst
+                            {t("innløst")}{" "}
                           </p>
                         </div>
                         <div className="actions">
@@ -1074,7 +1140,8 @@ function App() {
                             className="quiet"
                             onClick={() => setEditing(d)}
                           >
-                            Rediger
+                            {" "}
+                            {t("Rediger")}{" "}
                           </button>
                           <button
                             className="quiet"
@@ -1097,7 +1164,7 @@ function App() {
                               })
                             }
                           >
-                            {d.status === "active" ? "Pause" : "Publiser"}
+                            {d.status === "active" ? t("Pause") : t("Publiser")}
                           </button>
                         </div>
                       </article>
@@ -1106,17 +1173,19 @@ function App() {
                 )
               ) : tab === "redeem" ? (
                 <section className="card">
-                  <span className="eyebrow">VELKOMMEN INNOM</span>
-                  <h2>Gjør en kode til et besøk</h2>
+                  <span className="eyebrow">{t("VELKOMMEN INNOM")}</span>
+                  <h2>{t("Gjør en kode til et besøk")}</h2>
                   <p>
-                    Skann kundens QR-kode eller lim inn koden. Kontroller koden
-                    og trykk «Bekreft innløsning».
+                    {" "}
+                    {t(
+                      "Skann kundens QR-kode eller lim inn koden. Kontroller koden og trykk «Bekreft innløsning».",
+                    )}{" "}
                   </p>
                   <button
                     className="quiet"
                     onClick={() => setScanning((s) => !s)}
                   >
-                    {scanning ? "Stopp kamera" : "Åpne QR-skanner"}
+                    {scanning ? t("Stopp kamera") : t("Åpne QR-skanner")}
                   </button>
                   {scanning && (
                     <Scanner
@@ -1126,8 +1195,9 @@ function App() {
                       }}
                       error={(e) => {
                         setError(
-                          "Kunne ikke åpne kamera. Bruk HTTPS eller localhost, gi kameratilgang, eller lim inn kode. " +
-                            message(e),
+                          t(
+                            "Kunne ikke åpne kamera. Bruk HTTPS eller localhost, gi kameratilgang, eller lim inn kode. ",
+                          ) + message(e),
                         );
                         setScanning(false);
                       }}
@@ -1142,19 +1212,23 @@ function App() {
                         setScanning(false);
                         await loadBusiness(selected);
                         setNotice(
-                          `Innløsning bekreftet: ${deals.find((d) => d.id === r.deal_id)?.title ?? "Vennepris"}.`,
+                          t(
+                            "Innløsning bekreftet: {0}.",
+                            deals.find((d) => d.id === r.deal_id)?.title ??
+                              t("Vennepris"),
+                          ),
                         );
                       });
                     }}
                   >
                     <Field
-                      label="Kundens kode"
+                      label={t("Kundens kode")}
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                       required
                       autoComplete="off"
                     />
-                    <button type="submit">Bekreft innløsning</button>
+                    <button type="submit">{t("Bekreft innløsning")}</button>
                   </form>
                 </section>
               ) : (
@@ -1164,23 +1238,23 @@ function App() {
                   events={events}
                   news={news}
                   onNewDeal={() => {
-                    setTab("deals");
+                    navigate("deals");
                     setEditing("new");
                   }}
-                  onDeals={() => setTab("deals")}
+                  onDeals={() => navigate("deals")}
                   onEditDeal={(deal) => {
-                    setTab("deals");
+                    navigate("deals");
                     setEditing(deal);
                   }}
-                  onEvents={() => setTab("events")}
-                  onNews={() => setTab("news")}
+                  onEvents={() => navigate("events")}
+                  onNews={() => navigate("news")}
                 />
               )}
             </div>
           </div>
         )}
       </main>
-      <footer>DinVenn ♥ Heia de lokale.</footer>
+      <footer>{t("DinVenn ♥ Heia de lokale.")}</footer>
     </>
   );
 }

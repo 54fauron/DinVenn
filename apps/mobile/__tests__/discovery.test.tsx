@@ -1,3 +1,5 @@
+import { setLanguage } from "@dinvenn/core";
+import * as SecureStore from "expo-secure-store";
 import React from "react";
 import {
   render,
@@ -12,6 +14,10 @@ jest.mock("react-native-svg", () => {
   const { View } = require("react-native");
   return { __esModule: true, default: View, Path: View };
 });
+jest.mock("expo-secure-store", () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
 jest.mock("expo-status-bar", () => ({ StatusBar: () => null }));
 jest.mock("react-native-qrcode-svg", () => () => null);
 jest.mock("react-native-safe-area-context", () => {
@@ -115,6 +121,7 @@ const mockApi = {
   redemptions: jest.fn(),
 };
 beforeEach(() => {
+  setLanguage("nb");
   jest.clearAllMocks();
   mockApi.catalog.mockResolvedValue({
     businesses: [business],
@@ -296,4 +303,31 @@ test("kart fra bedriftsinfo åpner kortet og kan åpne samme bedrift igjen", asy
   expect(screen.queryByText("Se bedrift")).toBeNull();
   rerender(<MapScreen {...props} targetRequest={2} />);
   await screen.findByText("Se bedrift");
+});
+
+test("språk byttes fra Meg uten å oversette bedriftsinnhold eller miste navigasjon", async () => {
+  render(<App />);
+  await screen.findByText("Vennepriser nå");
+  fireEvent.press(screen.getByText("Meg"));
+  fireEvent.press(screen.getByLabelText("Bytt til engelsk"));
+  expect(screen.getByText("⚙ Settings")).toBeTruthy();
+  expect(screen.getByText("Explore")).toBeTruthy();
+  expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+    "dinvenn-language",
+    "en",
+  );
+  fireEvent.press(screen.getByText("Explore"));
+  await screen.findByText("Offers right now");
+  expect(screen.getAllByText(business.name).length).toBeGreaterThan(0);
+  fireEvent.press(screen.getByText("Me"));
+  fireEvent.press(screen.getByLabelText("Switch to Norwegian"));
+  expect(screen.getByText("Utforsk")).toBeTruthy();
+});
+
+test("mobilappen leser lagret språk ved oppstart", async () => {
+  jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce("en");
+  render(<App />);
+  await screen.findByText("Offers right now");
+  expect(screen.getByText("Explore")).toBeTruthy();
+  expect(screen.getByText("Me")).toBeTruthy();
 });

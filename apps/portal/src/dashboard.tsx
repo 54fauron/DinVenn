@@ -1,3 +1,4 @@
+import { t, locale } from "@dinvenn/core";
 import { discount, type Deal, type Redemption } from "@dinvenn/core";
 import {
   dateLabel,
@@ -88,22 +89,27 @@ export function Dashboard({
   const total = days.reduce((sum, d) => sum + d.count, 0);
   const stats = [
     [
-      "Aktive vennepriser",
+      t("Aktive vennepriser"),
       active.length,
-      "Tilbud som gjelder akkurat nå",
+      t("Tilbud som gjelder akkurat nå"),
       "deals",
     ],
-    ["Hentede koder", redemptions.length, "Alle hentinger hos dere", "redeem"],
     [
-      "Innløst i butikk",
+      t("Hentede koder"),
+      redemptions.length,
+      t("Alle hentinger hos dere"),
+      "redeem",
+    ],
+    [
+      t("Innløst i butikk"),
       redeemed.length,
-      "Bekreftede besøk, totalt",
+      t("Bekreftede besøk, totalt"),
       "profile",
     ],
     [
-      "Kommende arrangementer",
+      t("Kommende arrangementer"),
       upcoming.length,
-      "Publisert og klar til å deles",
+      t("Publisert og klar til å deles"),
       "events",
     ],
   ] as const;
@@ -111,14 +117,16 @@ export function Dashboard({
     <>
       <section className="dashboard-welcome">
         <div>
-          <span className="eyebrow">HEIA DE LOKALE</span>
-          <h2>Gode tilbud. Nye bekjentskaper.</h2>
+          <span className="eyebrow">{t("HEIA DE LOKALE")}</span>
+          <h2>{t("Gode tilbud. Nye bekjentskaper.")}</h2>
           <p>
-            Her er det som skjer hos dere. Gjør neste besøk til starten på noe
-            fint.
+            {" "}
+            {t(
+              "Her er det som skjer hos dere. Gjør neste besøk til starten på noe fint.",
+            )}{" "}
           </p>
         </div>
-        <button onClick={onNewDeal}>+ Ny vennepris</button>
+        <button onClick={onNewDeal}>{t("+ Ny vennepris")}</button>
       </section>
       <div className="stats dashboard-stats">
         {stats.map(([label, value, caption, icon]) => (
@@ -138,19 +146,21 @@ export function Dashboard({
         <section className="card offers-panel">
           <div className="section-heading">
             <div>
-              <h2>Venneprisene dine</h2>
-              <p>Et lite overblikk over tilbudene deres.</p>
+              <h2>{t("Venneprisene dine")}</h2>
+              <p>{t("Et lite overblikk over tilbudene deres.")}</p>
             </div>
             <button className="text-button" onClick={onDeals}>
-              Se alle →
+              {" "}
+              {t("Se alle →")}{" "}
             </button>
           </div>
           {!deals.length ? (
             <div className="empty-state">
-              <h3>Den første venneprisen venter</h3>
-              <p>Inviter noen innom med et godt tilbud.</p>
+              <h3>{t("Den første venneprisen venter")}</h3>
+              <p>{t("Inviter noen innom med et godt tilbud.")}</p>
               <button className="quiet" onClick={onNewDeal}>
-                Lag en vennepris
+                {" "}
+                {t("Lag en vennepris")}{" "}
               </button>
             </div>
           ) : (
@@ -158,12 +168,12 @@ export function Dashboard({
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Tilbud</th>
-                    <th>Slutter</th>
-                    <th>Innløst</th>
-                    <th>Status</th>
+                    <th>{t("Tilbud")}</th>
+                    <th>{t("Slutter")}</th>
+                    <th>{t("Innløst")}</th>
+                    <th>{t("Status")}</th>
                     <th>
-                      <span className="sr-only">Handling</span>
+                      <span className="sr-only">{t("Handling")}</span>
                     </th>
                   </tr>
                 </thead>
@@ -176,7 +186,7 @@ export function Dashboard({
                       </td>
                       <td>
                         {d.ends_at
-                          ? new Date(d.ends_at).toLocaleDateString("nb-NO", {
+                          ? new Date(d.ends_at).toLocaleDateString(locale(), {
                               day: "numeric",
                               month: "short",
                             })
@@ -199,10 +209,11 @@ export function Dashboard({
                       <td>
                         <button
                           className="text-button"
-                          aria-label={`Rediger ${d.title}`}
+                          aria-label={t("Rediger {0}", d.title)}
                           onClick={() => onEditDeal(d)}
                         >
-                          Rediger
+                          {" "}
+                          {t("Rediger")}{" "}
                         </button>
                       </td>
                     </tr>
@@ -215,15 +226,18 @@ export function Dashboard({
         <section className="card chart-panel">
           <div className="section-heading">
             <div>
-              <h2>Innløsninger</h2>
-              <p>Siste 7 dager · norsk tid</p>
+              <h2>{t("Innløsninger")}</h2>
+              <p>{t("Siste 7 dager · norsk tid")}</p>
             </div>
             <span className="chart-total">{total}</span>
           </div>
           <div
             className="bar-chart"
             role="img"
-            aria-label={`Innløsninger siste 7 dager: ${days.map((d) => `${d.key}: ${d.count}`).join(", ")}`}
+            aria-label={t(
+              "Innløsninger siste 7 dager: {0}",
+              days.map((d) => `${d.key}: ${d.count}`).join(", "),
+            )}
           >
             {days.map((d) => (
               <div className="chart-column" key={d.key}>
@@ -235,7 +249,7 @@ export function Dashboard({
                   />
                 </div>
                 <span className="day-label">
-                  {new Intl.DateTimeFormat("nb-NO", {
+                  {new Intl.DateTimeFormat(locale(), {
                     timeZone: "Europe/Oslo",
                     weekday: "short",
                   }).format(d.date)}
@@ -245,7 +259,10 @@ export function Dashboard({
           </div>
           {!total && (
             <p className="chart-note">
-              Her vokser grafen når kundene bruker venneprisene deres.
+              {" "}
+              {t(
+                "Her vokser grafen når kundene bruker venneprisene deres.",
+              )}{" "}
             </p>
           )}
         </section>
@@ -254,21 +271,25 @@ export function Dashboard({
         <section className="card">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">NOE Å GLEDE SEG TIL</span>
-              <h2>Kommende arrangementer</h2>
+              <span className="eyebrow">{t("NOE Å GLEDE SEG TIL")}</span>
+              <h2>{t("Kommende arrangementer")}</h2>
             </div>
             <button className="text-button" onClick={onEvents}>
-              Se alle →
+              {" "}
+              {t("Se alle →")}{" "}
             </button>
           </div>
           {!upcoming.length ? (
             <div className="empty-state compact">
               <p>
-                Skap et møtepunkt. Inviter til en workshop, et marked eller en
-                hyggelig kveld.
+                {" "}
+                {t(
+                  "Skap et møtepunkt. Inviter til en workshop, et marked eller en hyggelig kveld.",
+                )}{" "}
               </p>
               <button className="quiet" onClick={onEvents}>
-                Lag et arrangement
+                {" "}
+                {t("Lag et arrangement")}{" "}
               </button>
             </div>
           ) : (
@@ -276,12 +297,12 @@ export function Dashboard({
               <div key={e.id} className="agenda-row">
                 <div className="date-tile">
                   <b>
-                    {new Date(e.starts_at).toLocaleDateString("nb-NO", {
+                    {new Date(e.starts_at).toLocaleDateString(locale(), {
                       day: "numeric",
                     })}
                   </b>
                   <span>
-                    {new Date(e.starts_at).toLocaleDateString("nb-NO", {
+                    {new Date(e.starts_at).toLocaleDateString(locale(), {
                       month: "short",
                     })}
                   </span>
@@ -289,7 +310,7 @@ export function Dashboard({
                 <div>
                   <h3>{e.title}</h3>
                   <small>
-                    {dateLabel(e.starts_at)} · {e.price_text ?? "Gratis"}
+                    {dateLabel(e.starts_at)} · {e.price_text ?? t("Gratis")}
                   </small>
                 </div>
               </div>
@@ -299,20 +320,25 @@ export function Dashboard({
         <section className="card">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">DET SISTE FRA DERE</span>
-              <h2>Nyheter og oppdateringer</h2>
+              <span className="eyebrow">{t("DET SISTE FRA DERE")}</span>
+              <h2>{t("Nyheter og oppdateringer")}</h2>
             </div>
             <button className="text-button" onClick={onNews}>
-              Se alle →
+              {" "}
+              {t("Se alle →")}{" "}
             </button>
           </div>
           {!news.length ? (
             <div className="empty-state compact">
               <p>
-                En ny rett på menyen? Nye priser? Del det med kundene deres.
+                {" "}
+                {t(
+                  "En ny rett på menyen? Nye priser? Del det med kundene deres.",
+                )}{" "}
               </p>
               <button className="quiet" onClick={onNews}>
-                Skriv en nyhet
+                {" "}
+                {t("Skriv en nyhet")}{" "}
               </button>
             </div>
           ) : (
@@ -331,14 +357,17 @@ export function Dashboard({
       <section className="card">
         <div className="section-heading">
           <div>
-            <h2>Siste innløsninger</h2>
-            <p>Små koder som blir til lokale besøk.</p>
+            <h2>{t("Siste innløsninger")}</h2>
+            <p>{t("Små koder som blir til lokale besøk.")}</p>
           </div>
-          <span className="subtle-tag">{redeemed.length} totalt</span>
+          <span className="subtle-tag">
+            {redeemed.length} {t("totalt")}
+          </span>
         </div>
         {!redeemed.length ? (
           <p className="muted">
-            Besøkene deres dukker opp her når en kode løses inn.
+            {" "}
+            {t("Besøkene deres dukker opp her når en kode løses inn.")}{" "}
           </p>
         ) : (
           redeemed.slice(0, 5).map((r) => (
@@ -347,7 +376,7 @@ export function Dashboard({
                 ✓
               </span>
               <strong>
-                {deals.find((d) => d.id === r.deal_id)?.title ?? "Vennepris"}
+                {deals.find((d) => d.id === r.deal_id)?.title ?? t("Vennepris")}
               </strong>
               <time>{dateLabel(r.redeemed_at)}</time>
             </div>

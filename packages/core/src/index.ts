@@ -1,3 +1,4 @@
+import { t } from "./i18n.ts";
 import type { Database } from "./database.types";
 export type { Database } from "./database.types";
 import {
@@ -110,7 +111,7 @@ export function message(error: unknown): string {
     return "Kunne ikke kontakte tjenesten. Sjekk nettet og prøv igjen.";
   if (/Could not find the table|schema cache/i.test(text))
     return "Tjenesten er ikke ferdig satt opp ennå. Prøv igjen senere.";
-  return text;
+  return t(text);
 }
 export const contentStatusLabels: Record<ContentStatus, string> = {
   draft: "Utkast",
@@ -129,15 +130,15 @@ export function discount(deal: Deal) {
     : deal.discount_type === "amount"
       ? `${deal.discount_value ?? 0} kr`
       : deal.discount_type === "freebie"
-        ? "En gave til deg"
-        : "Vennepris";
+        ? t("En gave til deg")
+        : t("Vennepris");
 }
 export function redemptionStatus(r: Redemption, now = Date.now()) {
   return r.status === "redeemed"
-    ? "Innløst"
+    ? t("Innløst")
     : r.status === "expired" || Date.parse(r.expires_at) <= now
-      ? "Utløpt"
-      : "Klar til bruk";
+      ? t("Utløpt")
+      : t("Klar til bruk");
 }
 export function filterDeals(
   deals: Deal[],
@@ -299,3 +300,12 @@ export {
   addressIdentity,
 } from "./geo.ts";
 export type { Point, AddressHit } from "./geo.ts";
+
+export {
+  t,
+  locale,
+  getLanguage,
+  setLanguage,
+  subscribeLanguage,
+  type Language,
+} from "./i18n.ts";
