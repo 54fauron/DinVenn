@@ -1,3 +1,4 @@
+import { ThemePicker, useTheme } from "./ThemePicker";
 import { LanguagePicker, useLanguage } from "./LanguagePicker";
 import { t, locale } from "@dinvenn/core";
 import React, { useEffect, useRef, useState } from "react";
@@ -670,6 +671,7 @@ function DealForm({
   );
 }
 function App() {
+  const theme = useTheme();
   useLanguage();
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
@@ -840,13 +842,22 @@ function App() {
       <header>
         <a className="brand" href="/">
           <span className="brand-logo-frame">
-            <img src="/dinvenn-logo.png" alt="" className="brand-logo" />
+            <img
+              src={
+                theme === "dark"
+                  ? "/dinvenn-logo-dark.png"
+                  : "/dinvenn-logo.png"
+              }
+              alt=""
+              className="brand-logo"
+            />
           </span>
           <span>DinVenn</span>
         </a>
         <span>{t("FOR LOKALE BEDRIFTER")}</span>
         <div className="header-actions">
           <LanguagePicker />
+          <ThemePicker />
           {session && (
             <button
               className="quiet"

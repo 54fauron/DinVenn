@@ -1,3 +1,4 @@
+import { themeStyles, themeColor, useTheme } from "./theme";
 import { LanguageSettings, useLanguage } from "./LanguageSettings";
 import { t, locale } from "@dinvenn/core";
 import React, { useEffect, useRef, useState } from "react";
@@ -10,7 +11,6 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -38,7 +38,7 @@ import { Explore, BusinessDetails, ContentDetails } from "./Explore";
 import MapScreen from "./MapScreen";
 import { Icon, palette, ui } from "./ui";
 import { initials } from "./discovery";
-const colors = {
+const lightColors = {
   cream: "#fff7f0",
   ink: "#3b2a3a",
   peach: "#ffc9a8",
@@ -46,6 +46,11 @@ const colors = {
   purple: "#e6dbef",
   border: "#e7d9d1",
 };
+const colors = new Proxy(lightColors, {
+  get(target, name: keyof typeof lightColors) {
+    return themeColor(target[name]);
+  },
+});
 function Button({
   title,
   onPress,
@@ -80,7 +85,7 @@ function Input({
       <Text style={s.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor="#82717d"
+        placeholderTextColor={themeColor("#82717d")}
         {...props}
         style={[s.input, props.style]}
       />
@@ -88,6 +93,7 @@ function Input({
   );
 }
 function AppBody() {
+  const theme = useTheme();
   useLanguage();
   const [session, setSession] = useState<Session | null>(null);
   const [authReady, setAuthReady] = useState(false);
@@ -273,12 +279,16 @@ function AppBody() {
     )[0] || "venn";
   return (
     <SafeAreaView style={s.safe}>
-      <StatusBar style="dark" />
+      <StatusBar style={theme === "dark" ? "light" : "dark"} />
       <View style={s.header}>
         <View style={s.brandGroup}>
           <View style={s.brandLogoFrame}>
             <Image
-              source={require("../assets/dinvenn-logo.png")}
+              source={
+                theme === "dark"
+                  ? require("../assets/dinvenn-logo-dark.png")
+                  : require("../assets/dinvenn-logo.png")
+              }
               style={s.brandLogo}
               resizeMode="contain"
               accessible={false}
@@ -696,7 +706,7 @@ function AppBody() {
                 <Text style={s.h1}>{t(redemptionStatus(code, now))}</Text>
                 {redemptionStatus(code, now) === t("Klar til bruk") ? (
                   <>
-                    <View style={s.qr}>
+                    <View style={[s.qr, { backgroundColor: "#fff" }]}>
                       <QRCode value={code.token} size={230} />
                     </View>
                     <Text selectable style={s.code}>
@@ -849,7 +859,7 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
-const s = StyleSheet.create({
+const s = themeStyles({
   safe: { flex: 1, backgroundColor: colors.cream },
   accountHeading: { flexDirection: "row", alignItems: "center", gap: 14 },
   avatar: {

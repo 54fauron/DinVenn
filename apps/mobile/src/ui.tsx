@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { themeStyles, themeColor } from "./theme";
+import { Pressable, Text, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
-export const palette = {
+const lightPalette = {
   cream: "#fff7f0",
   ink: "#3b2a3a",
   muted: "#81717a",
@@ -12,6 +13,11 @@ export const palette = {
   border: "#eadfd6",
   white: "#fffdfb",
 };
+export const palette = new Proxy(lightPalette, {
+  get(target, name: keyof typeof lightPalette) {
+    return themeColor(target[name]);
+  },
+});
 export function Icon({
   name,
   size = 22,
@@ -77,7 +83,7 @@ export function SectionHeading({
     </View>
   );
 }
-export const ui = StyleSheet.create({
+export const ui = themeStyles({
   h1: {
     fontSize: 30,
     lineHeight: 36,

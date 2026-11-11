@@ -579,3 +579,46 @@ test("språkvelger oversetter portalen, bevarer DinVenn og husker valget", async
   ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "nb");
 });
+
+test("tema bytter logo, farger og lagres ved oppdatering", async ({ page }) => {
+  await backend(page);
+  await login(page);
+  const brandImage = page.locator(".brand img");
+  await expect(brandImage).toHaveAttribute("src", "/dinvenn-logo.png");
+  await page
+    .getByRole("button", { name: "Bytt til mørk modus", exact: true })
+    .click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(brandImage).toHaveAttribute("src", "/dinvenn-logo-dark.png");
+  await expect(page.locator("body")).toHaveCSS(
+    "background-color",
+    "rgb(21, 19, 25)",
+  );
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(page.getByLabel("Bedriftsnavn", { exact: true })).toHaveCSS(
+    "background-color",
+    "rgb(32, 28, 36)",
+  );
+  await expect(page.getByLabel("Bedriftsnavn", { exact: true })).toHaveValue(
+    "Hjørnekafeen",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `test-results/dark-profile-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(brandImage).toHaveAttribute("src", "/dinvenn-logo-dark.png");
+  await page
+    .getByRole("button", { name: "Bytt til lys modus", exact: true })
+    .click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(brandImage).toHaveAttribute("src", "/dinvenn-logo.png");
+});

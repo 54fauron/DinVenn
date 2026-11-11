@@ -1,3 +1,4 @@
+import { themeStyles, getTheme } from "./theme";
 import { t, locale } from "@dinvenn/core";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -239,6 +240,7 @@ export default function MapScreen({
       ) : (
         <View style={m.mapArea}>
           <MapView
+            userInterfaceStyle={getTheme() === "dark" ? "dark" : "light"}
             ref={map}
             style={StyleSheet.absoluteFill}
             initialRegion={{
@@ -404,7 +406,7 @@ export default function MapScreen({
     </View>
   );
 }
-const m = StyleSheet.create({
+const m = themeStyles({
   screen: { flex: 1, backgroundColor: palette.cream },
   controls: {
     paddingHorizontal: 20,

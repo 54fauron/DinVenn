@@ -1,3 +1,4 @@
+import { getTheme, toggleTheme } from "./theme";
 import { useEffect, useSyncExternalStore } from "react";
 import { Text, View, Pressable } from "react-native";
 import * as SecureStore from "expo-secure-store";
@@ -7,6 +8,7 @@ import {
   subscribeLanguage,
   t,
   type Language,
+  subscribeTheme,
 } from "@dinvenn/core";
 import { palette, ui } from "./ui";
 const key = "dinvenn-language";
@@ -24,6 +26,7 @@ export function useLanguage() {
   return language;
 }
 export function LanguageSettings() {
+  const theme = useSyncExternalStore(subscribeTheme, getTheme);
   const language = useSyncExternalStore(subscribeLanguage, getLanguage);
   function choose(next: Language) {
     setLanguage(next);
@@ -40,7 +43,7 @@ export function LanguageSettings() {
       }}
     >
       <Text style={ui.h3}>⚙ {t("Innstillinger")}</Text>
-      <Text>{t("Språk")}</Text>
+      <Text style={{ color: palette.ink }}>{t("Språk")}</Text>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={
@@ -61,6 +64,29 @@ export function LanguageSettings() {
         }}
       >
         <Text style={{ fontSize: 26 }}>{language === "nb" ? "🇳🇴" : "🇬🇧"}</Text>
+      </Pressable>
+      <Text style={{ color: palette.ink }}>{t("Utseende")}</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t(
+          theme === "light" ? "Bytt til mørk modus" : "Bytt til lys modus",
+        )}
+        onPress={toggleTheme}
+        style={{
+          alignSelf: "flex-start",
+          minWidth: 48,
+          minHeight: 48,
+          alignItems: "center",
+          justifyContent: "center",
+          borderWidth: 1,
+          borderColor: palette.border,
+          borderRadius: 12,
+          backgroundColor: palette.white,
+        }}
+      >
+        <Text style={{ fontSize: 28, color: palette.ink }}>
+          {theme === "light" ? "☀" : "☾"}
+        </Text>
       </Pressable>
     </View>
   );
