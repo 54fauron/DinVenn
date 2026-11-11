@@ -504,6 +504,11 @@ Object.assign(english, {
   "NYTT FRA DE LOKALE": "LOCAL UPDATES",
   "ET LOKALT STED": "A LOCAL PLACE",
 });
+Object.assign(english, {
+  Utseende: "Appearance",
+  "Bytt til mørk modus": "Switch to dark mode",
+  "Bytt til lys modus": "Switch to light mode",
+});
 let language: Language = "nb";
 const listeners = new Set<() => void>();
 export function getLanguage() {

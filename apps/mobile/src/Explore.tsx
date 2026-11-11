@@ -1,10 +1,10 @@
+import { themeStyles, themeColor } from "./theme";
 import { t, locale } from "@dinvenn/core";
 import {
   Image,
   Linking,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -345,7 +345,7 @@ export function Explore({
             </Text>
           </View>
           <View style={e.bannerMark}>
-            <Icon name="heart" size={50} color="#a55f42" />
+            <Icon name="heart" size={50} color={themeColor("#a55f42")} />
           </View>
         </View>
       )}
@@ -764,7 +764,7 @@ export function BusinessDetails({
     </>
   );
 }
-const e = StyleSheet.create({
+const e = themeStyles({
   grow: { flex: 1, minWidth: 0 },
   location: { flexDirection: "row", alignItems: "center", gap: 6 },
   locationText: { fontSize: 12, fontWeight: "600", color: palette.muted },

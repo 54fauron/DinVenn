@@ -131,3 +131,9 @@ Webkartet bruker Leaflet og OpenStreetMap-kartfliser med synlig kildehenvisning.
 Bedriftsportalen har én flaggknapp øverst (🇳🇴 / 🇬🇧) som viser valgt språk og bytter språk ved trykk. Mobilappen har samme valg under **Meg → Innstillinger → Språk**, også uten innlogging. Valget lagres på hver enhet. Grensesnitt, kategorier, statuser og datoformat følger språket. DinVenn-navnet og bedriftenes egne navn, beskrivelser, tilbud og nyheter beholdes slik de er skrevet.
 
 Felles oversettelser ligger i `packages/core/src/i18n.ts`. Nye grensesnitttekster legges i ordboken og vises med `t(...)`; bruk `locale()` for datoer. Språkvalget krever ingen databaseendring.
+
+### Lys og mørk modus
+
+Sol-/måneknappen ved språkvalget i webportalen og under **Meg → Innstillinger → Utseende** i mobilappen bytter tema. Solen viser lys modus, månen viser mørk modus. Lys modus er standard og beholder det opprinnelige designet. Valget lagres lokalt på hver enhet, uavhengig av språk og konto. Mørk modus bruker den alternative DinVenn-logoen. QR-koder vises på hvit bakgrunn også i mørk modus.
+
+Felles temavalg ligger i `packages/core/src/theme.ts`. Web bruker CSS-variabler, og mobil bruker paletten og `themeStyles` i `apps/mobile/src/theme.ts`. Ingen databaseendring er nødvendig.

@@ -1,4 +1,4 @@
-import { setLanguage } from "@dinvenn/core";
+import { setLanguage, setTheme, getTheme } from "@dinvenn/core";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
 import {
@@ -122,7 +122,9 @@ const mockApi = {
 };
 beforeEach(() => {
   setLanguage("nb");
+  setTheme("light");
   jest.clearAllMocks();
+  jest.mocked(SecureStore.getItemAsync).mockResolvedValue(null);
   mockApi.catalog.mockResolvedValue({
     businesses: [business],
     deals: [deal],
@@ -325,9 +327,45 @@ test("språk byttes fra Meg uten å oversette bedriftsinnhold eller miste naviga
 });
 
 test("mobilappen leser lagret språk ved oppstart", async () => {
-  jest.mocked(SecureStore.getItemAsync).mockResolvedValueOnce("en");
+  jest
+    .mocked(SecureStore.getItemAsync)
+    .mockImplementation(async (key) =>
+      key === "dinvenn-language" ? "en" : null,
+    );
   render(<App />);
   await screen.findByText("Offers right now");
   expect(screen.getByText("Explore")).toBeTruthy();
   expect(screen.getByText("Me")).toBeTruthy();
+});
+
+test("tema byttes fra innstillinger og lagres uten å endre språk", async () => {
+  render(<App />);
+  await screen.findByText("Vennepriser nå");
+  fireEvent.press(screen.getByText("Meg"));
+  const { themeColor } = require("../src/theme");
+  expect(themeColor("#fff7f0")).toBe("#fff7f0");
+  fireEvent.press(screen.getByLabelText("Bytt til mørk modus"));
+  expect(getTheme()).toBe("dark");
+  expect(themeColor("#fff7f0")).toBe("#151319");
+  expect(screen.getByText("Utforsk")).toHaveStyle({ color: "#f5edf4" });
+  expect(screen.getByLabelText("Bytt til lys modus")).toBeTruthy();
+  expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+    "dinvenn-theme",
+    "dark",
+  );
+  expect(screen.getByText("Utforsk")).toBeTruthy();
+  fireEvent.press(screen.getByLabelText("Bytt til lys modus"));
+  expect(getTheme()).toBe("light");
+  expect(themeColor("#fff7f0")).toBe("#fff7f0");
+});
+test("mobilappen gjenoppretter lagret mørkt tema", async () => {
+  jest
+    .mocked(SecureStore.getItemAsync)
+    .mockImplementation(async (key) =>
+      key === "dinvenn-theme" ? "dark" : null,
+    );
+  render(<App />);
+  await waitFor(() => expect(getTheme()).toBe("dark"));
+  fireEvent.press(screen.getByText("Meg"));
+  expect(screen.getByLabelText("Bytt til lys modus")).toBeTruthy();
 });

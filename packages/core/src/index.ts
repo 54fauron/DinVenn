@@ -309,3 +309,4 @@ export {
   subscribeLanguage,
   type Language,
 } from "./i18n.ts";
+export { getTheme, setTheme, subscribeTheme, type Theme } from "./theme.ts";
