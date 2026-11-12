@@ -1075,12 +1075,13 @@ function App() {
                   items={tab === "events" ? events : news}
                   run={run}
                   busy={busy}
-                  reload={async () => {
+                  reload={async (notice) => {
                     await loadBusiness(selected);
                     setNotice(
-                      tab === "events"
-                        ? t("Arrangementet er lagret.")
-                        : t("Nyheten er lagret."),
+                      notice ??
+                        (tab === "events"
+                          ? t("Arrangementet er lagret.")
+                          : t("Nyheten er lagret.")),
                     );
                   }}
                 />
@@ -1176,6 +1177,38 @@ function App() {
                             }
                           >
                             {d.status === "active" ? t("Pause") : t("Publiser")}
+                          </button>
+                          <button
+                            type="button"
+                            className="quiet delete-button"
+                            disabled={busy}
+                            aria-label={t("Slett {0}", d.title)}
+                            onClick={() => {
+                              if (
+                                !window.confirm(
+                                  t(
+                                    "Vil du slette venneprisen «{0}»? Tilhørende koder og innløsningshistorikk slettes også. Dette kan ikke angres.",
+                                    d.title,
+                                  ),
+                                )
+                              )
+                                return;
+                              void run(async () => {
+                                unwrap(
+                                  await db!
+                                    .from("deals")
+                                    .delete()
+                                    .eq("id", d.id)
+                                    .eq("business_id", business!.id)
+                                    .select("id")
+                                    .single(),
+                                );
+                                await loadBusiness(selected);
+                                setNotice(t("Venneprisen er slettet."));
+                              });
+                            }}
+                          >
+                            {t("Slett")}
                           </button>
                         </div>
                       </article>

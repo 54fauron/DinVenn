@@ -118,10 +118,21 @@ async function backend(
       return rows([business]);
     }
     if (path.endsWith("/deals")) {
+      if (method === "DELETE") {
+        const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+        const business = url.searchParams
+          .get("business_id")
+          ?.replace(/^eq\./, "");
+        const removed = deals.filter(
+          (item) => item.id === id && item.business_id === business,
+        );
+        deals = deals.filter((item) => !removed.includes(item));
+        return rows(removed);
+      }
       if (method === "POST")
         deals.push({
           ...data,
-          id: "deal1",
+          id: deals.length ? crypto.randomUUID() : "deal1",
           created_at: new Date().toISOString(),
           image_url: null,
         });
@@ -139,6 +150,19 @@ async function backend(
       ]);
     for (const table of ["events", "news_posts"]) {
       if (path.endsWith("/" + table)) {
+        if (method === "DELETE") {
+          const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+          const business = url.searchParams
+            .get("business_id")
+            ?.replace(/^eq\./, "");
+          const removed = content[table].filter(
+            (item) => item.id === id && item.business_id === business,
+          );
+          content[table] = content[table].filter(
+            (item) => !removed.includes(item),
+          );
+          return rows(removed);
+        }
         if (method === "POST")
           content[table].push({
             id: crypto.randomUUID(),
@@ -622,3 +646,99 @@ test("tema bytter logo, farger og lagres ved oppdatering", async ({ page }) => {
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   await expect(brandImage).toHaveAttribute("src", "/dinvenn-logo.png");
 });
+
+for (const entry of [
+  {
+    table: "deals",
+    tab: "Vennepriser",
+    create: "+ Ny vennepris",
+    save: "Lagre vennepris",
+    notice: "Venneprisen er slettet.",
+  },
+  {
+    table: "events",
+    tab: "Arrangementer",
+    create: "+ Nytt arrangement",
+    save: "Lagre arrangement",
+    notice: "Arrangementet er slettet.",
+  },
+  {
+    table: "news_posts",
+    tab: "Nyheter",
+    create: "+ Ny nyhet",
+    save: "Lagre nyhet",
+    notice: "Nyheten er slettet.",
+  },
+]) {
+  test(`${entry.tab}: sletting kan avbrytes, håndterer feil og sletter bare valgt innhold`, async ({
+    page,
+  }) => {
+    await backend(page);
+    await login(page);
+    await page.getByRole("button", { name: entry.tab, exact: true }).click();
+    for (const title of ["Slett meg", "Behold meg"]) {
+      await page
+        .getByRole("button", { name: entry.create, exact: true })
+        .click();
+      await page.getByLabel("Tittel", { exact: true }).fill(title);
+      if (entry.table === "events") {
+        await page
+          .getByLabel("Beskrivelse", { exact: true })
+          .fill("Beskrivelse av arrangementet.");
+        await page.getByLabel("Starter (lokal tid)").fill("2099-11-12T17:00");
+      }
+      if (entry.table === "news_posts")
+        await page
+          .getByLabel("Nyhetstekst")
+          .fill("En oppdatering fra bedriften.");
+      await page.getByRole("button", { name: entry.save, exact: true }).click();
+      await expect(
+        page.getByRole("article").filter({ hasText: title }),
+      ).toBeVisible();
+    }
+    const item = page.getByRole("article").filter({ hasText: "Slett meg" });
+    page.once("dialog", (dialog) => dialog.dismiss());
+    await item
+      .getByRole("button", { name: "Slett Slett meg", exact: true })
+      .click();
+    await expect(item).toBeVisible();
+    let rejectDelete = true;
+    await page.route(`**/rest/v1/${entry.table}?*`, async (route) => {
+      if (route.request().method() === "DELETE" && rejectDelete) {
+        await route.fulfill({
+          status: 403,
+          contentType: "application/json",
+          body: JSON.stringify({ message: "Ikke tilgang" }),
+        });
+      } else await route.fallback();
+    });
+    page.once("dialog", (dialog) => dialog.accept());
+    await item
+      .getByRole("button", { name: "Slett Slett meg", exact: true })
+      .click();
+    await expect(page.getByRole("alert")).toContainText("Ikke tilgang");
+    await expect(item).toBeVisible();
+    rejectDelete = false;
+    page.once("dialog", (dialog) => dialog.accept());
+    const request = page.waitForRequest((r) => r.method() === "DELETE");
+    await item
+      .getByRole("button", { name: "Slett Slett meg", exact: true })
+      .click();
+    expect(new URL((await request).url()).searchParams.get("business_id")).toBe(
+      `eq.${businessId}`,
+    );
+    await expect(page.getByText(entry.notice, { exact: true })).toBeVisible();
+    await expect(item).toHaveCount(0);
+    await expect(
+      page.getByRole("article").filter({ hasText: "Behold meg" }),
+    ).toBeVisible();
+    await page.reload();
+    await page.getByRole("button", { name: entry.tab, exact: true }).click();
+    await expect(
+      page.getByRole("article").filter({ hasText: "Slett meg" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("article").filter({ hasText: "Behold meg" }),
+    ).toBeVisible();
+  });
+}

@@ -1506,3 +1506,12 @@ fieldset {
 :root[data-theme="dark"] .leaflet-control-attribution a {
   color: #344f79;
 }
+
+button.delete-button {
+  color: #a13342;
+  border-color: #d7a4ac;
+}
+:root[data-theme="dark"] button.delete-button {
+  color: #ffb4bf;
+  border-color: #975966;
+}
