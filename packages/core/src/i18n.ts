@@ -509,6 +509,17 @@ Object.assign(english, {
   "Bytt til mørk modus": "Switch to dark mode",
   "Bytt til lys modus": "Switch to light mode",
 });
+Object.assign(english, {
+  Slett: "Delete",
+  "Slett {0}": "Delete {0}",
+  "Vil du slette «{0}»? Dette kan ikke angres.":
+    "Delete ‘{0}’? This cannot be undone.",
+  "Vil du slette venneprisen «{0}»? Tilhørende koder og innløsningshistorikk slettes også. Dette kan ikke angres.":
+    "Delete the offer ‘{0}’? Associated codes and redemption history will also be deleted. This cannot be undone.",
+  "Arrangementet er slettet.": "Event deleted.",
+  "Nyheten er slettet.": "News post deleted.",
+  "Venneprisen er slettet.": "Offer deleted.",
+});
 let language: Language = "nb";
 const listeners = new Set<() => void>();
 export function getLanguage() {

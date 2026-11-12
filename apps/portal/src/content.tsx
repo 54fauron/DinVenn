@@ -380,7 +380,7 @@ export function ContentManager({
   items: BusinessEvent[] | NewsPost[];
   run: Run;
   busy: boolean;
-  reload: () => Promise<void>;
+  reload: (notice?: string) => Promise<void>;
 }) {
   const [editing, setEditing] = useState<
     BusinessEvent | NewsPost | "new" | null
@@ -532,6 +532,43 @@ export function ContentManager({
                   }
                 >
                   {item.status === "active" ? t("Pause") : t("Publiser")}
+                </button>
+                <button
+                  type="button"
+                  className="quiet small-button delete-button"
+                  disabled={busy}
+                  aria-label={t("Slett {0}", item.title)}
+                  onClick={() => {
+                    if (
+                      !window.confirm(
+                        t(
+                          "Vil du slette «{0}»? Dette kan ikke angres.",
+                          item.title,
+                        ),
+                      )
+                    )
+                      return;
+                    void run(async () => {
+                      unwrap(
+                        await db
+                          .from(kind)
+                          .delete()
+                          .eq("id", item.id)
+                          .eq("business_id", business.id)
+                          .select("id")
+                          .single(),
+                      );
+                      await reload(
+                        t(
+                          isEvent
+                            ? "Arrangementet er slettet."
+                            : "Nyheten er slettet.",
+                        ),
+                      );
+                    });
+                  }}
+                >
+                  {t("Slett")}
                 </button>
               </div>
             </article>
