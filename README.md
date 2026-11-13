@@ -149,3 +149,31 @@ Felles temavalg ligger i `packages/core/src/theme.ts`. Web bruker CSS-variabler,
 - Byggvariabler: `VITE_SUPABASE_URL` og `VITE_SUPABASE_PUBLISHABLE_KEY`. Disse må være tilgjengelige under bygging, siden Vite bygger dem inn i klienten.
 
 Etter publisering må den faktiske HTTPS-adressen legges inn i Supabase Auth sine URL-innstillinger og i mobilens `EXPO_PUBLIC_PORTAL_URL`. Denne konfigurasjonen gjelder Workers; Pages bruker egne byggeinnstillinger.
+
+### Installerbar pilotapp (Expo Build)
+
+Mobilappen er koblet til [din-venn/dinvenn](https://expo.dev/accounts/din-venn/projects/dinvenn). Byggekonfigurasjonen ligger i `apps/mobile/eas.json`. Kjør EAS-kommandoer fra `apps/mobile`, ikke repositoriroten.
+
+`preview` lager en selvstendig Android-APK eller en intern iOS-testapp med JavaScript inkludert, slik at Expo Go og en lokal Metro-server ikke trengs. `simulator` lager en iPhone-simulatorversjon for Mac. Deling til fysiske iPhone-enheter gjennom EAS krever et aktivt Apple Developer-medlemskap og registrerte testenheter; simulatorprofilen er ikke installerbar på en iPhone.
+
+Før Android-bygg:
+
+1. Opprett/velg et Google Cloud-prosjekt, konfigurer fakturering og aktiver **Maps SDK for Android**.
+2. Opprett en API-nøkkel og begrens den til Maps SDK for Android. Før deling begrenses den også til Android-pakken `no.dinvenn.pilot` og SHA-1 fra appens signeringssertifikat i EAS. iOS bruker Apple Maps og trenger ikke denne Google-nøkkelen.
+3. Legg `GOOGLE_MAPS_ANDROID_API_KEY` i `apps/mobile/.env`, og overfør appvariablene til Expo-miljøet:
+
+   ```bash
+   cd apps/mobile
+   npx eas-cli env:push preview --path .env
+   ```
+
+   Preview-miljøet skal ha `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_PORTAL_URL` (`https://dinvenn.app`) og Google Maps-nøkkelen. Ingen service-role-nøkkel eller databasepassord skal legges inn. `.env` og signeringsfiler er utelatt fra Git.
+4. Start bygg og la EAS håndtere Android-signeringen:
+
+   ```bash
+   npx eas-cli build --platform android --profile preview
+   ```
+
+   Build-lenken gir nedlasting av APK-en når bygget er ferdig. Android-enheten må tillate installasjon fra valgt kilde. Google Maps-nøkkelens Android-begrensning må bruke SHA-1 fra signeringen som faktisk ble brukt i APK-en.
+
+Bygg for iOS Simulator: `npx eas-cli build --platform ios --profile simulator`. Et slikt bygg bruker også Expo sin byggekvote. Android-signering er opprettet i Expo, og første APK-bygg er fullført med profilen `preview`. Byggestatus og installasjonslenker finnes i Expo-prosjektets Builds-side.

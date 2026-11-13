@@ -7,12 +7,19 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "no.dinvenn.pilot"
     },
     "android": {
       "package": "no.dinvenn.pilot"
     },
     "plugins": ["expo-secure-store"],
-    "icon": "./assets/dinvenn-logo.png"
+    "icon": "./assets/dinvenn-logo.png",
+    "owner": "din-venn",
+    "extra": {
+      "eas": {
+        "projectId": "c9db43d4-4af8-4eb3-a3de-f2f7bc5f6676"
+      }
+    }
   }
 }
