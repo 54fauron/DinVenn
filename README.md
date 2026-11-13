@@ -137,3 +137,15 @@ Felles oversettelser ligger i `packages/core/src/i18n.ts`. Nye grensesnitttekste
 Sol-/måneknappen ved språkvalget i webportalen og under **Meg → Innstillinger → Utseende** i mobilappen bytter tema. Solen viser lys modus, månen viser mørk modus. Lys modus er standard og beholder det opprinnelige designet. Valget lagres lokalt på hver enhet, uavhengig av språk og konto. Mørk modus bruker den alternative DinVenn-logoen. QR-koder vises på hvit bakgrunn også i mørk modus.
 
 Felles temavalg ligger i `packages/core/src/theme.ts`. Web bruker CSS-variabler, og mobil bruker paletten og `themeStyles` i `apps/mobile/src/theme.ts`. Ingen databaseendring er nødvendig.
+
+### Publisering på Cloudflare Workers
+
+`wrangler.jsonc` i prosjektroten peker på webportalens ferdige bygg. Bruk disse innstillingene i Cloudflare Workers Builds:
+
+- Root directory: prosjektroten (ikke `apps/portal`, siden prosjektet bruker npm workspaces).
+- Build command: `npm run build`.
+- Deploy command: `npx wrangler deploy`.
+- Worker-navn: `dinvenn` (må samsvare med `name` i `wrangler.jsonc`; tilpass begge hvis du velger et annet navn).
+- Byggvariabler: `VITE_SUPABASE_URL` og `VITE_SUPABASE_PUBLISHABLE_KEY`. Disse må være tilgjengelige under bygging, siden Vite bygger dem inn i klienten.
+
+Etter publisering må den faktiske HTTPS-adressen legges inn i Supabase Auth sine URL-innstillinger og i mobilens `EXPO_PUBLIC_PORTAL_URL`. Denne konfigurasjonen gjelder Workers; Pages bruker egne byggeinnstillinger.
