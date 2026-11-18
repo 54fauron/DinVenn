@@ -1,0 +1,23 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_PORTAL_URL": "https://dinvenn.app"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "simulator": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      }
+    }
+  }
+}
