@@ -569,6 +569,10 @@ Object.assign(english, {
     "Only an administrator can delete reviews.",
   "Anmeldelsen finnes ikke lenger.": "This review no longer exists.",
 });
+Object.assign(english, {
+  "* Påkrevde felt": "* Required fields",
+  "Fyll ut alle påkrevde felt.": "Please fill in all required fields.",
+});
 let language: Language = "nb";
 const listeners = new Set<() => void>();
 export function getLanguage() {
