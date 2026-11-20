@@ -59,12 +59,14 @@ function Field({
 }) {
   return (
     <label>
-      {label}
-      {markRequired && props.required && (
-        <span className="required-marker" aria-hidden="true">
-          *
-        </span>
-      )}
+      <span className="field-label">
+        {label}
+        {markRequired && props.required && (
+          <span className="required-marker" aria-hidden="true">
+            *
+          </span>
+        )}
+      </span>
       <input aria-label={label} {...props} />
     </label>
   );
@@ -445,11 +447,12 @@ function BusinessForm({
                 />
               ))}
               <label>
-                {" "}
-                {t("Kategori")}
-                <span className="required-marker" aria-hidden="true">
-                  *
-                </span>{" "}
+                <span className="field-label">
+                  {t("Kategori")}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
                 <select
                   aria-label={t("Kategori")}
                   value={form.category_id}
@@ -466,11 +469,12 @@ function BusinessForm({
               </label>
             </div>
             <label>
-              {" "}
-              {t("Om bedriften")}
-              <span className="required-marker" aria-hidden="true">
-                *
-              </span>{" "}
+              <span className="field-label">
+                {t("Om bedriften")}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>
+              </span>
               <textarea
                 aria-label={t("Om bedriften")}
                 required

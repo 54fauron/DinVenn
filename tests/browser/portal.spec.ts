@@ -849,6 +849,19 @@ test("bedriftsprofil markerer og krever alle felt unntatt nettside og forsidebil
     await expect(field.locator("..").locator(".required-marker")).toHaveText(
       "*",
     );
+    const sameLine = await field.locator("..").evaluate((label) => {
+      const caption = label.querySelector(".field-label")!;
+      const marker = label.querySelector(".required-marker")!;
+      const range = document.createRange();
+      range.selectNodeContents(caption.firstChild!);
+      const text = range.getBoundingClientRect();
+      const star = marker.getBoundingClientRect();
+      return (
+        Math.abs((text.top + text.bottom) / 2 - (star.top + star.bottom) / 2) <
+        3
+      );
+    });
+    expect(sameLine).toBe(true);
   }
   await expect(
     page.getByLabel("Nettside", { exact: true }),
