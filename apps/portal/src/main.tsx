@@ -76,11 +76,13 @@ function Auth({
   run,
   recovery,
   done,
+  feedback,
 }: {
   db: Client;
   run: Run;
   recovery: boolean;
   done: () => void;
+  feedback: React.ReactNode;
 }) {
   const [mode, setMode] = useState<"login" | "register" | "reset">("login");
   const [email, setEmail] = useState("");
@@ -90,6 +92,12 @@ function Auth({
   return (
     <section className="auth card">
       <span className="eyebrow">{t("LOKALT ER FINT")}</span>
+      {feedback}
+      {notice && (
+        <p className="notice" role="status">
+          {t(notice)}
+        </p>
+      )}
       <h1>
         {recovery ? t("Velg nytt passord") : t("Flere kunder. Flere venner.")}
       </h1>
@@ -183,7 +191,6 @@ function Auth({
                 : t("Send tilbakestillingslenke")}
         </button>
       </form>
-      {notice && <p role="status">{t(notice)}</p>}
       {!recovery && (
         <div className="actions">
           <button
@@ -925,6 +932,33 @@ function App() {
     await load();
     if (selected) await loadBusiness(selected);
   }
+  const inlineAuthMessages = configured && ready && (!session || recovery);
+  const feedback = (
+    <>
+      {error && (
+        <div className="alert" role="alert">
+          {t(error)}
+          <button className="quiet" onClick={() => setError("")}>
+            {" "}
+            {t("Lukk")}{" "}
+          </button>
+        </div>
+      )}
+      {notice && (
+        <div className="notice dismissible-notice" role="status">
+          <span>{t(notice)}</span>
+          <button
+            type="button"
+            className="notice-close"
+            aria-label={t("Lukk bekreftelse")}
+            onClick={() => setNotice("")}
+          >
+            ×
+          </button>
+        </div>
+      )}
+    </>
+  );
   return (
     <>
       <header>
@@ -962,28 +996,7 @@ function App() {
         </div>
       </header>
       <main aria-busy={busy}>
-        {error && (
-          <div className="alert" role="alert">
-            {t(error)}
-            <button className="quiet" onClick={() => setError("")}>
-              {" "}
-              {t("Lukk")}{" "}
-            </button>
-          </div>
-        )}
-        {notice && (
-          <div className="notice dismissible-notice" role="status">
-            <span>{t(notice)}</span>
-            <button
-              type="button"
-              className="notice-close"
-              aria-label={t("Lukk bekreftelse")}
-              onClick={() => setNotice("")}
-            >
-              ×
-            </button>
-          </div>
-        )}
+        {!inlineAuthMessages && feedback}
         {busy && <p role="status">{t("Jobber …")}</p>}
         {!configured ? (
           <section className="card auth">
@@ -1008,6 +1021,7 @@ function App() {
             db={db!}
             run={run}
             recovery={recovery}
+            feedback={feedback}
             done={() => {
               setRecovery(false);
               history.replaceState(null, "", "/");

@@ -279,6 +279,26 @@ function AppBody() {
     (session?.user.user_metadata?.display_name as string | undefined)?.split(
       " ",
     )[0] || "venn";
+  const inlineAuthMessages = configured && tab === "Meg" && !session;
+  const feedback = (
+    <>
+      {error ? (
+        <View accessibilityRole="alert" style={s.alert}>
+          <Text style={s.text}>{t(error)}</Text>
+          <Button
+            title={t("Lukk melding")}
+            quiet
+            onPress={() => setError("")}
+          />
+        </View>
+      ) : null}
+      {notice ? (
+        <View style={s.notice}>
+          <Text style={s.text}>{t(notice)}</Text>
+        </View>
+      ) : null}
+    </>
+  );
   return (
     <SafeAreaView style={s.safe}>
       <StatusBar style={theme === "dark" ? "light" : "dark"} />
@@ -350,21 +370,7 @@ function AppBody() {
             />
           }
         >
-          {error ? (
-            <View accessibilityRole="alert" style={s.alert}>
-              <Text style={s.text}>{t(error)}</Text>
-              <Button
-                title={t("Lukk melding")}
-                quiet
-                onPress={() => setError("")}
-              />
-            </View>
-          ) : null}
-          {notice ? (
-            <View style={s.notice}>
-              <Text style={s.text}>{t(notice)}</Text>
-            </View>
-          ) : null}
+          {!inlineAuthMessages && feedback}
           {busy && (
             <ActivityIndicator
               accessibilityLabel={t("Jobber")}
@@ -389,6 +395,7 @@ function AppBody() {
           ) : tab === "Meg" ? (
             <>
               <LanguageSettings />
+              {inlineAuthMessages && feedback}
               <Text style={s.h1}>
                 {session ? t("Hei, {0}!", firstName) : t("Bli en lokal venn")}
               </Text>
