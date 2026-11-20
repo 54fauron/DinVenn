@@ -16,3 +16,9 @@ credentials.json
 *.keystore
 *.p12
 *.mobileprovision
+
+# Native prosjekter genereres lokalt av Expo Prebuild.
+apps/mobile/ios/
+apps/mobile/android/
+
+apps/mobile/dist-web/

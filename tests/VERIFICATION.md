@@ -39,3 +39,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - React Native-komponenttestene dekker innlogging, standardrating, anonym innsending og visning av bedriftssvar.
 - Playwright tester bedriftssvar og admin-moderering, inkludert avbrutt sletting og blokkert godkjenning uten organisasjonsnummer, på PC og mobilbredde.
 - Brukeren bekreftet 20. november 2026 at produksjonsoppgraderingen er kjørt uten feil; dette er ikke kontrollert direkte av agenten. Ny klientkode er ennå ikke publisert av agenten. Fysisk enhet og faktisk e-postlevering er ikke testet i denne endringen.
+
+### Brukerapp på web – 20. november 2026
+
+- Produksjonsbygg av portal og brukerapp, TypeScript, 45 kjernetester og 14 native komponenttester bestått.
+- Chromium kontrollert ved mobil- og PC-bredde: katalog, innloggingskrav, språk/tema etter reload, kartmarkør og lukking på kartet. Gjentakbare tester: `npm run test:web`.
+- Begge Cloudflare-domener returnerte HTTP 200 og riktig grensesnitt uten JavaScript-feil etter publisering.
+- Faktisk installasjon på hjemskjerm i Safari/Android, og e-postflyt på det nye portalunderdomenet, er ikke verifisert. Supabase Redirect URLs krever manuell kontroll.

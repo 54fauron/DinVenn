@@ -5,6 +5,7 @@ import { t, locale } from "@dinvenn/core";
 import React, { useEffect, useRef, useState } from "react";
 import {
   AppState,
+  Platform,
   ActivityIndicator,
   Image,
   Linking,
@@ -304,7 +305,16 @@ function AppBody() {
           </View>
           <Text style={s.brand}>DinVenn</Text>
         </View>
-        <Text style={s.small}>{t("HEIA DE LOKALE")}</Text>
+        {Platform.OS === "web" ? (
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => void Linking.openURL("https://bedrift.dinvenn.app")}
+          >
+            <Text style={s.small}>{t("For bedrifter")}</Text>
+          </Pressable>
+        ) : (
+          <Text style={s.small}>{t("HEIA DE LOKALE")}</Text>
+        )}
       </View>
       {tab === "Kart" && configured ? (
         <>
@@ -505,7 +515,10 @@ function AppBody() {
                               password,
                               options: {
                                 data: { display_name: name.trim() },
-                                emailRedirectTo: portal,
+                                emailRedirectTo:
+                                  Platform.OS === "web"
+                                    ? window.location.origin
+                                    : portal,
                               },
                             }),
                           );
