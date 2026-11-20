@@ -1,6 +1,7 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "For bedrifter": "For businesses",
   "LOKALT ER FINT": "LOCAL IS LOVELY",
   "Velg nytt passord": "Choose a new password",
   "Flere kunder. Flere venner.": "More customers. More friends.",

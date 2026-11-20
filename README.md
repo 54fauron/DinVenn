@@ -214,3 +214,42 @@ En gratis Apple-konto (Personal Team) kan brukes til å installere på din egen 
 7. Hvis telefonen viser «Untrusted Developer», godkjenn din utviklerkonto under **Innstillinger → Generelt → VPN og enhetsadministrering**.
 
 Expo-konfigurasjonen i `app.json`/`app.config.js` er kilden til nye native prosjekter. Unngå `expo prebuild --clean` etter manuelt signeringsoppsett, med mindre du er forberedt på å velge Team på nytt. Apple-passord og signeringsnøkler skal ikke lagres i kode eller sendes i chatten.
+
+## Brukerappen på web (PWA)
+
+Brukerappen er tilgjengelig på **https://dinvenn.app**. Bedriftsportalen ligger på
+**https://bedrift.dinvenn.app**, med en lenke fra brukerappens toppfelt.
+Mobilkoden gjenbrukes via React Native Web; iOS og Android beholder sine native kart
+og sikker lagring. På web brukes Leaflet/OpenStreetMap og nettleserens lokale lagring.
+Økter lagres kun i den aktuelle nettleseren, og ingen hemmelige servernøkler brukes.
+
+- Lokal brukerapp: `npm run web` (http://localhost:5174).
+- Lokal bedriftsportal: `npm run portal` (http://localhost:5173).
+- Bygg begge: `npm run build:all`.
+- Nettlesertester av brukerappen: `npm run test:web`.
+- Publiser begge til Cloudflare: `npm run deploy:web` (krever Wrangler-innlogging).
+
+`wrangler.jsonc` publiserer bedriftsportalen som Worker `dinvenn`.
+`wrangler.consumer.jsonc` publiserer brukerappen som Worker `dinvenn-app`.
+Dagens automatiske Cloudflare-bygg for portalen publiserer fortsatt bare portalen;
+bruk kommandoen over når brukerappen endres, eller koble en egen Workers Build til
+`dinvenn-app` med byggkommando `npm run build:web` og deploykommando
+`npx wrangler@4.165.0 deploy --config wrangler.consumer.jsonc`.
+Sett `EXPO_PUBLIC_SUPABASE_URL` og `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` i dette
+byggmiljøet (VITE-variantene støttes også), samt
+`EXPO_PUBLIC_PORTAL_URL=https://bedrift.dinvenn.app`. Kun offentlige klientnøkler.
+
+I Supabase → Authentication → URL Configuration beholdes Site URL som
+`https://dinvenn.app`. Redirect URLs må inneholde begge domenene og
+`https://bedrift.dinvenn.app/?recovery=1`, i tillegg til lokale utviklingsadresser.
+Webregistrering bekrefter e-post tilbake til brukerappen. Passordtilbakestilling
+bruker portalens eksisterende skjerm. Eldre tilbakestillingslenker til hoveddomenet
+videresendes til portalen med parametere og token bevart. Supabase-innstillingene
+må lagres manuelt dersom administratortilgang ikke er tilgjengelig.
+
+På iPhone: åpne dinvenn.app i Safari → Del → Legg til på Hjem-skjerm.
+På Android: åpne i Chrome → meny → Installer app / Legg til på startskjermen.
+Appen krever internett for katalog, innlogging og QR-status; frakoblet navigasjon
+viser en melding med «Prøv igjen». Service worker lagrer aldri API-svar eller
+brukerdata. Nye kodeversjoner lastes ved neste åpning/oppdatering av siden.
+Dette berører ikke Xcode-installasjonen og har ingen syvdagers signeringsgrense.

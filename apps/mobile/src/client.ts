@@ -1,4 +1,5 @@
 import "react-native-url-polyfill/auto";
+import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { makeClient, processLock } from "@dinvenn/core";
 // Supabase sessions can exceed iOS' historical per-value limit. Keep small chunks
@@ -66,7 +67,7 @@ export const client = configured
           storage,
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: false,
+          detectSessionInUrl: Platform.OS === "web",
           lock: processLock,
         },
       },

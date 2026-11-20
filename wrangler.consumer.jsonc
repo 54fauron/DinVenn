@@ -1,0 +1,10 @@
+{
+  "name": "dinvenn-app",
+  "compatibility_date": "2026-11-13",
+  "assets": {
+    "directory": "./apps/mobile/dist-web",
+    "not_found_handling": "single-page-application",
+  },
+  "workers_dev": true,
+  "routes": [{ "pattern": "dinvenn.app", "custom_domain": true }],
+}

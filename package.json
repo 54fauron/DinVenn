@@ -19,7 +19,12 @@
     "format": "prettier --write apps packages scripts tests playwright.config.ts package.json",
     "db:types": "node scripts/generate-types.mjs",
     "test:mobile": "npm run test -w @dinvenn/mobile",
-    "mobile:ios": "npm run ios:device -w @dinvenn/mobile"
+    "mobile:ios": "npm run ios:device -w @dinvenn/mobile",
+    "web": "npm run web -w @dinvenn/mobile",
+    "build:web": "npm run build:web -w @dinvenn/mobile",
+    "build:all": "npm run build && npm run build:web",
+    "test:web": "playwright test --config playwright.consumer.config.ts",
+    "deploy:web": "npm run build:all && npx wrangler@4.165.0 deploy --config wrangler.jsonc && npx wrangler@4.165.0 deploy --config wrangler.consumer.jsonc"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14",
