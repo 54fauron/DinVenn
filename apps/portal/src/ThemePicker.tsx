@@ -12,14 +12,6 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
-    document
-      .querySelectorAll<HTMLLinkElement>(
-        'link[rel="icon"], link[rel="apple-touch-icon"]',
-      )
-      .forEach((link) => {
-        link.href =
-          theme === "dark" ? "/dinvenn-logo-dark.png" : "/dinvenn-logo.png";
-      });
   }, [theme]);
   return theme;
 }
