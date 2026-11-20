@@ -51,12 +51,21 @@ const recovering =
 type Run = (action: () => Promise<void>) => Promise<void>;
 function Field({
   label,
+  markRequired = false,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  markRequired?: boolean;
+}) {
   return (
     <label>
       {label}
-      <input {...props} />
+      {markRequired && props.required && (
+        <span className="required-marker" aria-hidden="true">
+          *
+        </span>
+      )}
+      <input aria-label={label} {...props} />
     </label>
   );
 }
@@ -308,6 +317,7 @@ function BusinessForm({
       <p>
         {t("Nye bedrifter blir synlige når DinVenn har godkjent profilen.")}
       </p>
+      <p className="muted">{t("* Påkrevde felt")}</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -319,7 +329,19 @@ function BusinessForm({
               name: form.name.trim(),
               category_id: form.category_id ? Number(form.category_id) : null,
             };
-            if (!values.name) throw new Error(t("Skriv bedriftens navn."));
+            if (
+              [
+                form.name,
+                form.city,
+                form.address,
+                form.postal_code,
+                form.phone,
+                form.email,
+                form.description,
+                form.category_id,
+              ].some((value) => !value.trim())
+            )
+              throw new Error(t("Fyll ut alle påkrevde felt."));
             if (!/^\d{9}$/.test(orgNumber.trim()))
               throw new Error(t("Organisasjonsnummer må ha ni sifre."));
             if (business) await api(db).saveBusinessOrg(business.id, orgNumber);
@@ -368,6 +390,7 @@ function BusinessForm({
           <div className="business-profile-fields">
             <Field
               label={t("Organisasjonsnummer")}
+              markRequired
               value={orgNumber}
               onChange={(e) => setOrgNumber(e.target.value.replace(/\s/g, ""))}
               required
@@ -416,14 +439,19 @@ function BusinessForm({
                         ? "url"
                         : "text"
                   }
-                  required={key === "name" || key === "city"}
+                  required={key !== "website"}
+                  markRequired
                   onChange={(e) => change(key, e.target.value)}
                 />
               ))}
               <label>
                 {" "}
-                {t("Kategori")}{" "}
+                {t("Kategori")}
+                <span className="required-marker" aria-hidden="true">
+                  *
+                </span>{" "}
                 <select
+                  aria-label={t("Kategori")}
                   value={form.category_id}
                   required
                   onChange={(e) => change("category_id", e.target.value)}
@@ -439,8 +467,13 @@ function BusinessForm({
             </div>
             <label>
               {" "}
-              {t("Om bedriften")}{" "}
+              {t("Om bedriften")}
+              <span className="required-marker" aria-hidden="true">
+                *
+              </span>{" "}
               <textarea
+                aria-label={t("Om bedriften")}
+                required
                 value={form.description}
                 onChange={(e) => change("description", e.target.value)}
               />

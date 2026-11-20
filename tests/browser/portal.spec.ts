@@ -17,8 +17,8 @@ async function backend(
     city: "Kristiansand",
     address: "Demogata 1",
     postal_code: "4611",
-    phone: "",
-    email: "",
+    phone: "12345678",
+    email: "kontakt@test.example",
     website: "",
     cover_url: null,
     category_id: 1,
@@ -823,4 +823,51 @@ test("administrator kan slette anmeldelser og kan ikke godkjenne uten organisasj
     .click();
   await expect(page.getByText("Anmeldelsen er slettet.")).toBeVisible();
   await expect(page.getByText("En fin opplevelse")).toHaveCount(0);
+});
+
+test("bedriftsprofil markerer og krever alle felt unntatt nettside og forsidebilde", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  for (const name of [
+    "Organisasjonsnummer",
+    "Bedriftsnavn",
+    "By",
+    "Adresse",
+    "Postnummer",
+    "Telefon",
+    "E-post",
+    "Kategori",
+    "Om bedriften",
+  ]) {
+    const field = page.getByLabel(name, { exact: true });
+    await expect(field).toHaveAttribute("required", "");
+    await expect(field.locator("..").locator(".required-marker")).toHaveText(
+      "*",
+    );
+  }
+  await expect(
+    page.getByLabel("Nettside", { exact: true }),
+  ).not.toHaveAttribute("required", "");
+  await expect(
+    page.getByLabel("Forsidebilde (JPG, PNG eller WebP, maks 5 MB)", {
+      exact: true,
+    }),
+  ).not.toHaveAttribute("required", "");
+  await page.getByLabel("Telefon", { exact: true }).fill("");
+  await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
+  expect(
+    await page
+      .getByLabel("Telefon", { exact: true })
+      .evaluate((el: HTMLInputElement) => el.validity.valueMissing),
+  ).toBe(true);
+  await page.getByLabel("Telefon", { exact: true }).fill("12345678");
+  await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
+  await expect(
+    page.getByText("Profilen er lagret.", { exact: true }),
+  ).toBeVisible();
 });

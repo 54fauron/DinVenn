@@ -1533,3 +1533,8 @@ button.delete-button {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.required-marker {
+  margin-inline-start: 4px;
+  font-weight: 700;
+}
