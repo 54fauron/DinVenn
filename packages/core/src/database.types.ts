@@ -301,6 +301,30 @@ export type Database = {
           },
         ];
       };
+      business_private_details: {
+        Row: {
+          business_id: string;
+          org_number: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          org_number: string;
+        };
+        Update: {
+          business_id?: string;
+          org_number?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_private_details_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: true;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       business_tags: {
         Row: {
           business_id: string;
@@ -1600,6 +1624,7 @@ export type Database = {
           comment: string | null;
           created_at: string;
           id: string;
+          is_anonymous: boolean;
           rating: number;
           replied_at: string | null;
           status: Database["public"]["Enums"]["review_status"];
@@ -1613,7 +1638,8 @@ export type Database = {
           comment?: string | null;
           created_at?: string;
           id?: string;
-          rating: number;
+          is_anonymous?: boolean;
+          rating?: number;
           replied_at?: string | null;
           status?: Database["public"]["Enums"]["review_status"];
           updated_at?: string;
@@ -1625,6 +1651,7 @@ export type Database = {
           comment?: string | null;
           created_at?: string;
           id?: string;
+          is_anonymous?: boolean;
           rating?: number;
           replied_at?: string | null;
           status?: Database["public"]["Enums"]["review_status"];
@@ -2167,10 +2194,15 @@ export type Database = {
         Args: { p_at?: string; p_deal_id: string };
         Returns: boolean;
       };
+      delete_business_review: {
+        Args: { p_review_id: string };
+        Returns: undefined;
+      };
       distance_m: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number };
         Returns: number;
       };
+      get_business_org: { Args: { p_business_id: string }; Returns: string };
       has_visited_business: {
         Args: { p_business_id: string };
         Returns: boolean;
@@ -2203,6 +2235,22 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      list_business_reviews: {
+        Args: { p_business_id?: string };
+        Returns: {
+          author_name: string;
+          business_id: string;
+          business_name: string;
+          business_reply: string;
+          comment: string;
+          created_at: string;
+          id: string;
+          is_anonymous: boolean;
+          is_own: boolean;
+          rating: number;
+          replied_at: string;
+        }[];
       };
       nearby_flash_audience: {
         Args: { p_deal_id: string };
@@ -2275,24 +2323,7 @@ export type Database = {
       };
       reply_to_review: {
         Args: { p_reply: string; p_review_id: string };
-        Returns: {
-          business_id: string;
-          business_reply: string | null;
-          comment: string | null;
-          created_at: string;
-          id: string;
-          rating: number;
-          replied_at: string | null;
-          status: Database["public"]["Enums"]["review_status"];
-          updated_at: string;
-          user_id: string;
-        };
-        SetofOptions: {
-          from: "*";
-          to: "reviews";
-          isOneToOne: true;
-          isSetofReturn: false;
-        };
+        Returns: undefined;
       };
       request_student_verification: {
         Args: { p_edu_email: string };
@@ -2316,6 +2347,10 @@ export type Database = {
         };
       };
       run_maintenance: { Args: Record<PropertyKey, never>; Returns: undefined };
+      save_business_org: {
+        Args: { p_business_id: string; p_org_number: string };
+        Returns: undefined;
+      };
       send_friend_request: {
         Args: { p_friend_code: string };
         Returns: {
@@ -2351,6 +2386,15 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      submit_business_review: {
+        Args: {
+          p_anonymous?: boolean;
+          p_business_id: string;
+          p_comment?: string;
+          p_rating?: number;
+        };
+        Returns: undefined;
       };
       verify_student: {
         Args: { p_token: string };

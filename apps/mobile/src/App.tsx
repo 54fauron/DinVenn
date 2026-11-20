@@ -1,3 +1,4 @@
+import { Reviews } from "./Reviews";
 import { themeStyles, themeColor, useTheme } from "./theme";
 import { LanguageSettings, useLanguage } from "./LanguageSettings";
 import { t, locale } from "@dinvenn/core";
@@ -837,21 +838,35 @@ function AppBody() {
                 )}
               </>
             ) : business ? (
-              <BusinessDetails
-                business={business}
-                deals={deals}
-                events={events}
-                news={news}
-                categories={categories}
-                onDeal={setDeal}
-                onEvent={setSelectedEvent}
-                onNews={setSelectedNews}
-                onMap={() => openMap(business)}
-                isFavorite={favorite("business", business.id)}
-                onFavorite={() => toggleFavorite("business", business.id)}
-                busy={busy}
-                onError={(e) => setError(message(e))}
-              />
+              <>
+                <BusinessDetails
+                  business={business}
+                  deals={deals}
+                  events={events}
+                  news={news}
+                  categories={categories}
+                  onDeal={setDeal}
+                  onEvent={setSelectedEvent}
+                  onNews={setSelectedNews}
+                  onMap={() => openMap(business)}
+                  isFavorite={favorite("business", business.id)}
+                  onFavorite={() => toggleFavorite("business", business.id)}
+                  busy={busy}
+                  onError={(e) => setError(message(e))}
+                />
+                {client && (
+                  <Reviews
+                    key={`${business.id}:${session?.user.id ?? "guest"}`}
+                    db={client}
+                    businessId={business.id}
+                    userId={session?.user.id}
+                    onLogin={() => {
+                      closeDetails();
+                      setTab("Meg");
+                    }}
+                  />
+                )}
+              </>
             ) : null}
           </ScrollView>
         </SafeAreaView>

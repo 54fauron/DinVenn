@@ -5,6 +5,8 @@ async function backend(
   page: Page,
   admin = false,
   coordinates?: { lat: number; lng: number },
+  initialOrg: string | null = "123456789",
+  initialReviews: Record<string, unknown>[] = [],
 ) {
   let business = {
     id: businessId,
@@ -25,6 +27,8 @@ async function backend(
     status: "pending",
   };
   let deals: Record<string, unknown>[] = [];
+  let orgNumber = initialOrg;
+  let reviews = initialReviews.map((r) => ({ ...r }));
   let used = false;
   const content: Record<string, Record<string, unknown>[]> = {
     events: [],
@@ -89,6 +93,26 @@ async function backend(
           : value,
       );
     if (method === "OPTIONS") return send({});
+    if (path.endsWith("/rpc/get_business_org")) return send(orgNumber);
+    if (path.endsWith("/rpc/save_business_org")) {
+      if (orgNumber !== data.p_org_number && business.status === "approved")
+        business.status = "pending";
+      orgNumber = data.p_org_number;
+      return send(null);
+    }
+    if (path.endsWith("/rpc/list_business_reviews")) return send(reviews);
+    if (path.endsWith("/rpc/reply_to_review")) {
+      reviews = reviews.map((r) =>
+        r.id === data.p_review_id ? { ...r, business_reply: data.p_reply } : r,
+      );
+      return send(null);
+    }
+    if (path.endsWith("/rpc/delete_business_review")) {
+      if (!admin) return send({ message: "Ikke tilgang" }, 403);
+      reviews = reviews.filter((r) => r.id !== data.p_review_id);
+      return send(null);
+    }
+
     if (path.endsWith("/token"))
       return data.password === "wrongpass"
         ? send({ msg: "Feil e-post eller passord" }, 400)
@@ -742,3 +766,61 @@ for (const entry of [
     ).toBeVisible();
   });
 }
+
+const reviewFixture = {
+  id: "review1",
+  business_id: businessId,
+  business_name: "Hjørnekafeen",
+  is_anonymous: true,
+  author_name: null,
+  rating: 5,
+  comment: "En fin opplevelse",
+  business_reply: null,
+  replied_at: null,
+  created_at: "2026-11-20T10:00:00Z",
+  is_own: false,
+};
+test("bedriften kan svare på en anonym anmeldelse uten sletteknapp", async ({
+  page,
+}) => {
+  await backend(page, false, undefined, "123456789", [reviewFixture]);
+  await login(page);
+  await page.getByRole("button", { name: "Anmeldelser", exact: true }).click();
+  await expect(page.getByText("Anonym", { exact: true })).toBeVisible();
+  await page
+    .getByLabel("Svar på anmeldelse fra Anonym")
+    .fill("Takk for besøket!");
+  await page.getByRole("button", { name: "Lagre svar", exact: true }).click();
+  await expect(page.getByText("Svaret er lagret.")).toBeVisible();
+  await expect(page.locator("blockquote")).toContainText("Takk for besøket!");
+  await expect(
+    page.getByRole("button", { name: "Slett anmeldelse", exact: true }),
+  ).toHaveCount(0);
+});
+test("administrator kan slette anmeldelser og kan ikke godkjenne uten organisasjonsnummer", async ({
+  page,
+}) => {
+  await backend(page, true, undefined, null, [reviewFixture]);
+  await login(page);
+  await page.getByRole("button", { name: "Godkjenning", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Godkjenn", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText("Mangler organisasjonsnummer", { exact: false }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Moderering av anmeldelser", exact: true })
+    .click();
+  page.once("dialog", (dialog) => dialog.dismiss());
+  await page
+    .getByRole("button", { name: "Slett anmeldelse", exact: true })
+    .click();
+  await expect(page.getByText("En fin opplevelse")).toBeVisible();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Slett anmeldelse", exact: true })
+    .click();
+  await expect(page.getByText("Anmeldelsen er slettet.")).toBeVisible();
+  await expect(page.getByText("En fin opplevelse")).toHaveCount(0);
+});

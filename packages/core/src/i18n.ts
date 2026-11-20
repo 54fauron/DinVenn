@@ -520,6 +520,55 @@ Object.assign(english, {
   "Nyheten er slettet.": "News post deleted.",
   "Venneprisen er slettet.": "Offer deleted.",
 });
+Object.assign(english, {
+  Anmeldelser: "Reviews",
+  anmeldelser: "reviews",
+  Anmeldelse: "Review",
+  Anonym: "Anonymous",
+  Bruker: "User",
+  "Din anmeldelse": "Your review",
+  "Skriv en anmeldelse": "Write a review",
+  "Rediger anmeldelsen din": "Edit your review",
+  "Svar fra bedriften": "Business reply",
+  "{0} stjerner": "{0} stars",
+  "Fortell om opplevelsen din …": "Tell us about your experience …",
+  "Vis anmeldelsen anonymt": "Post anonymously",
+  "Bare administrator kan slette anmeldelser.":
+    "Only an administrator can delete reviews.",
+  "Lagre anmeldelse": "Save review",
+  "Logg inn for å skrive anmeldelse": "Sign in to write a review",
+  "Anmeldelsen er lagret.": "Review saved.",
+  "Ingen anmeldelser ennå.": "No reviews yet.",
+  "Moderering av anmeldelser": "Review moderation",
+  "Bare bedriften kan svare. Bare administrator kan slette anmeldelser.":
+    "Only the business can reply. Only an administrator can delete reviews.",
+  "Laster anmeldelser …": "Loading reviews …",
+  "Laster …": "Loading …",
+  "Bedriftens svar": "Business reply",
+  "Svar på anmeldelse fra {0}": "Reply to review by {0}",
+  "Lagre svar": "Save reply",
+  "Svaret er lagret.": "Reply saved.",
+  "Vil du slette anmeldelsen? Dette kan ikke angres.":
+    "Delete this review? This cannot be undone.",
+  "Slett anmeldelse": "Delete review",
+  "Anmeldelsen er slettet.": "Review deleted.",
+  Organisasjonsnummer: "Organisation number",
+  "Mangler organisasjonsnummer": "Organisation number missing",
+  "Kun synlig for bedriften og administrator. Endring krever ny godkjenning.":
+    "Visible only to the business and administrator. Changes require approval again.",
+  "Organisasjonsnummer må ha ni sifre.":
+    "The organisation number must contain nine digits.",
+  "Organisasjonsnummer må fylles inn før godkjenning.":
+    "An organisation number is required before approval.",
+  "Velg mellom én og fem stjerner.": "Choose between one and five stars.",
+  "Anmeldelsen kan ha maks 1000 tegn.":
+    "Reviews can contain up to 1000 characters.",
+  "Svaret må ha mellom 1 og 1000 tegn.":
+    "Replies must contain between 1 and 1000 characters.",
+  "Kun administrator kan slette anmeldelser.":
+    "Only an administrator can delete reviews.",
+  "Anmeldelsen finnes ikke lenger.": "This review no longer exists.",
+});
 let language: Language = "nb";
 const listeners = new Set<() => void>();
 export function getLanguage() {

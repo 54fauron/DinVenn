@@ -91,6 +91,18 @@ test(
         ).error,
       );
       check(
+        await owner.rpc("save_business_org", {
+          p_business_id: b.id,
+          p_org_number: "123456789",
+        }),
+      );
+      check(
+        await owner2.rpc("save_business_org", {
+          p_business_id: b2.id,
+          p_org_number: "987654321",
+        }),
+      );
+      check(
         await admin
           .from("businesses")
           .update({ status: "approved" })
@@ -340,6 +352,100 @@ test(
             })
         ).error,
       );
+      assert.ok(
+        (await anon.rpc("submit_business_review", { p_business_id: b.id }))
+          .error,
+      );
+      check(
+        await other.rpc("submit_business_review", {
+          p_business_id: b.id,
+          p_comment: "Anonym test",
+          p_anonymous: true,
+        }),
+      );
+      const publicReviews = await api(anon).reviews(b.id);
+      const review = publicReviews.find((r) => r.comment === "Anonym test");
+      assert.ok(review);
+      assert.equal(review.author_name, null);
+      assert.equal(review.rating, 5);
+      assert.equal("user_id" in review, false);
+      assert.ok((await owner.from("reviews").select("*")).error);
+      assert.ok(
+        (await other.from("profiles").delete().eq("id", clients.other.id))
+          .error,
+      );
+      assert.ok(
+        (await other.from("reviews").delete().eq("id", review.id)).error,
+      );
+      assert.ok(
+        (await other.rpc("delete_business_review", { p_review_id: review.id }))
+          .error,
+      );
+      assert.ok(
+        (
+          await owner2.rpc("reply_to_review", {
+            p_review_id: review.id,
+            p_reply: "Feil bedrift",
+          })
+        ).error,
+      );
+      assert.ok(
+        (
+          await other.rpc("reply_to_review", {
+            p_review_id: review.id,
+            p_reply: "Bruker kan ikke svare",
+          })
+        ).error,
+      );
+      check(
+        await owner.rpc("reply_to_review", {
+          p_review_id: review.id,
+          p_reply: "Takk!",
+        }),
+      );
+      assert.equal(
+        (await api(anon).reviews(b.id)).find((r) => r.id === review.id)
+          .business_reply,
+        "Takk!",
+      );
+      check(
+        await admin.rpc("delete_business_review", { p_review_id: review.id }),
+      );
+      assert.equal((await api(anon).reviews(b.id)).length, 0);
+      assert.equal(
+        check(
+          await anon.from("businesses").select("org_number").eq("id", b.id),
+        )[0].org_number,
+        null,
+      );
+      assert.equal(
+        check(await other.from("business_private_details").select("*")).length,
+        0,
+      );
+      assert.ok(
+        (await other.rpc("get_business_org", { p_business_id: b.id })).error,
+      );
+      assert.equal(
+        check(await owner.rpc("get_business_org", { p_business_id: b.id })),
+        "123456789",
+      );
+      check(
+        await owner.rpc("save_business_org", {
+          p_business_id: b.id,
+          p_org_number: "111111111",
+        }),
+      );
+      assert.equal(
+        check(
+          await owner
+            .from("businesses")
+            .select("status")
+            .eq("id", b.id)
+            .single(),
+        ).status,
+        "pending",
+      );
+
       console.log(
         "Ekte Supabase-kjerneflyt og samtidighet bestått. E-postlevering og kamera krever manuell enhetstest.",
       );

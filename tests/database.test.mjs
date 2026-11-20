@@ -123,6 +123,54 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
         0,
       );
     });
+    await t.test("organisasjonsnummer er påkrevd og privat", async () => {
+      await assert.rejects(
+        as("admin", () =>
+          query("update businesses set status='approved' where id=$1", [
+            business.id,
+          ]),
+        ),
+        /Organisasjonsnummer/,
+      );
+      await as("owner", () =>
+        query("select save_business_org($1, '123456789')", [business.id]),
+      );
+      await as("owner2", () =>
+        query("select save_business_org($1, '987654321')", [business2.id]),
+      );
+      assert.equal(
+        (
+          await as("owner", () =>
+            query("select get_business_org($1) as org", [business.id]),
+          )
+        )[0].org,
+        "123456789",
+      );
+      assert.equal(
+        (
+          await as("other", () =>
+            query("select * from business_private_details"),
+          )
+        ).length,
+        0,
+      );
+      await assert.rejects(
+        as("other", () => query("select get_business_org($1)", [business.id])),
+        /tilgang/,
+      );
+      await assert.rejects(
+        as("owner2", () =>
+          query("select save_business_org($1, '111111111')", [business.id]),
+        ),
+        /tilgang/,
+      );
+      await assert.rejects(
+        as("owner", () =>
+          query("select save_business_org($1, '')", [business.id]),
+        ),
+        /ni sifre/,
+      );
+    });
     await t.test("admin kan godkjenne", async () => {
       await as("admin", () => query("update businesses set status='approved'"));
       assert.equal(
@@ -374,6 +422,178 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
             query("select award_points($1,999,'juks',null,null)", [ids.user]),
           ),
           /permission denied/,
+        );
+      },
+    );
+
+    await t.test(
+      "anmeldelser krever innlogging, starter på fem stjerner og skjuler identitet",
+      async () => {
+        await assert.rejects(
+          as(
+            null,
+            () => query("select submit_business_review($1)", [business.id]),
+            "anon",
+          ),
+          /permission denied/,
+        );
+        await as("other", () =>
+          query(
+            "select submit_business_review($1, 5, 'Anonym erfaring', true)",
+            [business.id],
+          ),
+        );
+        const publicRows = await as(
+          null,
+          () => query("select * from list_business_reviews($1)", [business.id]),
+          "anon",
+        );
+        const anonymous = publicRows.find(
+          (r) => r.comment === "Anonym erfaring",
+        );
+        assert.equal(anonymous.author_name, null);
+        assert.equal(anonymous.rating, 5);
+        assert.equal("user_id" in anonymous, false);
+        assert.equal(anonymous.is_own, false);
+        assert.equal(
+          (
+            await as("owner", () =>
+              query("select * from public_profiles where id=$1", [ids.other]),
+            )
+          ).length,
+          0,
+        );
+        for (const who of ["other", "owner", "admin"])
+          await assert.rejects(
+            as(who, () => query("select * from reviews")),
+            /permission denied/,
+          );
+        await as("user", () =>
+          query("select submit_business_review($1)", [business.id]),
+        );
+        const named = (
+          await as("user", () =>
+            query("select * from list_business_reviews($1)", [business.id]),
+          )
+        ).find((r) => r.is_own);
+        assert.equal(named.rating, 5);
+        assert.equal(named.author_name, "user");
+        await assert.rejects(
+          as("user", () =>
+            query("select submit_business_review($1, 0)", [business.id]),
+          ),
+          /stjerner/,
+        );
+        await assert.rejects(
+          as("user", () =>
+            query("select submit_business_review($1, 5, $2)", [
+              business.id,
+              "a".repeat(1001),
+            ]),
+          ),
+          /1000/,
+        );
+        await assert.rejects(
+          as("other", () => query("select * from list_business_reviews()")),
+          /tilgang/,
+        );
+      },
+    );
+    await t.test(
+      "bare egen bedrift kan svare og bare admin kan slette",
+      async () => {
+        const r = (
+          await as("other", () =>
+            query("select * from list_business_reviews($1)", [business.id]),
+          )
+        ).find((r) => r.is_own);
+        await assert.rejects(
+          as("other", () =>
+            query("select reply_to_review($1, 'Brukersvar')", [r.id]),
+          ),
+          /tilgang/,
+        );
+        await assert.rejects(
+          as("owner2", () =>
+            query("select reply_to_review($1, 'Feil bedrift')", [r.id]),
+          ),
+          /tilgang/,
+        );
+        await as("owner", () =>
+          query("select reply_to_review($1, 'Takk for besøket')", [r.id]),
+        );
+        await as("other", () =>
+          query("select submit_business_review($1, 4, 'Oppdatert', true)", [
+            business.id,
+          ]),
+        );
+        const own = (
+          await as("other", () =>
+            query("select * from list_business_reviews($1)", [business.id]),
+          )
+        ).find((x) => x.is_own);
+        assert.equal(own.business_reply, "Takk for besøket");
+        await assert.rejects(
+          as("other", () =>
+            query("delete from profiles where id=$1", [ids.other]),
+          ),
+          /permission denied/,
+        );
+        for (const who of ["other", "owner", "owner2"]) {
+          await assert.rejects(
+            as(who, () => query("delete from reviews where id=$1", [r.id])),
+            /permission denied/,
+          );
+          await assert.rejects(
+            as(who, () => query("select delete_business_review($1)", [r.id])),
+            /administrator/,
+          );
+        }
+        await as("admin", () =>
+          query("select delete_business_review($1)", [r.id]),
+        );
+        assert.equal(
+          (
+            await as(
+              null,
+              () =>
+                query("select * from list_business_reviews($1)", [business.id]),
+              "anon",
+            )
+          ).some((x) => x.id === r.id),
+          false,
+        );
+      },
+    );
+    await t.test(
+      "offentlig bedriftsdata røper ikke nummer, og nummerendring krever ny godkjenning",
+      async () => {
+        assert.equal(
+          (
+            await as(
+              null,
+              () =>
+                query("select * from businesses where id=$1", [business.id]),
+              "anon",
+            )
+          )[0].org_number,
+          null,
+        );
+        await as("owner", () =>
+          query("select save_business_org($1, '111111111')", [business.id]),
+        );
+        assert.equal(
+          (
+            await as("owner", () =>
+              query("select status from businesses where id=$1", [business.id]),
+            )
+          )[0].status,
+          "pending",
+        );
+        await as("admin", () =>
+          query("update businesses set status='approved' where id=$1", [
+            business.id,
+          ]),
         );
       },
     );

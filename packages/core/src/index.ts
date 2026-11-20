@@ -184,7 +184,63 @@ export function validateDeal(d: Partial<Deal>) {
   if (d.discount_type === "percent" && (d.discount_value ?? 0) > 100)
     throw new Error("Prosent kan ikke være over 100.");
 }
+export type Review = Omit<
+  Database["public"]["Functions"]["list_business_reviews"]["Returns"][number],
+  "author_name" | "comment" | "business_reply" | "replied_at"
+> & {
+  author_name: string | null;
+  comment: string | null;
+  business_reply: string | null;
+  replied_at: string | null;
+};
 export const api = (db: Client) => ({
+  async reviews(businessId?: string) {
+    return unwrap(
+      await db.rpc(
+        "list_business_reviews",
+        businessId ? { p_business_id: businessId } : {},
+      ),
+    );
+  },
+  async review(
+    businessId: string,
+    rating: number,
+    comment: string,
+    anonymous: boolean,
+  ) {
+    check(
+      await db.rpc("submit_business_review", {
+        p_business_id: businessId,
+        p_rating: rating,
+        p_comment: comment,
+        p_anonymous: anonymous,
+      }),
+    );
+  },
+  async reply(reviewId: string, reply: string) {
+    check(
+      await db.rpc("reply_to_review", {
+        p_review_id: reviewId,
+        p_reply: reply,
+      }),
+    );
+  },
+  async deleteReview(reviewId: string) {
+    check(await db.rpc("delete_business_review", { p_review_id: reviewId }));
+  },
+  async businessOrg(businessId: string) {
+    const r = await db.rpc("get_business_org", { p_business_id: businessId });
+    check(r);
+    return r.data ?? "";
+  },
+  async saveBusinessOrg(businessId: string, org: string) {
+    check(
+      await db.rpc("save_business_org", {
+        p_business_id: businessId,
+        p_org_number: org.trim(),
+      }),
+    );
+  },
   async catalog() {
     const now = new Date().toISOString();
     const [bs, ds, cs, es, ns] = await Promise.all([

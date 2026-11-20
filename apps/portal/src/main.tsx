@@ -1,3 +1,4 @@
+import { ReviewsPanel } from "./ReviewsPanel";
 import { ThemePicker, useTheme } from "./ThemePicker";
 import { LanguagePicker, useLanguage } from "./LanguagePicker";
 import { t, locale } from "@dinvenn/core";
@@ -266,6 +267,27 @@ function BusinessForm({
     website: business?.website ?? "",
     category_id: String(business?.category_id ?? ""),
   });
+  const [orgNumber, setOrgNumber] = useState("");
+  const [orgLoading, setOrgLoading] = useState(!!business);
+  const [orgError, setOrgError] = useState("");
+  useEffect(() => {
+    let active = true;
+    if (!business) return;
+    api(db)
+      .businessOrg(business.id)
+      .then((org) => {
+        if (active) setOrgNumber(org);
+      })
+      .catch((e) => {
+        if (active) setOrgError(message(e));
+      })
+      .finally(() => {
+        if (active) setOrgLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [db, business?.id]);
   const [cover, setCover] = useState<File | null>(null);
   const [pin, setPin] = useState<{ address: string; point: Point | null }>(
     () => ({
@@ -298,6 +320,9 @@ function BusinessForm({
               category_id: form.category_id ? Number(form.category_id) : null,
             };
             if (!values.name) throw new Error(t("Skriv bedriftens navn."));
+            if (!/^\d{9}$/.test(orgNumber.trim()))
+              throw new Error(t("Organisasjonsnummer må ha ni sifre."));
+            if (business) await api(db).saveBusinessOrg(business.id, orgNumber);
             const b = business
               ? unwrap(
                   await db
@@ -323,6 +348,7 @@ function BusinessForm({
                     .select()
                     .single(),
                 );
+            if (!business) await api(db).saveBusinessOrg(b.id, orgNumber);
             if (cover) {
               const cover_url = await api(db).upload(b.id, cover);
               unwrap(
@@ -340,6 +366,23 @@ function BusinessForm({
       >
         <div className="business-profile-layout">
           <div className="business-profile-fields">
+            <Field
+              label={t("Organisasjonsnummer")}
+              value={orgNumber}
+              onChange={(e) => setOrgNumber(e.target.value.replace(/\s/g, ""))}
+              required
+              pattern="[0-9]{9}"
+              maxLength={9}
+              inputMode="numeric"
+              disabled={orgLoading}
+            />
+            <p className="muted">
+              {t(
+                "Kun synlig for bedriften og administrator. Endring krever ny godkjenning.",
+              )}
+            </p>
+            {orgLoading && <p role="status">{t("Laster …")}</p>}
+            {orgError && <p role="alert">{t(orgError)}</p>}
             <div className="formgrid">
               {(
                 [
@@ -693,6 +736,7 @@ function App() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const businessRequest = useRef(0);
   const [adminBusinesses, setAdminBusinesses] = useState<Business[]>([]);
+  const [adminOrgs, setAdminOrgs] = useState<Record<string, string>>({});
   const [tab, setTab] = useState("overview");
   const [editing, setEditing] = useState<Deal | "new" | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -754,15 +798,22 @@ function App() {
       : [];
     setBusinesses(bs);
     setSelected((id) => (bs.some((b) => b.id === id) ? id : (bs[0]?.id ?? "")));
-    if (p.role === "admin")
-      setAdminBusinesses(
-        unwrap(
-          await db
-            .from("businesses")
-            .select("*")
-            .order("created_at", { ascending: false }),
+    if (p.role === "admin") {
+      const adminRows = unwrap(
+        await db
+          .from("businesses")
+          .select("*")
+          .order("created_at", { ascending: false }),
+      );
+      setAdminBusinesses(adminRows);
+      setAdminOrgs(
+        Object.fromEntries(
+          await Promise.all(
+            adminRows.map(async (b) => [b.id, await api(db).businessOrg(b.id)]),
+          ),
         ),
       );
+    }
   }
   async function loadBusiness(id: string) {
     if (!db) return;
@@ -961,9 +1012,13 @@ function App() {
                   ["news", t("Nyheter")],
                   ["redeem", t("Løs inn kode")],
                   ["subscription", t("Abonnement")],
+                  ["reviews", t("Anmeldelser")],
                   ["new", t("Registrer bedrift")],
                   ...(profile?.role === "admin"
-                    ? [["admin", t("Godkjenning")]]
+                    ? [
+                        ["admin", t("Godkjenning")],
+                        ["adminReviews", t("Moderering av anmeldelser")],
+                      ]
                     : []),
                 ].map(([key, label]) => (
                   <button
@@ -1003,7 +1058,8 @@ function App() {
                   </span>
                 </div>
               )}
-              {tab === "new" || (!business && tab !== "admin") ? (
+              {tab === "new" ||
+              (!business && tab !== "admin" && tab !== "adminReviews") ? (
                 <BusinessForm
                   key="new"
                   db={db!}
@@ -1015,6 +1071,15 @@ function App() {
                     setTab("overview");
                     setNotice(t("Bedriften er sendt til godkjenning."));
                   }}
+                />
+              ) : tab === "reviews" || tab === "adminReviews" ? (
+                <ReviewsPanel
+                  key={tab}
+                  db={db!}
+                  businessId={tab === "reviews" ? selected : undefined}
+                  admin={profile?.role === "admin"}
+                  run={run}
+                  busy={busy}
                 />
               ) : tab === "admin" ? (
                 <section className="card">
@@ -1030,6 +1095,10 @@ function App() {
                           {b.city} · {t(businessStatusLabels[b.status])}
                         </p>
                         <p>{b.description}</p>
+                        <p>
+                          {t("Organisasjonsnummer")}:{" "}
+                          {adminOrgs[b.id] || t("Mangler organisasjonsnummer")}
+                        </p>
                         <small>
                           {b.address} · {b.email} · {b.website}
                         </small>
@@ -1040,7 +1109,10 @@ function App() {
                           .map((status) => (
                             <button
                               key={status}
-                              disabled={busy}
+                              disabled={
+                                busy ||
+                                (status === "approved" && !adminOrgs[b.id])
+                              }
                               className={status === "suspended" ? "quiet" : ""}
                               onClick={() =>
                                 void run(async () => {

@@ -30,3 +30,12 @@ Den utvidede lokale Supabase-testen bekrefter også katalogspørringene som mobi
 ## Kart i bedriftsprofil – 9. november 2026
 
 Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag, lagring og gjeninnlasting av koordinater, at adresseendring fjerner gammel pinne, og manuell flytting før lagring. Desktop-testen drar selve Leaflet-markøren, mens mobilvisningen setter pinnen ved karttrykk. Kartverkets svar og kartfliser er simulerte i nettlesertestene; Leaflet-kartet og interaksjonene kjører i nettleseren. Delte adressefunksjoner testes også av de eksisterende logikktestene.
+
+## Anmeldelser og organisasjonsnummer – 20. november 2026
+
+- Migrasjonen er testet i PGlite og brukt i lokal Supabase native runtime.
+- SQL- og faktiske Auth/PostgREST-tester dekker anonym visning uten bruker-ID, sperring av rå anmeldelsesdata, påkrevd innlogging, fem stjerner som standard, svar kun fra riktig bedrift, admin-sletting, privat organisasjonsnummer og ny godkjenning ved nummerendring.
+- SQL-testen dekker også at profilsletting fra klienten ikke kan brukes til å kaskadeslette anmeldelser.
+- React Native-komponenttestene dekker innlogging, standardrating, anonym innsending og visning av bedriftssvar.
+- Playwright tester bedriftssvar og admin-moderering, inkludert avbrutt sletting og blokkert godkjenning uten organisasjonsnummer, på PC og mobilbredde.
+- Brukeren bekreftet 20. november 2026 at produksjonsoppgraderingen er kjørt uten feil; dette er ikke kontrollert direkte av agenten. Ny klientkode er ennå ikke publisert av agenten. Fysisk enhet og faktisk e-postlevering er ikke testet i denne endringen.
