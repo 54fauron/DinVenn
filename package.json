@@ -18,7 +18,8 @@
     "db:bundle": "node scripts/bundle-sql.mjs",
     "format": "prettier --write apps packages scripts tests playwright.config.ts package.json",
     "db:types": "node scripts/generate-types.mjs",
-    "test:mobile": "npm run test -w @dinvenn/mobile"
+    "test:mobile": "npm run test -w @dinvenn/mobile",
+    "mobile:ios": "npm run ios:device -w @dinvenn/mobile"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.3.14",

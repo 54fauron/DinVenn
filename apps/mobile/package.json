@@ -6,7 +6,8 @@
   "scripts": {
     "start": "expo start",
     "typecheck": "tsc --noEmit",
-    "test": "jest --config jest.config.cjs --runInBand"
+    "test": "jest --config jest.config.cjs --runInBand",
+    "ios:device": "expo run:ios --device --configuration Release --no-bundler"
   },
   "dependencies": {
     "@dinvenn/core": "*",
