@@ -195,26 +195,6 @@ For en eksisterende Supabase-pilotdatabase:
 
 For en ny, tom database brukes `setup.sql` som vanlig. Alle nye API-funksjoner og tilgangsregler finnes i migrasjonen `20261120000008_reviews_business_identity.sql`.
 
-### Gratis lokal iPhone-test med Xcode
-
-En gratis Apple-konto (Personal Team) kan brukes til å installere på din egen iPhone fra Mac-en. Dette bruker lokal Xcode-signering, ikke Expo Build eller TestFlight. Gratis signering varer i syv dager; deretter må appen bygges og installeres igjen. iOS-prosjektet er generert med Expo Prebuild og er utelatt fra Git.
-
-1. Åpne Xcode, godkjenn lisensen og installer komponentene for iOS som Xcode ber om.
-2. Logg inn med din private Apple-konto i **Xcode → Settings → Apple Accounts**. Velg Personal Team for appen.
-3. Koble iPhone til Mac med USB, lås opp telefonen og godkjenn **Stol på denne datamaskinen**.
-4. Aktiver **Innstillinger → Personvern og sikkerhet → Utviklermodus** på telefonen hvis Xcode ber om det. Telefonen må da startes på nytt og valget bekreftes.
-5. Installer CocoaPods om det mangler (`brew install cocoapods`), og kjør fra repositoriroten:
-
-   ```bash
-   npm run mobile:ios
-   ```
-
-   Kommandoen bruker `Release` og `--no-bundler`: JavaScript bygges inn i appen, slik at den ferdig installerte appen kan åpnes uten Expo Go eller en lokal Metro-server. Supabase og kartoppslag trenger fortsatt internett.
-6. Hvis signering må settes i Xcode, åpne `apps/mobile/ios/DinVenn.xcworkspace` etter at CocoaPods er installert. Velg app-target **DinVenn → Signing & Capabilities → Automatically manage signing → din Personal Team**. Velg iPhonen som kjøremål. Ved bygg fra Xcode velges **Product → Scheme → Edit Scheme → Run → Build Configuration: Release** for å unngå avhengighet av Metro.
-7. Hvis telefonen viser «Untrusted Developer», godkjenn din utviklerkonto under **Innstillinger → Generelt → VPN og enhetsadministrering**.
-
-Expo-konfigurasjonen i `app.json`/`app.config.js` er kilden til nye native prosjekter. Unngå `expo prebuild --clean` etter manuelt signeringsoppsett, med mindre du er forberedt på å velge Team på nytt. Apple-passord og signeringsnøkler skal ikke lagres i kode eller sendes i chatten.
-
 ## Brukerappen på web (PWA)
 
 Brukerappen er tilgjengelig på **https://dinvenn.app**. Bedriftsportalen ligger på
@@ -252,4 +232,4 @@ På Android: åpne i Chrome → meny → Installer app / Legg til på startskjer
 Appen krever internett for katalog, innlogging og QR-status; frakoblet navigasjon
 viser en melding med «Prøv igjen». Service worker lagrer aldri API-svar eller
 brukerdata. Nye kodeversjoner lastes ved neste åpning/oppdatering av siden.
-Dette berører ikke Xcode-installasjonen og har ingen syvdagers signeringsgrense.
+Webappen krever ikke Xcode eller Apple-signering og har ingen syvdagersgrense.
