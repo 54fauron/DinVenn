@@ -177,3 +177,20 @@ Før Android-bygg:
    Build-lenken gir nedlasting av APK-en når bygget er ferdig. Android-enheten må tillate installasjon fra valgt kilde. Google Maps-nøkkelens Android-begrensning må bruke SHA-1 fra signeringen som faktisk ble brukt i APK-en.
 
 Bygg for iOS Simulator: `npx eas-cli build --platform ios --profile simulator`. Et slikt bygg bruker også Expo sin byggekvote. Android-signering er opprettet i Expo, og første APK-bygg er fullført med profilen `preview`. Byggestatus og installasjonslenker finnes i Expo-prosjektets Builds-side.
+
+### Anmeldelser og privat organisasjonsnummer
+
+Mobilens bedriftsprofil har anmeldelser med 1–5 stjerner (5 som standard), tekst og valgfri anonym visning. Innlogging kreves for å skrive; én anmeldelse per bruker og bedrift kan redigeres av forfatteren. Bedriften svarer på sin egen side **Anmeldelser** i portalen. Andre brukere kan ikke svare. Kun administrator kan slette gjennom **Moderering av anmeldelser**.
+
+Rå anmeldelsesrader er ikke tilgjengelige gjennom klient-API-et, fordi de inneholder forfatterens bruker-ID. `list_business_reviews` returnerer bare visningsdata og et `is_own`-flagg; anonyme anmeldelser inneholder verken forfatternavn eller bruker-ID. Klienter kan ikke slette profiler direkte for å omgå sletteforbudet gjennom kaskadesletting. Eventuell kontosletting må håndteres gjennom server/admin.
+
+Organisasjonsnummer lagres i `business_private_details`, med lesetilgang bare for medlemmer av bedriften og administrator. Det gamle offentlige `businesses.org_number` beholdes alltid tomt for å støtte eldre klienters `select('*')`. Nummeret krever ni sifre; dette er formatkontroll, **ikke automatisk verifisering mot Brønnøysundregistrene**. Administrator godkjenner bedriften manuelt. Endring av nummer opphever eksisterende godkjenning og krever ny godkjenning.
+
+For en eksisterende Supabase-pilotdatabase:
+
+1. Kjør **hele `supabase/upgrade-reviews.sql` én gang** i SQL Editor. Filen kjører oppgraderingen i én transaksjon. Ikke kjør `setup.sql` i en eksisterende database.
+2. Oppgraderingen flytter eksisterende organisasjonsnumre til den private tabellen. Godkjente bedrifter som mangler nummer blir satt til `pending` og er skjult fra den offentlige katalogen til nummer er lagt inn og administrator har godkjent igjen.
+3. Publiser den nye portalversjonen og last inn mobilappen på nytt i Expo Go (eller bygg ny APK). Den tidligere installerte APK-en får ikke ny kode automatisk.
+4. Fyll inn manglende nummer på bedriftsprofilene og godkjenn dem i administratorens **Godkjenning**.
+
+For en ny, tom database brukes `setup.sql` som vanlig. Alle nye API-funksjoner og tilgangsregler finnes i migrasjonen `20261120000008_reviews_business_identity.sql`.

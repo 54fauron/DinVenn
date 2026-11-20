@@ -1,6 +1,6 @@
 # Ideer til senere
 
-Notert 18. november 2026. Dette er brukerens ideer til fremtidig arbeid. De skal ikke implementeres nå.
+Notert 18. november 2026. Implementering bestilt 20. november 2026 og ferdigstilt lokalt. Brukeren bekreftet 20. november 2026 at databaseoppgraderingen er kjørt uten feil. Publisering av den nye klientkoden gjenstår.
 
 ## Anmeldelser av bedrifter
 

@@ -1,3 +1,4 @@
+import { Reviews } from "../src/Reviews";
 import { setLanguage, setTheme, getTheme } from "@dinvenn/core";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
@@ -117,6 +118,8 @@ const news = {
 } as NewsPost;
 const mockApi = {
   catalog: jest.fn(),
+  reviews: jest.fn(),
+  review: jest.fn(),
   favorites: jest.fn(),
   redemptions: jest.fn(),
 };
@@ -134,6 +137,8 @@ beforeEach(() => {
     events: [event],
     news: [news],
   });
+  mockApi.reviews.mockResolvedValue([]);
+  mockApi.review.mockResolvedValue(undefined);
   mockApi.favorites.mockResolvedValue([]);
   mockApi.redemptions.mockResolvedValue([]);
 });
@@ -382,4 +387,46 @@ test("mobilappen gjenoppretter lagret mørkt tema", async () => {
   await waitFor(() => expect(getTheme()).toBe("dark"));
   fireEvent.press(screen.getByText("Meg"));
   expect(screen.getByLabelText("Bytt til lys modus")).toBeTruthy();
+});
+
+test("anmeldelser krever innlogging og sender fem stjerner med valgfri anonymitet", async () => {
+  const db = {} as any;
+  const onLogin = jest.fn();
+  const { rerender } = render(
+    <Reviews db={db} businessId="b1" onLogin={onLogin} />,
+  );
+  await screen.findByText("Ingen anmeldelser ennå.");
+  fireEvent.press(screen.getByText("Logg inn for å skrive anmeldelse"));
+  expect(onLogin).toHaveBeenCalledTimes(1);
+  rerender(<Reviews db={db} businessId="b1" userId="u1" onLogin={onLogin} />);
+  await screen.findByText("Skriv en anmeldelse");
+  expect(
+    screen.getByLabelText("5 stjerner").props.accessibilityState.selected,
+  ).toBe(true);
+  fireEvent.changeText(screen.getByLabelText("Anmeldelse"), "God mat");
+  fireEvent.press(screen.getByRole("checkbox"));
+  fireEvent.press(screen.getByLabelText("Lagre anmeldelse"));
+  await waitFor(() =>
+    expect(mockApi.review).toHaveBeenCalledWith("b1", 5, "God mat", true),
+  );
+  await screen.findByText("Anmeldelsen er lagret.");
+  expect(screen.queryByText("Slett anmeldelse")).toBeNull();
+});
+test("anonyme anmeldelser og bedriftssvar vises uten forfatternavn", async () => {
+  mockApi.reviews.mockResolvedValue([
+    {
+      id: "r1",
+      is_anonymous: true,
+      author_name: null,
+      rating: 4,
+      comment: "Hyggelig sted",
+      business_reply: "Takk for besøket",
+      created_at: new Date().toISOString(),
+      is_own: false,
+    },
+  ]);
+  render(<Reviews db={{} as any} businessId="b1" onLogin={jest.fn()} />);
+  await screen.findByText("Anonym");
+  expect(screen.getByText("Takk for besøket")).toBeTruthy();
+  expect(screen.queryByText("Lagre svar")).toBeNull();
 });

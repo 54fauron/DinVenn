@@ -52,13 +52,21 @@ for (const [id, name, slug] of [
           address: "Demogata 1",
           description:
             "Dette er tydelig merkede eksempeldata, ikke en ekte bedrift.",
-          status: "approved",
+          status: "pending",
           category_id: 1,
         },
         { onConflict: "slug" },
       )
       .select()
       .single(),
+  );
+  check(
+    await db
+      .from("business_private_details")
+      .upsert({ business_id: b.id, org_number: "123456789" }),
+  ); // Fiktivt eksempelnummer, ikke registerverifisert.
+  check(
+    await db.from("businesses").update({ status: "approved" }).eq("id", b.id),
   );
   const found = check(
     await db.from("deals").select("id").eq("business_id", b.id),

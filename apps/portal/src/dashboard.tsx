@@ -16,6 +16,9 @@ export function NavIcon({ name }: { name: string }) {
     redeem:
       "M3 8V3h5 M16 3h5v5 M21 16v5h-5 M8 21H3v-5 M7 7h3v3H7z M14 7h3v3h-3z M7 14h3v3H7z M14 14h3v3h-3z",
     subscription: "M3 5h18v14H3z M3 10h18 M6 15h4",
+    reviews:
+      "M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z",
+    adminReviews: "M12 2l8 4v6c0 5-8 10-8 10S4 17 4 12V6z M8 12h8",
     new: "M12 3v18 M3 12h18",
     admin: "M12 2l8 4v6c0 5-8 10-8 10S4 17 4 12V6z M8 12l3 3 5-6",
   };
