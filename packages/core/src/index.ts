@@ -75,6 +75,8 @@ export type Favorite = {
   target_id: string;
   created_at: string;
 };
+export type BusinessLocation =
+  Database["public"]["Tables"]["business_locations"]["Row"];
 export type BusinessEvent = Database["public"]["Tables"]["events"]["Row"];
 export type NewsPost = Database["public"]["Tables"]["news_posts"]["Row"];
 export type Client = SupabaseClient<Database>;
@@ -227,6 +229,58 @@ export const api = (db: Client) => ({
   },
   async deleteReview(reviewId: string) {
     check(await db.rpc("delete_business_review", { p_review_id: reviewId }));
+  },
+  async businessLocations(businessId: string) {
+    return unwrap(
+      await db
+        .from("business_locations")
+        .select("*")
+        .eq("business_id", businessId)
+        .order("created_at")
+        .order("id"),
+    );
+  },
+  async saveBusinessLocation(
+    businessId: string,
+    id: string,
+    values: Pick<
+      BusinessLocation,
+      "name" | "address" | "postal_code" | "city" | "lat" | "lng"
+    >,
+    existing: boolean,
+  ) {
+    const data = { ...values, business_id: businessId };
+    return existing
+      ? unwrap(
+          await db
+            .from("business_locations")
+            .update(data)
+            .eq("id", id)
+            .eq("business_id", businessId)
+            .select()
+            .single(),
+        )
+      : unwrap(
+          await db
+            .from("business_locations")
+            .insert({ ...data, id })
+            .select()
+            .single(),
+        );
+  },
+  async deleteBusinessLocation(businessId: string, id: string) {
+    const rows = unwrap(
+      await db
+        .from("business_locations")
+        .delete()
+        .eq("id", id)
+        .eq("business_id", businessId)
+        .select("id"),
+    );
+    if (rows.length !== 1)
+      throw new Error(
+        "Avdelingen finnes ikke lenger, eller du mangler tilgang.",
+      );
   },
   async businessOrg(businessId: string) {
     const r = await db.rpc("get_business_org", { p_business_id: businessId });

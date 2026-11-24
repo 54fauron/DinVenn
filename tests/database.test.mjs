@@ -179,6 +179,199 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
         2,
       );
     });
+    await t.test(
+      "avdelinger har egen adresse, kartpinne og tilgang per bedrift",
+      async () => {
+        const branch = (
+          await as("owner", () =>
+            query(
+              "insert into business_locations(business_id,name,address,postal_code,city,lat,lng) values($1,'Sentrum','Storgata 2','3015','Drammen',59.74,10.2) returning *",
+              [business.id],
+            ),
+          )
+        )[0];
+        await as("admin", () =>
+          query("update businesses set status='pending' where id=$1", [
+            business2.id,
+          ]),
+        );
+        const hidden = (
+          await as("owner2", () =>
+            query(
+              "insert into business_locations(business_id,name,address,postal_code,city) values($1,'Vest','Vestgata 1','3016','Drammen') returning *",
+              [business2.id],
+            ),
+          )
+        )[0];
+        assert.equal(
+          (
+            await as(
+              null,
+              () => query("select * from business_locations"),
+              "anon",
+            )
+          ).length,
+          1,
+        );
+        assert.equal(
+          (
+            await as("owner2", () =>
+              query("select * from business_locations where id=$1", [
+                hidden.id,
+              ]),
+            )
+          ).length,
+          1,
+        );
+        await assert.rejects(
+          as("owner2", () =>
+            query(
+              "insert into business_locations(business_id,name,address,postal_code,city) values($1,'Juks','Gate 1','3015','Drammen')",
+              [business.id],
+            ),
+          ),
+          /row-level security/,
+        );
+        assert.equal(
+          (
+            await as("owner2", () =>
+              query(
+                "update business_locations set name='Juks' where id=$1 returning id",
+                [branch.id],
+              ),
+            )
+          ).length,
+          0,
+        );
+        assert.equal(
+          (
+            await as("owner2", () =>
+              query("delete from business_locations where id=$1 returning id", [
+                branch.id,
+              ]),
+            )
+          ).length,
+          0,
+        );
+        await assert.rejects(
+          as("owner", () =>
+            query("update business_locations set business_id=$1 where id=$2", [
+              business2.id,
+              branch.id,
+            ]),
+          ),
+          /row-level security/,
+        );
+        await as("owner", () =>
+          query(
+            "update business_locations set name='Nytt navn',lat=null,lng=null where id=$1",
+            [branch.id],
+          ),
+        );
+        assert.equal(
+          (
+            await query("select name from business_locations where id=$1", [
+              branch.id,
+            ])
+          )[0].name,
+          "Nytt navn",
+        );
+        await as("admin", () =>
+          query("update businesses set status='suspended' where id=$1", [
+            business.id,
+          ]),
+        );
+        assert.equal(
+          (
+            await as(
+              null,
+              () => query("select * from business_locations"),
+              "anon",
+            )
+          ).length,
+          0,
+        );
+        assert.equal(
+          (await as("admin", () => query("select * from business_locations")))
+            .length,
+          2,
+        );
+        await as("admin", () =>
+          query("update businesses set status='approved' where id=$1", [
+            business.id,
+          ]),
+        );
+        for (const [field, value] of [
+          ["postal_code", "12"],
+          ["name", "   "],
+          ["city", ""],
+        ]) {
+          await assert.rejects(
+            as("owner", () =>
+              query(`update business_locations set ${field}=$1 where id=$2`, [
+                value,
+                branch.id,
+              ]),
+            ),
+            /check constraint/,
+          );
+        }
+        for (const coords of [
+          [91, 10],
+          [60, 181],
+          [60, null],
+          [null, 10],
+        ]) {
+          await assert.rejects(
+            as("owner", () =>
+              query("update business_locations set lat=$1,lng=$2 where id=$3", [
+                ...coords,
+                branch.id,
+              ]),
+            ),
+            /check constraint/,
+          );
+        }
+        await as("admin", () =>
+          query(
+            "update business_locations set name='Adminrettelse' where id=$1",
+            [hidden.id],
+          ),
+        );
+        const original = (
+          await query("select address from businesses where id=$1", [
+            business.id,
+          ])
+        )[0].address;
+        await as("owner", () =>
+          query("delete from business_locations where id=$1", [branch.id]),
+        );
+        assert.equal(
+          (
+            await query("select address from businesses where id=$1", [
+              business.id,
+            ])
+          )[0].address,
+          original,
+        );
+        assert.ok(
+          (
+            await query(
+              "select id from audit_log where table_name='business_locations' and row_id=$1",
+              [branch.id],
+            )
+          ).length >= 3,
+        );
+        await as("owner2", () =>
+          query("delete from business_locations where id=$1", [hidden.id]),
+        );
+        await as("admin", () =>
+          query("update businesses set status='approved' where id=$1", [
+            business2.id,
+          ]),
+        );
+      },
+    );
     await t.test("annen bedrift kan ikke redigere profilen", async () => {
       assert.equal(
         (

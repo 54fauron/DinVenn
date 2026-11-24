@@ -260,6 +260,51 @@ export type Database = {
           },
         ];
       };
+      business_locations: {
+        Row: {
+          id: string;
+          business_id: string;
+          name: string;
+          address: string;
+          postal_code: string;
+          city: string;
+          lat: number | null;
+          lng: number | null;
+          created_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          business_id: string;
+          name: string;
+          address: string;
+          postal_code: string;
+          city: string;
+          lat?: number | null;
+          lng?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          business_id?: string;
+          name?: string;
+          address?: string;
+          postal_code?: string;
+          city?: string;
+          lat?: number | null;
+          lng?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "business_locations_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       business_members: {
         Row: {
           business_id: string;

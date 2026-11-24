@@ -272,3 +272,30 @@ identitetsord blokkeres ikke av startlisten. Bøyninger må legges til separat.
 Ordlisten tolker ikke kontekst: sitater kan også avvises, og omskrivinger,
 feilstavinger og diskriminerende setninger uten listeord kan slippe gjennom.
 Administratorens eksisterende moderering og sletting beholdes.
+
+## Flere avdelinger i bedriftsportalen
+
+Kjør hele `supabase/upgrade-business-locations.sql` én gang i Supabase SQL Editor
+på den eksisterende pilotdatabasen. Ikke kjør `setup.sql` der. For nye tomme
+databaser er endringen inkludert i den samlede oppsettsfilen. Dagens hovedadresse
+og kartpinne i `businesses` beholdes; oppgraderingen flytter eller sletter ingen
+adresser, anmeldelser eller tilbud.
+
+Etter registrering finnes **Avdelinger og flere adresser** nederst under
+**Bedriftsprofil**. Hvert ekstra lokale har eget navn, gateadresse, norsk
+postnummer, by og valgfri kartpinne. Kartverket-oppslaget og manuell flytting av
+pinnen fungerer som for hovedadressen. Adresseendring fjerner en tidligere pinne,
+slik at gamle koordinater ikke lagres for en ny adresse. Avdelinger lagres separat
+med **Lagre avdeling**; profilknappen over lagrer hovedprofilen. Sletting krever
+bekreftelse og berører bare det valgte ekstra lokalet.
+
+Alle avdelinger deler organisasjonsnummer, medlemskap, godkjenningsstatus og
+tilbud med bedriften. Dette er ikke separate bedriftskontoer eller egne
+innløsningsgrenser. Bedriftsmedlemmer kan administrere egne lokaler;
+administrator kan administrere alle. Godkjente bedrifters avdelinger er lesbare
+med RLS, mens ventende/suspenderte bedrifters lokaler kun vises for medlemmer og
+administrator. Skriving føres i eksisterende endringslogg.
+
+Denne leveransen gjelder administrasjon i bedriftsportalen. Brukerappens
+nåværende kart, byfilter og bedriftsprofil bruker fortsatt hovedadressen;
+visning og filtrering av alle avdelinger der er et eget neste steg.

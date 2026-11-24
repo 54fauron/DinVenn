@@ -1538,3 +1538,36 @@ button.delete-button {
   margin-inline-start: 4px;
   font-weight: 700;
 }
+
+.business-locations {
+  border-top: 1px solid var(--border-eadfd6, #eadfd6);
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+}
+.location-list {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.location-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border: 1px solid var(--border-eadfd6, #eadfd6);
+  border-radius: 1rem;
+  padding: 1rem;
+}
+.location-card h4,
+.location-card p {
+  margin: 0 0 0.5rem;
+}
+.location-editor {
+  margin-top: 1rem;
+}
+.location-editor fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}

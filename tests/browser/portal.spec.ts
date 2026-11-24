@@ -27,6 +27,7 @@ async function backend(
     status: "pending",
   };
   let deals: Record<string, unknown>[] = [];
+  let locations: Record<string, unknown>[] = [];
   let orgNumber = initialOrg;
   let reviews = initialReviews.map((r) => ({ ...r }));
   let used = false;
@@ -140,6 +141,26 @@ async function backend(
     if (path.endsWith("/businesses")) {
       if (method === "PATCH") business = { ...business, ...data };
       return rows([business]);
+    }
+    if (path.endsWith("/business_locations")) {
+      const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+      const scoped = url.searchParams.get("business_id")?.replace(/^eq\./, "");
+      if (method === "POST") {
+        const row = { ...data, created_at: new Date().toISOString() };
+        locations.push(row);
+        return rows([row]);
+      }
+      if (method === "PATCH") {
+        locations = locations.map((r) =>
+          r.id === id && r.business_id === scoped ? { ...r, ...data } : r,
+        );
+      }
+      const matching = locations.filter(
+        (r) => (!id || r.id === id) && (!scoped || r.business_id === scoped),
+      );
+      if (method === "DELETE")
+        locations = locations.filter((r) => !matching.includes(r));
+      return rows(matching);
     }
     if (path.endsWith("/deals")) {
       if (method === "DELETE") {
@@ -883,4 +904,113 @@ test("bedriftsprofil markerer og krever alle felt unntatt nettside og forsidebil
   await expect(
     page.getByText("Profilen er lagret.", { exact: true }),
   ).toBeVisible();
+});
+
+test("flere avdelinger kan opprettes, redigeres og slettes uten å endre hovedadressen", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(page.getByText("Ingen ekstra avdelinger ennå.")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Legg til avdeling", exact: true })
+    .click();
+  await page.getByLabel("Avdelingsnavn", { exact: true }).fill("Sentrum");
+  await page
+    .getByLabel("Avdelingsadresse", { exact: true })
+    .fill("Markens gate 12A");
+  await page.getByLabel("Avdelingens postnummer", { exact: true }).fill("4611");
+  await page.getByLabel("Avdelingens by", { exact: true }).fill("Kristiansand");
+  const editor = page.getByRole("form", { name: "Avdelingsskjema" });
+  await expect(editor.getByLabel("Kartkoordinater")).toContainText("58.145000");
+  const request = page.waitForRequest(
+    (r) => r.url().includes("/business_locations") && r.method() === "POST",
+  );
+  await page
+    .getByRole("button", { name: "Lagre avdeling", exact: true })
+    .click();
+  const body = (await request).postDataJSON();
+  expect(body.business_id).toBe(businessId);
+  expect(body.lat).toBe(58.145);
+  expect(body.lng).toBe(7.995);
+  await expect(page.getByText("Avdelingen er lagret.")).toBeVisible();
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Rediger avdeling Sentrum", exact: true })
+    .click();
+  await page.getByLabel("Avdelingsnavn", { exact: true }).fill("Sentrum øst");
+  // Ny adresse må ikke beholde den gamle pinnen.
+  await page
+    .getByLabel("Avdelingsadresse", { exact: true })
+    .fill("Ukjent gate 99");
+  const update = page.waitForRequest(
+    (r) => r.url().includes("/business_locations") && r.method() === "PATCH",
+  );
+  await page
+    .getByRole("button", { name: "Lagre avdeling", exact: true })
+    .click();
+  expect((await update).postDataJSON().lat).toBeNull();
+  expect((await update).postDataJSON().lng).toBeNull();
+  await expect(
+    page.getByRole("button", {
+      name: "Rediger avdeling Sentrum øst",
+      exact: true,
+    }),
+  ).toBeVisible();
+  page.once("dialog", (d) => d.dismiss());
+  await page
+    .getByRole("button", { name: "Slett avdeling Sentrum øst", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Rediger avdeling Sentrum øst",
+      exact: true,
+    }),
+  ).toBeVisible();
+  page.once("dialog", (d) => d.accept());
+  await page
+    .getByRole("button", { name: "Slett avdeling Sentrum øst", exact: true })
+    .click();
+  await expect(page.getByText("Ingen ekstra avdelinger ennå.")).toBeVisible();
+  await expect(page.getByLabel("Adresse", { exact: true })).toHaveValue(
+    "Demogata 1",
+  );
+});
+
+test("avdelinger kan ikke overskrives når lasting feiler, og kan lastes på nytt", async ({
+  page,
+}) => {
+  await backend(page);
+  let fail = true;
+  await page.route("**/rest/v1/business_locations?**", (route) =>
+    fail
+      ? route.fulfill({
+          status: 500,
+          json: { message: "Avdelingene kunne ikke lastes." },
+        })
+      : route.fallback(),
+  );
+  await login(page);
+  await page
+    .getByRole("button", { name: "Bedriftsprofil", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "Avdelingene kunne ikke lastes." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Legg til avdeling", exact: true }),
+  ).toHaveCount(0);
+  fail = false;
+  await page.getByRole("button", { name: "Prøv igjen", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Legg til avdeling", exact: true }),
+  ).toBeEnabled();
 });

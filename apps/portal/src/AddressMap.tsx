@@ -169,9 +169,7 @@ export default function AddressMap({
         {phase === "loading"
           ? t("Søker etter adressen …")
           : phase === "ready"
-            ? t(
-                "Kartpinnen er klar. Lagre profilen for å beholde plasseringen.",
-              )
+            ? t("Kartpinnen er klar. Lagre for å beholde plasseringen.")
             : phase === "missing"
               ? t(
                   "Fant ingen entydig adresse. Kontroller adressen, eller plasser pinnen selv i kartet.",
@@ -228,7 +226,7 @@ export default function AddressMap({
       <small>
         {" "}
         {t(
-          "Adresseoppslag: Kartverket. Lagret pinne brukes også i mobilappen.",
+          "Adresseoppslag: Kartverket. Kontroller kartpinnen før du lagrer.",
         )}{" "}
       </small>
     </section>

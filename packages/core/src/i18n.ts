@@ -1,6 +1,36 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Avdelingen finnes ikke lenger, eller du mangler tilgang.":
+    "The location no longer exists, or you do not have access.",
+  "Avdelinger og flere adresser": "Locations and additional addresses",
+  "Hovedadressen redigeres i profilen over. Legg til andre lokaler her. Avdelingene deler bedriftsprofil og tilbud.":
+    "Edit the main address in the profile above. Add other locations here. Locations share the business profile and offers.",
+  "Laster avdelinger …": "Loading locations \u2026",
+  "Ingen ekstra avdelinger ennå.": "No additional locations yet.",
+  "Rediger avdeling {0}": "Edit location {0}",
+  "Slett avdeling {0}": "Delete location {0}",
+  "Vil du slette avdelingen {0}? Hovedadressen og tilbudene beholdes.":
+    "Delete location {0}? The main address and offers will be kept.",
+  "Avdelingen er slettet.": "The location has been deleted.",
+  "Legg til avdeling": "Add location",
+  Avdelingsskjema: "Location form",
+  "Postnummer må ha fire sifre.": "The postal code must have four digits.",
+  "Avdelingen er lagret.": "The location has been saved.",
+  "Rediger avdeling": "Edit location",
+  "Ny avdeling": "New location",
+  Avdelingsnavn: "Location name",
+  Avdelingsadresse: "Location address",
+  "Avdelingens postnummer": "Location postal code",
+  "Avdelingens by": "Location city",
+  "Lagre avdeling": "Save location",
+  "Registrer bedriften først. Deretter kan du legge til flere avdelinger i bedriftsprofilen.":
+    "Register your business first. You can then add more locations to the business profile.",
+  "Kartpinnen er klar. Lagre for å beholde plasseringen.":
+    "The map pin is ready. Save to keep the location.",
+  "Adresseoppslag: Kartverket. Kontroller kartpinnen før du lagrer.":
+    "Address lookup: Kartverket. Check the map pin before saving.",
+
   "Diskriminerende og nedsettende ord er ikke tillatt i anmeldelser eller svar.":
     "Discriminatory and derogatory words are not allowed in reviews or replies.",
   "Teksten inneholder ord eller uttrykk som ikke er tillatt. Skriv om teksten og prøv igjen.":

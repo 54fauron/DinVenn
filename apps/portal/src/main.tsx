@@ -1,3 +1,4 @@
+import { BusinessLocations } from "./BusinessLocations";
 import { ReviewsPanel } from "./ReviewsPanel";
 import { ThemePicker, useTheme } from "./ThemePicker";
 import { LanguagePicker, useLanguage } from "./LanguagePicker";
@@ -515,6 +516,15 @@ function BusinessForm({
           {business ? t("Lagre profil") : t("Send til godkjenning")}
         </button>
       </form>
+      {business ? (
+        <BusinessLocations key={business.id} db={db} businessId={business.id} />
+      ) : (
+        <p className="muted">
+          {t(
+            "Registrer bedriften først. Deretter kan du legge til flere avdelinger i bedriftsprofilen.",
+          )}
+        </p>
+      )}
     </section>
   );
 }

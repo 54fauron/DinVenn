@@ -53,3 +53,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - 49 kjernetester bestått, inkludert administratorregler for ordliste, avvisning av nye og redigerte anmeldelser, bedriftssvar, direkte SQL, normalisering, ordgrenser og dynamisk deaktivering.
 - Eksisterende anmeldelser og moderering av uendret tekst beholdes. TypeScript og begge produksjonsbygg bestått.
 - Cloud-databasen er ikke oppgradert av agenten; `upgrade-review-filter.sql` må kjøres av prosjekteier før filteret håndheves i produksjon. Ekte Supabase-integrasjon av den nye triggeren er ikke testet.
+
+### Flere avdelinger – 24. november 2026
+
+- TypeScript og produksjonsbygg for både portal og brukerapp bestått.
+- 51 kjernetester bestått. Alle ti migrasjoner er kjørt i en ren PGlite-testdatabase med Auth/Storage-modell. Avdelingstesten dekker innsetting, egne/andre bedrifter, administrator, offentlig synlighet ved godkjenning/suspensjon, ugyldige felt/koordinater, endringslogg og sletting uten endring av hovedadressen.
+- Nettlesertester med simulert backend: oppretting, redigering, vedvarende lagring etter reload, adresseoppslag, nullstilling av gammel kartpinne og bekreftet/avbrutt sletting ved mobil- og PC-bredde. Eksisterende profil- og kartflyt passerer også (10 tester). To ekstra tester av lastefeil og nytt forsøk passerer på mobil og PC.
+- Oppgradering av sky-Supabase krever at prosjekteier kjører `upgrade-business-locations.sql`. Reell ende-til-ende-lagring i skyen er ikke kontrollert av agenten. Brukerappens visning av ekstra avdelinger inngår ikke i denne portalendringen.
