@@ -27,6 +27,7 @@ import {
   message,
   redemptionStatus,
   type Business,
+  type BusinessLocation,
   type Category,
   type Deal,
   type Favorite,
@@ -101,6 +102,7 @@ function AppBody() {
   const [authReady, setAuthReady] = useState(false);
   const [tab, setTab] = useState("Utforsk");
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [locations, setLocations] = useState<BusinessLocation[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [events, setEvents] = useState<BusinessEvent[]>([]);
@@ -150,6 +152,7 @@ function AppBody() {
     try {
       const data = await api(client).catalog();
       setBusinesses(data.businesses);
+      setLocations(data.locations ?? []);
       setDeals(data.deals);
       setCategories(data.categories);
       setEvents(data.events);
@@ -340,6 +343,7 @@ function AppBody() {
         <>
           <MapScreen
             businesses={businesses}
+            locations={locations}
             categories={categories}
             deals={deals}
             targetId={mapTarget}

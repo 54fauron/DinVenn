@@ -2,6 +2,7 @@ import { Reviews } from "../src/Reviews";
 import { setLanguage, setTheme, getTheme } from "@dinvenn/core";
 import * as SecureStore from "expo-secure-store";
 import React from "react";
+import { Linking } from "react-native";
 import {
   render,
   screen,
@@ -10,7 +11,13 @@ import {
 } from "@testing-library/react-native";
 import App from "../src/App";
 import MapScreen from "../src/MapScreen";
-import type { Business, BusinessEvent, Deal, NewsPost } from "@dinvenn/core";
+import type {
+  Business,
+  BusinessEvent,
+  BusinessLocation,
+  Deal,
+  NewsPost,
+} from "@dinvenn/core";
 jest.mock("react-native-svg", () => {
   const { View } = require("react-native");
   return { __esModule: true, default: View, Path: View };
@@ -429,4 +436,131 @@ test("anonyme anmeldelser og bedriftssvar vises uten forfatternavn", async () =>
   await screen.findByText("Anonym");
   expect(screen.getByText("Takk for besøket")).toBeTruthy();
   expect(screen.queryByText("Lagre svar")).toBeNull();
+});
+
+test("ekstra avdelinger lastes fra katalogen og har egne markører, adresser og byfilter", async () => {
+  const branch = {
+    id: "l1",
+    business_id: "b1",
+    name: "Oslo sentrum",
+    address: "Storgata 2",
+    postal_code: "0155",
+    city: "Oslo",
+    lat: 59.91,
+    lng: 10.75,
+  } as BusinessLocation;
+  const catalog = await mockApi.catalog();
+  mockApi.catalog.mockResolvedValue({ ...catalog, locations: [branch] });
+  render(<App />);
+  await screen.findByText("20 % på kaffe");
+  fireEvent.press(screen.getByRole("tab", { name: "Kart" }));
+  await screen.findByRole("button", { name: "Markør: Hjørnekafeen" });
+  const marker = await screen.findByRole("button", {
+    name: "Markør: Hjørnekafeen · Oslo sentrum",
+  });
+  fireEvent.press(marker, { stopPropagation: jest.fn() });
+  expect(screen.getByText("Storgata 2, Oslo")).toBeTruthy();
+  fireEvent.press(screen.getByRole("button", { name: "Oslo" }));
+  await waitFor(() =>
+    expect(
+      screen.queryByRole("button", {
+        name: "Markør: Hjørnekafeen",
+      }),
+    ).toBeNull(),
+  );
+  expect(
+    screen.getByRole("button", { name: "Markør: Hjørnekafeen · Oslo sentrum" }),
+  ).toBeTruthy();
+  fireEvent.press(screen.getByLabelText("Kart over lokale bedrifter"), {
+    nativeEvent: { action: "map-press" },
+  });
+  expect(screen.queryByText("Se bedrift")).toBeNull();
+  fireEvent.press(
+    screen.getByRole("button", { name: "Markør: Hjørnekafeen · Oslo sentrum" }),
+    { stopPropagation: jest.fn() },
+  );
+  fireEvent.press(screen.getByText("Se bedrift"));
+  await screen.findByText("En lokal kafé.");
+  expect(screen.getByText("Markens gate 12A, 4611, Kristiansand")).toBeTruthy();
+});
+
+test("kartet holder avdelinger adskilt og åpner opprinnelig profil", async () => {
+  const open = jest.fn();
+  const branches = [
+    {
+      id: "l1",
+      business_id: "b1",
+      name: "Øst",
+      address: "Østgata 1",
+      postal_code: "4611",
+      city: "Kristiansand",
+      lat: 58.15,
+      lng: 8.01,
+    },
+    {
+      id: "l2",
+      business_id: "b1",
+      name: "Vest",
+      address: "Vestgata 2",
+      postal_code: "4611",
+      city: "Kristiansand",
+      lat: 58.14,
+      lng: 7.98,
+    },
+    {
+      id: "private",
+      business_id: "not-in-catalog",
+      name: "Skjult",
+      address: "Gate 1",
+      postal_code: "4611",
+      city: "Kristiansand",
+      lat: 58.14,
+      lng: 7.97,
+    },
+  ] as BusinessLocation[];
+  render(
+    <MapScreen
+      businesses={[business]}
+      locations={branches}
+      categories={[]}
+      deals={[deal]}
+      targetId={null}
+      onBusiness={open}
+      onError={jest.fn()}
+    />,
+  );
+  for (const name of ["Øst", "Vest"]) {
+    fireEvent.press(
+      await screen.findByRole("button", {
+        name: `Markør: Hjørnekafeen · ${name}`,
+      }),
+      { stopPropagation: jest.fn() },
+    );
+    expect(
+      screen.getByText(
+        name === "Øst" ? "Østgata 1, Kristiansand" : "Vestgata 2, Kristiansand",
+      ),
+    ).toBeTruthy();
+    fireEvent.press(screen.getByText("Se bedrift"));
+    expect(open).toHaveBeenLastCalledWith(business);
+  }
+  const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+  try {
+    fireEvent.press(
+      screen.getByRole("link", {
+        name: "Veibeskrivelse til Hjørnekafeen · Vest",
+      }),
+    );
+    await waitFor(() =>
+      expect(openURL).toHaveBeenCalledWith(
+        "https://www.google.com/maps/dir/?api=1&destination=58.14%2C7.98",
+      ),
+    );
+  } finally {
+    openURL.mockRestore();
+  }
+  expect(screen.queryByText(/Skjult/)).toBeNull();
+  fireEvent.press(screen.getByText("Vis liste"));
+  expect(screen.getByText("Hjørnekafeen · Øst")).toBeTruthy();
+  expect(screen.getByText("Hjørnekafeen · Vest")).toBeTruthy();
 });

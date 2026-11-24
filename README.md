@@ -296,6 +296,10 @@ administrator kan administrere alle. Godkjente bedrifters avdelinger er lesbare
 med RLS, mens ventende/suspenderte bedrifters lokaler kun vises for medlemmer og
 administrator. Skriving føres i eksisterende endringslogg.
 
-Denne leveransen gjelder administrasjon i bedriftsportalen. Brukerappens
-nåværende kart, byfilter og bedriftsprofil bruker fortsatt hovedadressen;
-visning og filtrering av alle avdelinger der er et eget neste steg.
+Brukerappens kart og kartliste viser både hovedadressen og ekstra avdelinger.
+Kartets byfilter og søk bruker hver avdelings adresse, by og navn. Kartkort og
+veibeskrivelse bruker den valgte avdelingens plassering; «Se bedrift» åpner den
+felles profilen med samme tilbud og favoritt-ID. Utforsk og profilens praktiske
+informasjon bruker fortsatt hovedadressen. Avdelinger hos bedrifter som ikke er
+godkjent inngår ikke i den offentlige katalogen. Ingen ny SQL-oppgradering kreves
+for kartvisningen utover `upgrade-business-locations.sql`.

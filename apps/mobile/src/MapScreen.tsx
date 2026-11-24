@@ -1,6 +1,6 @@
 import { themeStyles, getTheme } from "./theme";
 import { t, locale } from "@dinvenn/core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
-import type { Business, Category, Deal } from "@dinvenn/core";
+import type { Business, BusinessLocation, Category, Deal } from "@dinvenn/core";
 import {
   addressSearchUrl,
   chooseAddressPoint,
@@ -24,9 +24,18 @@ import {
 import { CategoryChips } from "./Explore";
 import { Icon, palette, ui } from "./ui";
 const cache = new Map<string, Point>();
-type Located = { business: Business; point: Point };
+type MapPlace = Business & {
+  mapId: string;
+  branchName?: string;
+  original: Business;
+};
+type Located = { business: MapPlace; point: Point };
+const emptyLocations: BusinessLocation[] = [];
+const placeName = (place: MapPlace) =>
+  place.branchName ? `${place.name} · ${place.branchName}` : place.name;
 export default function MapScreen({
   businesses,
+  locations = emptyLocations,
   categories,
   deals,
   targetId,
@@ -36,6 +45,7 @@ export default function MapScreen({
   onError,
 }: {
   businesses: Business[];
+  locations?: BusinessLocation[];
   categories: Category[];
   deals: Deal[];
   targetId: string | null;
@@ -56,19 +66,41 @@ export default function MapScreen({
   const [ready, setReady] = useState(false);
   const [showList, setShowList] = useState(false);
   const map = useRef<MapView>(null);
-  const visible = businesses.filter(
+  const places = useMemo<MapPlace[]>(() => {
+    const byBusiness = new Map<string, BusinessLocation[]>();
+    for (const location of locations) {
+      const rows = byBusiness.get(location.business_id) ?? [];
+      rows.push(location);
+      byBusiness.set(location.business_id, rows);
+    }
+    return businesses.flatMap((b) => [
+      { ...b, mapId: b.id, original: b },
+      ...(byBusiness.get(b.id) ?? []).map((location) => ({
+        ...b,
+        address: location.address,
+        postal_code: location.postal_code,
+        city: location.city,
+        lat: location.lat,
+        lng: location.lng,
+        mapId: `location:${location.id}`,
+        branchName: location.name,
+        original: b,
+      })),
+    ]);
+  }, [businesses, locations]);
+  const visible = places.filter(
     (b) =>
       (!city || b.city === city) &&
       (!category || String(b.category_id) === category) &&
       (!query ||
-        `${b.name} ${b.address ?? ""}`
+        `${b.name} ${b.branchName ?? ""} ${b.address ?? ""} ${b.postal_code ?? ""} ${b.city ?? ""}`
           .toLocaleLowerCase("nb-NO")
           .includes(query.toLocaleLowerCase("nb-NO"))),
   );
   const signature = visible
     .map(
       (b) =>
-        `${b.id}|${b.address}|${b.postal_code}|${b.city}|${b.lat}|${b.lng}`,
+        `${b.mapId}|${placeName(b)}|${b.category_id}|${b.address}|${b.postal_code}|${b.city}|${b.lat}|${b.lng}`,
     )
     .join(";");
   useEffect(() => {
@@ -105,7 +137,7 @@ export default function MapScreen({
       if (active) {
         setLocated(result);
         setSelected((id) =>
-          result.some((p) => p.business.id === id) ? id : null,
+          result.some((p) => p.business.mapId === id) ? id : null,
         );
         setLoading(false);
         clearTimeout(timeout);
@@ -151,9 +183,9 @@ export default function MapScreen({
   useEffect(() => {
     fit();
   }, [ready, located, targetId, targetRequest]);
-  const picked = located.find((p) => p.business.id === selected);
+  const picked = located.find((p) => p.business.mapId === selected);
   const unresolved = visible.filter(
-    (b) => !located.some((p) => p.business.id === b.id),
+    (b) => !located.some((p) => p.business.mapId === b.mapId),
   );
   return (
     <View style={m.screen}>
@@ -193,7 +225,7 @@ export default function MapScreen({
             "",
             ...Array.from(
               new Set(
-                businesses.map((b) => b.city).filter((c): c is string => !!c),
+                places.map((b) => b.city).filter((c): c is string => !!c),
               ),
             ),
           ].map((c) => (
@@ -221,12 +253,12 @@ export default function MapScreen({
           </Text>
           {visible.map((b) => (
             <Pressable
-              key={b.id}
+              key={b.mapId}
               accessibilityRole="button"
               style={ui.card}
-              onPress={() => onBusiness(b)}
+              onPress={() => onBusiness(b.original)}
             >
-              <Text style={ui.h3}>{b.name}</Text>
+              <Text style={ui.h3}>{placeName(b)}</Text>
               <Text style={ui.muted}>
                 {[b.address, b.city].filter(Boolean).join(", ")}
               </Text>
@@ -263,19 +295,19 @@ export default function MapScreen({
           >
             {located.map((p) => (
               <Marker
-                key={p.business.id}
+                key={p.business.mapId}
                 coordinate={p.point}
-                title={p.business.name}
+                title={placeName(p.business)}
                 description={p.business.address ?? ""}
                 pinColor={
-                  selected === p.business.id
+                  selected === p.business.mapId
                     ? palette.ink
                     : (categories.find((c) => c.id === p.business.category_id)
                         ?.color ?? palette.coral)
                 }
                 onPress={(event) => {
                   event.stopPropagation();
-                  setSelected(p.business.id);
+                  setSelected(p.business.mapId);
                 }}
               />
             ))}
@@ -329,7 +361,7 @@ export default function MapScreen({
             <View style={m.sheet}>
               <View style={m.sheetHeading}>
                 <View style={m.grow}>
-                  <Text style={ui.h3}>{picked.business.name}</Text>
+                  <Text style={ui.h3}>{placeName(picked.business)}</Text>
                   <Text style={ui.muted}>
                     {[picked.business.address, picked.business.city]
                       .filter(Boolean)
@@ -347,7 +379,7 @@ export default function MapScreen({
               <View style={ui.row}>
                 <Pressable
                   accessibilityRole="button"
-                  onPress={() => onBusiness(picked.business)}
+                  onPress={() => onBusiness(picked.business.original)}
                   style={[ui.button, m.grow]}
                 >
                   <Text style={ui.buttonText}>{t("Se bedrift")}</Text>
@@ -356,7 +388,7 @@ export default function MapScreen({
                   accessibilityRole="link"
                   accessibilityLabel={t(
                     "Veibeskrivelse til {0}",
-                    picked.business.name,
+                    placeName(picked.business),
                   )}
                   onPress={() =>
                     void Linking.openURL(

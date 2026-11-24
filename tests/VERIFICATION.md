@@ -60,3 +60,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - 51 kjernetester bestått. Alle ti migrasjoner er kjørt i en ren PGlite-testdatabase med Auth/Storage-modell. Avdelingstesten dekker innsetting, egne/andre bedrifter, administrator, offentlig synlighet ved godkjenning/suspensjon, ugyldige felt/koordinater, endringslogg og sletting uten endring av hovedadressen.
 - Nettlesertester med simulert backend: oppretting, redigering, vedvarende lagring etter reload, adresseoppslag, nullstilling av gammel kartpinne og bekreftet/avbrutt sletting ved mobil- og PC-bredde. Eksisterende profil- og kartflyt passerer også (10 tester). To ekstra tester av lastefeil og nytt forsøk passerer på mobil og PC.
 - Oppgradering av sky-Supabase krever at prosjekteier kjører `upgrade-business-locations.sql`. Reell ende-til-ende-lagring i skyen er ikke kontrollert av agenten. Brukerappens visning av ekstra avdelinger inngår ikke i denne portalendringen.
+
+### Avdelinger på brukerkartet – 24. november 2026
+
+- Katalogen henter ekstra avdelinger og filtrerer dem mot godkjente bedrifter. Ingen ny migrasjon kreves.
+- TypeScript, webbygg og 16 native komponenttester bestått. Ny dekning for avdelingsmarkører, separate kartkort, byfilter, kartliste, felles bedriftsprofil og veibeskrivelse til avdelingens koordinater.
+- Åtte nettleserkontroller bestått ved mobil- og PC-bredde: eksisterende kontoflyt og kartkort, flere avdelinger i samme bedrift, filtrering, valg/lukking og ren tekst i kartetiketter.
+- Lesetilgang til sky-Supabase kontrollert: den ekstra offentlige avdelingen finnes med lagrede koordinater. Ingen data er endret i skyen.
+- Etter publisering: kontrollert direkte på dinvenn.app at hovedadressen og den ekstra avdelingen vises som to markører. Valg av avdelingen viste riktig adresse, uten JavaScript-feil.

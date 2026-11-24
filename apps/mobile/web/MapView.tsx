@@ -79,8 +79,23 @@ export function Marker(props: any) {
       weight: 3,
       fillColor: props.pinColor,
       fillOpacity: 1,
+      bubblingMouseEvents: false,
     }).addTo(map);
-    marker.bindTooltip(props.title);
+    const label = document.createElement("span");
+    label.textContent = props.title;
+    marker.bindTooltip(label);
+    const element = marker.getElement();
+    element?.setAttribute("role", "button");
+    element?.setAttribute("tabindex", "0");
+    element?.setAttribute("aria-label", props.title);
+    element?.addEventListener("keydown", (event) => {
+      const key = (event as KeyboardEvent).key;
+      if (key === "Enter" || key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+        callback.current?.({ stopPropagation() {} });
+      }
+    });
     marker.on("click", (event) => {
       L.DomEvent.stopPropagation(event);
       callback.current?.({ stopPropagation() {} });

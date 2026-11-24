@@ -297,7 +297,7 @@ export const api = (db: Client) => ({
   },
   async catalog() {
     const now = new Date().toISOString();
-    const [bs, ds, cs, es, ns] = await Promise.all([
+    const [bs, ds, cs, es, ns, ls] = await Promise.all([
       db.from("businesses").select("*").eq("status", "approved").order("name"),
       db
         .from("deals")
@@ -321,11 +321,17 @@ export const api = (db: Client) => ({
         .eq("status", "active")
         .lte("published_at", now)
         .order("published_at", { ascending: false }),
+      db.from("business_locations").select("*").order("created_at").order("id"),
     ]);
     const businesses = unwrap(bs);
     const approved = new Set(businesses.map((b) => b.id));
     return {
       businesses,
+      // An older database can still show the main addresses during rollout.
+      locations: (ls.error && ["PGRST205", "42P01"].includes(ls.error.code)
+        ? []
+        : unwrap(ls)
+      ).filter((location) => approved.has(location.business_id)),
       deals: unwrap(ds).filter((d) => approved.has(d.business_id)),
       categories: unwrap(cs),
       events: unwrap(es).filter((e) => approved.has(e.business_id)),
