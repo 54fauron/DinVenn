@@ -233,3 +233,42 @@ Appen krever internett for katalog, innlogging og QR-status; frakoblet navigasjo
 viser en melding med «Prøv igjen». Service worker lagrer aldri API-svar eller
 brukerdata. Nye kodeversjoner lastes ved neste åpning/oppdatering av siden.
 Webappen krever ikke Xcode eller Apple-signering og har ingen syvdagersgrense.
+
+## Ordfilter for anmeldelser
+
+Kjør hele `supabase/upgrade-review-filter.sql` **én gang** i SQL Editor på den
+allerede oppgraderte pilotdatabasen (etter `upgrade-reviews.sql`). Ikke kjør
+`setup.sql` i en eksisterende database. Oppgraderingen er atomisk og legger til
+ordliste og databasetrigger; den endrer eller sletter ikke eldre anmeldelser.
+
+Filteret gjelder nye og endrede anmeldelsestekster og bedriftssvar, inkludert
+API-kall og direkte databaseskriving. Anonym publisering gir ikke unntak.
+Teksten avvises med en forståelig melding og lagres ikke delvis. Kun
+administrator kan lese eller endre `public.review_blocked_terms` gjennom API-et.
+Supabase SQL Editor / Table Editor kan også brukes til å vedlikeholde listen.
+
+Startlisten inneholder tydelige norske og engelske diskriminerende skjellsord.
+Den er ment som et utgangspunkt, og kan gjennomgås i migrasjonsfilen. For å legge
+til et ord eller uttrykk fra SQL Editor, erstatt eksemplet nedenfor:
+
+```sql
+insert into public.review_blocked_terms (term)
+values (public.normalize_review_text('ord eller uttrykk'))
+on conflict (term) do update set is_active = true;
+```
+
+For å deaktivere et uttrykk uten å slette det:
+
+```sql
+update public.review_blocked_terms
+set is_active = false
+where term = public.normalize_review_text('ord eller uttrykk');
+```
+
+Nye ord gjelder med én gang, uten ny publisering av webappen. Filteret bruker hele
+ord/uttrykk, Unicode NFKC, små bokstaver, fjerning av utvalgte usynlige tegn og
+normalisering av tegnsetting/mellomrom. Vanlig negativ kritikk og nøytrale
+identitetsord blokkeres ikke av startlisten. Bøyninger må legges til separat.
+Ordlisten tolker ikke kontekst: sitater kan også avvises, og omskrivinger,
+feilstavinger og diskriminerende setninger uten listeord kan slippe gjennom.
+Administratorens eksisterende moderering og sletting beholdes.

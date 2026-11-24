@@ -1,6 +1,10 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Diskriminerende og nedsettende ord er ikke tillatt i anmeldelser eller svar.":
+    "Discriminatory and derogatory words are not allowed in reviews or replies.",
+  "Teksten inneholder ord eller uttrykk som ikke er tillatt. Skriv om teksten og prøv igjen.":
+    "The text contains words or phrases that are not allowed. Rephrase it and try again.",
   "For bedrifter": "For businesses",
   "LOKALT ER FINT": "LOCAL IS LOVELY",
   "Velg nytt passord": "Choose a new password",

@@ -499,6 +499,177 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
         );
       },
     );
+    await t.test("bare admin kan lese og endre ordlisten", async () => {
+      assert.equal(
+        (await as("user", () => query("select * from review_blocked_terms")))
+          .length,
+        0,
+      );
+      await assert.rejects(
+        as("user", () =>
+          query("insert into review_blocked_terms(term) values ('filtertest')"),
+        ),
+        /row-level security/,
+      );
+      await assert.rejects(
+        as(null, () => query("select * from review_blocked_terms"), "anon"),
+        /permission denied/,
+      );
+      await as("admin", () =>
+        query(
+          "insert into review_blocked_terms(term) values ('filtertest'), ('test uttrykk')",
+        ),
+      );
+      assert.equal(
+        (
+          await as("owner", () =>
+            query("delete from review_blocked_terms returning term"),
+          )
+        ).length,
+        0,
+      );
+      assert.equal(
+        (
+          await as("user", () =>
+            query(
+              "update review_blocked_terms set is_active=false returning term",
+            ),
+          )
+        ).length,
+        0,
+      );
+      assert.ok(
+        (await as("admin", () => query("select * from review_blocked_terms")))
+          .length > 2,
+      );
+    });
+    await t.test(
+      "ordfilter blokkerer nye anmeldelser og redigering, med normalisering",
+      async () => {
+        for (const text of [
+          "FILTERTEST!",
+          "Hei, test---uttrykk!",
+          "filter\u200btest",
+          "ｆｉｌｔｅｒｔｅｓｔ",
+          "NIGGER",
+        ]) {
+          await assert.rejects(
+            as("user", () =>
+              query("select submit_business_review($1, 5, $2, true)", [
+                business.id,
+                text,
+              ]),
+            ),
+            /ikke er tillatt/,
+          );
+        }
+        await assert.rejects(
+          as("owner2", () =>
+            query("select submit_business_review($1, 5, 'filtertest')", [
+              business.id,
+            ]),
+          ),
+          /ikke er tillatt/,
+        );
+        assert.equal(
+          (
+            await query(
+              "select count(*)::int n from reviews where user_id=$1",
+              [ids.owner2],
+            )
+          )[0].n,
+          0,
+        );
+        const own = (
+          await as("other", () =>
+            query("select * from list_business_reviews($1)", [business.id]),
+          )
+        ).find((r) => r.is_own);
+        await assert.rejects(
+          as("other", () =>
+            query("select submit_business_review($1, 1, 'filtertest')", [
+              business.id,
+            ]),
+          ),
+          /ikke er tillatt/,
+        );
+        assert.equal(
+          (await query("select comment from reviews where id=$1", [own.id]))[0]
+            .comment,
+          "Anonym erfaring",
+        );
+        // Hele ord: vanlig omtale og ord som bare inneholder et oppført ord bevares.
+        await as("user", () =>
+          query(
+            "select submit_business_review($1, 2, 'Dårlig service. filtertesten var treg. Vi er et homofilt par.')",
+            [business.id],
+          ),
+        );
+        await as("user", () =>
+          query("select submit_business_review($1, 5, '')", [business.id]),
+        );
+      },
+    );
+    await t.test(
+      "bedriftssvar og direkte databaseskriving følger samme filter",
+      async () => {
+        const r = (
+          await query(
+            "select id from reviews where user_id=$1 and business_id=$2",
+            [ids.other, business.id],
+          )
+        )[0];
+        await assert.rejects(
+          as("owner", () =>
+            query("select reply_to_review($1, 'filtertest')", [r.id]),
+          ),
+          /ikke er tillatt/,
+        );
+        await assert.rejects(
+          query("update reviews set comment='filtertest' where id=$1", [r.id]),
+          /ikke er tillatt/,
+        );
+        await assert.rejects(
+          query("update reviews set business_reply='filtertest' where id=$1", [
+            r.id,
+          ]),
+          /ikke er tillatt/,
+        );
+        assert.equal(
+          (
+            await query("select business_reply from reviews where id=$1", [
+              r.id,
+            ])
+          )[0].business_reply,
+          null,
+        );
+        await as("admin", () =>
+          query(
+            "update review_blocked_terms set is_active=false where term='filtertest'",
+          ),
+        );
+        await as("owner", () =>
+          query("select reply_to_review($1, 'filtertest')", [r.id]),
+        );
+        // Et nytt ord blokkerer ikke moderering av uendret eldre innhold.
+        await as("admin", () =>
+          query(
+            "update review_blocked_terms set is_active=true where term='filtertest'",
+          ),
+        );
+        await query("update reviews set status='published' where id=$1", [
+          r.id,
+        ]);
+        await as("owner", () =>
+          query("select reply_to_review($1, 'Takk')", [r.id]),
+        );
+        await as("admin", () =>
+          query(
+            "delete from review_blocked_terms where term in ('filtertest', 'test uttrykk')",
+          ),
+        );
+      },
+    );
     await t.test(
       "bare egen bedrift kan svare og bare admin kan slette",
       async () => {

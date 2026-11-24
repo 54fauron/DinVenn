@@ -67,6 +67,11 @@ export function ReviewsPanel({
           "Bare bedriften kan svare. Bare administrator kan slette anmeldelser.",
         )}
       </p>
+      <p>
+        {t(
+          "Diskriminerende og nedsettende ord er ikke tillatt i anmeldelser eller svar.",
+        )}
+      </p>
       {loading && <p role="status">{t("Laster anmeldelser …")}</p>}
       {error && (
         <div role="alert">

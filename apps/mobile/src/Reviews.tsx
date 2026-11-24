@@ -190,6 +190,11 @@ export function Reviews({
               <Text style={ui.muted}>
                 {t("Bare administrator kan slette anmeldelser.")}
               </Text>
+              <Text style={ui.muted}>
+                {t(
+                  "Diskriminerende og nedsettende ord er ikke tillatt i anmeldelser eller svar.",
+                )}
+              </Text>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t("Lagre anmeldelse")}

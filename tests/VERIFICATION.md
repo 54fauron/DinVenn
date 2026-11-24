@@ -46,3 +46,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Chromium kontrollert ved mobil- og PC-bredde: katalog, innloggingskrav, språk/tema etter reload, kartmarkør og lukking på kartet. Gjentakbare tester: `npm run test:web`.
 - Begge Cloudflare-domener returnerte HTTP 200 og riktig grensesnitt uten JavaScript-feil etter publisering.
 - Faktisk installasjon på hjemskjerm i Safari/Android, og e-postflyt på det nye portalunderdomenet, er ikke verifisert. Supabase Redirect URLs krever manuell kontroll.
+
+### Ordfilter – 24. november 2026
+
+- Alle ni migrasjoner kjørt i ren PostgreSQL via PGlite med testmodell av Supabase Auth/Storage.
+- 49 kjernetester bestått, inkludert administratorregler for ordliste, avvisning av nye og redigerte anmeldelser, bedriftssvar, direkte SQL, normalisering, ordgrenser og dynamisk deaktivering.
+- Eksisterende anmeldelser og moderering av uendret tekst beholdes. TypeScript og begge produksjonsbygg bestått.
+- Cloud-databasen er ikke oppgradert av agenten; `upgrade-review-filter.sql` må kjøres av prosjekteier før filteret håndheves i produksjon. Ekte Supabase-integrasjon av den nye triggeren er ikke testet.
