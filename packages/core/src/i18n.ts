@@ -1,6 +1,49 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Lys modus": "Light mode",
+  "Mørk modus": "Dark mode",
+  "Min side": "My account",
+  "Små fordeler. Dine favorittsteder.": "Little perks. Your favourite places.",
+  "Lokal venn": "Local friend",
+  "Velg din hjemby": "Choose your home town",
+  "Rediger profil": "Edit profile",
+  "Hjemby (valgfritt)": "Home town (optional)",
+  "Lagre profilen min": "Save my profile",
+  "Profilen din er oppdatert.": "Your profile has been updated.",
+  "Navnet må ha mellom 1 og 80 tegn.":
+    "Your name must have between 1 and 80 characters.",
+  "Hjembyen kan ha maks 120 tegn.":
+    "Your home town must be at most 120 characters.",
+  "Profilen finnes ikke. Prøv å logge inn på nytt.":
+    "Your profile was not found. Try signing in again.",
+  "Dine fordeler": "Your perks",
+  "Åpne favoritter": "Open favourites",
+  "Åpne aktive koder": "Open active codes",
+  "Aktive koder": "Active codes",
+  "Mine anmeldelser": "My reviews",
+  "Dine opplevelser og svar fra bedriftene":
+    "Your experiences and replies from businesses",
+  "Laster anmeldelsene dine …": "Loading your reviews \u2026",
+  "Din første anmeldelse venter": "Your first review awaits",
+  "Har du besøkt et lokalt sted? Åpne bedriftsprofilen og del opplevelsen din.":
+    "Visited somewhere local? Open the business profile and share your experience.",
+  "Med navn": "Named review",
+  "Skjult av administrator": "Hidden by administrator",
+  "Rediger anmeldelse hos {0}": "Edit review of {0}",
+  "Bedriften er ikke tilgjengelig for redigering nå.":
+    "This business is not available for editing right now.",
+  "Hjelp og personvern": "Help and privacy",
+  "Navnet ditt vises på anmeldelser du publiserer med navn. Du kan velge anonym visning per anmeldelse. Hjemby er valgfritt.":
+    "Your name appears on reviews you publish with your name. You can choose anonymous display for each review. Home town is optional.",
+  "Kontosletting behandles av administrator. Det er forskjellig fra å logge ut.":
+    "Account deletion is handled by an administrator. It is different from signing out.",
+  "Kontakt oss / rapporter et problem": "Contact us / report a problem",
+  "Be om sletting av konto": "Request account deletion",
+  "VELKOMMEN TIL DINVENN": "WELCOME TO DINVENN",
+  "Lagre favorittene dine og hent fordeler hos de lokale.":
+    "Save your favourites and claim perks at local businesses.",
+
   "Vis innløsningskode": "Show redemption token",
   "Skjul innløsningskode": "Hide redemption token",
   "Beskriv hva gaven eller tilbudet gjelder.": "Describe the gift or offer.",

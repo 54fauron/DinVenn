@@ -1044,6 +1044,97 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
       },
     );
     await t.test(
+      "Min side redigerer bare egen profil og røper bare egne anmeldelser",
+      async () => {
+        await assert.rejects(
+          as(
+            null,
+            () => query("select save_my_profile('Test','Oslo')"),
+            "anon",
+          ),
+          /permission denied/,
+        );
+        const other = (
+          await query("select display_name from profiles where id=$1", [
+            ids.other,
+          ])
+        )[0].display_name;
+        await as("user", () =>
+          query("select save_my_profile('  Nytt navn  ', '  Drammen  ')"),
+        );
+        const profile = (
+          await query(
+            "select display_name,home_city,role from profiles where id=$1",
+            [ids.user],
+          )
+        )[0];
+        assert.equal(profile.display_name, "Nytt navn");
+        assert.equal(profile.home_city, "Drammen");
+        assert.equal(profile.role, "user");
+        assert.equal(
+          (
+            await query("select display_name from profiles where id=$1", [
+              ids.other,
+            ])
+          )[0].display_name,
+          other,
+        );
+        await assert.rejects(
+          as("user", () => query("select save_my_profile(' ','Oslo')")),
+          /1 og 80/,
+        );
+        await assert.rejects(
+          as("user", () =>
+            query("select save_my_profile('Test',$1)", ["a".repeat(121)]),
+          ),
+          /120/,
+        );
+        await as("user", () =>
+          query(
+            "select submit_business_review($1, 4, 'Min egen anmeldelse',true)",
+            [business.id],
+          ),
+        );
+        await as("other", () =>
+          query(
+            "select submit_business_review($1, 3, 'En annen brukers anmeldelse',false)",
+            [business.id],
+          ),
+        );
+        const own = await as("user", () =>
+          query("select * from list_my_reviews()"),
+        );
+        assert.ok(own.some((r) => r.comment === "Min egen anmeldelse"));
+        assert.ok(
+          own.every((r) => r.comment !== "En annen brukers anmeldelse"),
+        );
+        assert.ok(own.every((r) => r.is_own));
+        assert.ok(own.every((r) => !("user_id" in r)));
+        const r = own.find((r) => r.comment === "Min egen anmeldelse");
+        assert.equal(r.author_name, null);
+        await query("update reviews set status='hidden' where id=$1", [r.id]);
+        await as("admin", () =>
+          query("update businesses set status='suspended' where id=$1", [
+            business.id,
+          ]),
+        );
+        const hidden = (
+          await as("user", () => query("select * from list_my_reviews()"))
+        ).find((x) => x.id === r.id);
+        assert.equal(hidden.status, "hidden");
+        assert.equal(hidden.business_status, "suspended");
+        await assert.rejects(
+          as(null, () => query("select * from list_my_reviews()"), "anon"),
+          /permission denied/,
+        );
+        await as("admin", () =>
+          query("update businesses set status='approved' where id=$1", [
+            business.id,
+          ]),
+        );
+      },
+    );
+    await t.test(
       "offentlig bedriftsdata røper ikke nummer, og nummerendring krever ny godkjenning",
       async () => {
         assert.equal(

@@ -330,3 +330,29 @@ Visningskoden fryses på innløsningen ved uthenting. Endret tilbudskode påvirk
 bare nye uthentinger; gamle kodekort beholdes. Eksisterende innløsninger fra før
 oppgraderingen viser sin opprinnelige tilfeldige kode. Valget **Automatisk kode**
 fjerner tilbudets egen kode ved lagring og bruker normal QR/engangskodeflyt igjen.
+
+## Min side
+
+Kjør `supabase/upgrade-my-account.sql` én gang i SQL Editor på den eksisterende
+pilotdatabasen for sikker profilredigering og egen anmeldelseshistorikk. Den
+endrer ikke eksisterende data. Nye tomme databaser bruker den samlede `setup.sql`.
+
+Min side har profilkort med initialer, navn og valgfri hjemby, snarveier til
+favoritter og aktive (utstedte, ikke utløpte) koder, Mine anmeldelser og kompakte
+språk-/temavalg. Utloggede brukere får innlogging og registrering før innstillinger.
+Profilnavnet brukes også i navngitte anmeldelser; redigeringen endrer bare
+`profiles.display_name` og `profiles.home_city`, aldri roller, e-post eller passord.
+Auth-metadata er ikke profilens kilde etter at profilen er lastet.
+
+`list_my_reviews()` identifiserer brukeren fra innloggingen og tar ikke imot en
+valgfri bruker-ID. Den viser bare egne anmeldelser, også skjulte anmeldelser og
+anmeldelser av bedrifter som ikke lenger er godkjent. Redigering er tilgjengelig
+når bedriften er godkjent, gjennom eksisterende anmeldelsesfunksjon og ordfilter.
+Bare administrator kan fortsatt slette anmeldelser. Anonym visning beholdes.
+
+Den offentlige kontaktadressen konfigureres med `EXPO_PUBLIC_SUPPORT_EMAIL` ved
+bygging. Når den er satt, viser Hjelp og personvern knapper som åpner e-postklienten
+for støtte/problemrapportering og forespørsel om kontosletting. Brukeren må sende
+meldingen selv; det slettes ikke automatisk data. Uten en konfigurert adresse
+skjules disse knappene. Denne kontoinformasjonen erstatter ikke en fullstendig
+personvernerklæring for offentlig drift.

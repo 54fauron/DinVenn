@@ -75,3 +75,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Ny databasetest dekker gave/2-for-1-beskrivelse, trimming, ugyldig kode, frosset visningskode, unike QR-token for ulike brukere, gjenbruk av reservasjon og avvisning av dobbelt innløst kode. En felles rabattkode kan ikke innløses som en personlig token.
 - Fire målrettede nettlesertester bestått med simulert backend på mobil/PC: oppretting/redigering av gave og 2-for-1, egen/automatisk kode, brukerens uthenting med riktig beskrivelse og frosset kode samt manuell visning av unik innløsningskode.
 - TypeScript og begge produksjonsbygg bestått. Prosjekteier oppga at SQL-oppgraderingen var kjørt uten feil. Ingen ekte innløsning eller prøveordre er opprettet i produksjon av agenten.
+
+### Oppusset Min side – 27. november 2026
+
+- TypeScript og begge produksjonsbygg bestått; 56 kjernetester og 16 native komponenttester bestått.
+- Ny databasetest dekker profilendring bare for innlogget bruker, validering, uendrede roller, ingen endring av andres profiler og egen anmeldelseshistorikk uten andre brukeres anmeldelser. Skjulte anmeldelser og suspenderte bedrifter vises bare for egen bruker i denne oversikten.
+- Ny nettlesertest passerer på mobil og PC med simulert backend: utlogget rekkefølge, profilredigering og reload, korrekt antall aktive koder, anmeldelsesredigering og bedriftssvar, språk og mørk modus. Skjermbilder gjennomgått visuelt.
+- Prosjekteier bekreftet SQL-oppgraderingen kjørt uten feil. Ingen kontosletting eller e-post er sendt av agenten. Kontaktknapper vises bare når offentlig støtteadresse er konfigurert.
+- Hele brukerappens nettlesersuite bestått (12 tester). Skyfunksjonen `list_my_reviews` er kontrollert å finnes og avvise anonym tilgang; ingen private brukerdata er hentet av agenten.

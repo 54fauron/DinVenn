@@ -20,11 +20,15 @@ export function Reviews({
   businessId,
   userId,
   onLogin,
+  editorOnly = false,
+  onSaved,
 }: {
   db: Client;
   businessId: string;
   userId?: string;
   onLogin: () => void;
+  editorOnly?: boolean;
+  onSaved?: () => void;
 }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [rating, setRating] = useState(5);
@@ -82,6 +86,7 @@ export function Reviews({
       await api(db).review(businessId, rating, comment, anonymous);
       setReviews(await api(db).reviews(businessId));
       setNotice("Anmeldelsen er lagret.");
+      onSaved?.();
     } catch (e) {
       setError(message(e));
     } finally {
@@ -92,8 +97,8 @@ export function Reviews({
   const own = reviews.find((r) => r.is_own);
   return (
     <View style={{ gap: 14 }}>
-      <Text style={ui.h2}>{t("Anmeldelser")}</Text>
-      {!!reviews.length && (
+      {!editorOnly && <Text style={ui.h2}>{t("Anmeldelser")}</Text>}
+      {!editorOnly && !!reviews.length && (
         <Text style={ui.text}>
           {(
             reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -105,37 +110,40 @@ export function Reviews({
         <ActivityIndicator />
       ) : (
         <>
-          {!reviews.length && !error && (
+          {!editorOnly && !reviews.length && !error && (
             <Text style={ui.muted}>{t("Ingen anmeldelser ennå.")}</Text>
           )}
-          {reviews.map((r) => (
-            <View key={r.id} style={ui.card}>
-              <Text style={ui.h3}>
-                {r.is_anonymous ? t("Anonym") : (r.author_name ?? t("Bruker"))}
-                {r.is_own ? ` · ${t("Din anmeldelse")}` : ""}
-              </Text>
-              <Text style={ui.text}>
-                {"★".repeat(r.rating)}
-                {"☆".repeat(5 - r.rating)}
-              </Text>
-              <Text style={ui.muted}>
-                {new Date(r.created_at).toLocaleDateString(locale())}
-              </Text>
-              {!!r.comment && <Text style={ui.text}>{r.comment}</Text>}
-              {!!r.business_reply && (
-                <View
-                  style={{
-                    padding: 12,
-                    backgroundColor: palette.purple,
-                    borderRadius: 12,
-                  }}
-                >
-                  <Text style={ui.h3}>{t("Svar fra bedriften")}</Text>
-                  <Text style={ui.text}>{r.business_reply}</Text>
-                </View>
-              )}
-            </View>
-          ))}
+          {!editorOnly &&
+            reviews.map((r) => (
+              <View key={r.id} style={ui.card}>
+                <Text style={ui.h3}>
+                  {r.is_anonymous
+                    ? t("Anonym")
+                    : (r.author_name ?? t("Bruker"))}
+                  {r.is_own ? ` · ${t("Din anmeldelse")}` : ""}
+                </Text>
+                <Text style={ui.text}>
+                  {"★".repeat(r.rating)}
+                  {"☆".repeat(5 - r.rating)}
+                </Text>
+                <Text style={ui.muted}>
+                  {new Date(r.created_at).toLocaleDateString(locale())}
+                </Text>
+                {!!r.comment && <Text style={ui.text}>{r.comment}</Text>}
+                {!!r.business_reply && (
+                  <View
+                    style={{
+                      padding: 12,
+                      backgroundColor: palette.purple,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text style={ui.h3}>{t("Svar fra bedriften")}</Text>
+                    <Text style={ui.text}>{r.business_reply}</Text>
+                  </View>
+                )}
+              </View>
+            ))}
           {userId ? (
             <View style={ui.card}>
               <Text style={ui.h3}>

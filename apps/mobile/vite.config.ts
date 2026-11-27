@@ -77,6 +77,9 @@ export default defineConfig(({ mode }) => {
       ],
     },
     define: {
+      "process.env.EXPO_PUBLIC_SUPPORT_EMAIL": JSON.stringify(
+        env.EXPO_PUBLIC_SUPPORT_EMAIL || "",
+      ),
       "process.env.EXPO_PUBLIC_SUPABASE_URL": JSON.stringify(
         env.EXPO_PUBLIC_SUPABASE_URL || env.VITE_SUPABASE_URL || "",
       ),

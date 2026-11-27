@@ -12,6 +12,7 @@ export type Profile = {
   id: string;
   role: "user" | "business" | "admin";
   display_name: string | null;
+  home_city?: string | null;
 };
 export type Category = {
   id: number;
@@ -212,7 +213,20 @@ export type Review = Omit<
   business_reply: string | null;
   replied_at: string | null;
 };
+export type OwnReview =
+  Database["public"]["Functions"]["list_my_reviews"]["Returns"][number];
 export const api = (db: Client) => ({
+  async myReviews() {
+    return unwrap(await db.rpc("list_my_reviews", {}));
+  },
+  async saveMyProfile(name: string, city: string) {
+    check(
+      await db.rpc("save_my_profile", {
+        p_display_name: name.trim(),
+        p_home_city: city.trim() || null,
+      }),
+    );
+  },
   async reviews(businessId?: string) {
     return unwrap(
       await db.rpc(

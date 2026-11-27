@@ -324,7 +324,7 @@ test("språk byttes fra Meg uten å oversette bedriftsinnhold eller miste naviga
   await screen.findByText("Vennepriser nå");
   fireEvent.press(screen.getByText("Meg"));
   fireEvent.press(screen.getByLabelText("Bytt til engelsk"));
-  expect(screen.getByText("⚙ Settings")).toBeTruthy();
+  expect(screen.getByText("Settings")).toBeTruthy();
   expect(screen.getByText("Explore")).toBeTruthy();
   expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
     "dinvenn-language",

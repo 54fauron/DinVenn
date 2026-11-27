@@ -2288,6 +2288,28 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      save_my_profile: {
+        Args: { p_display_name: string; p_home_city?: string | null };
+        Returns: undefined;
+      };
+      list_my_reviews: {
+        Args: Record<PropertyKey, never>;
+        Returns: {
+          id: string;
+          business_id: string;
+          business_name: string;
+          author_name: string | null;
+          is_anonymous: boolean;
+          rating: number;
+          comment: string | null;
+          business_reply: string | null;
+          replied_at: string | null;
+          created_at: string;
+          is_own: boolean;
+          status: Database["public"]["Enums"]["review_status"];
+          business_status: Database["public"]["Enums"]["business_status"];
+        }[];
+      };
       list_business_reviews: {
         Args: { p_business_id?: string };
         Returns: {

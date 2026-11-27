@@ -32,62 +32,65 @@ export function LanguageSettings() {
     setLanguage(next);
     void SecureStore.setItemAsync(key, next).catch(() => {});
   }
+  const button = {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    borderWidth: 1,
+    borderColor: palette.border,
+    borderRadius: 12,
+    backgroundColor: palette.white,
+  };
+  const row = {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    gap: 16,
+  };
   return (
-    <View
-      style={{
-        backgroundColor: palette.white,
-        borderRadius: 20,
-        padding: 20,
-        gap: 14,
-        marginBottom: 20,
-      }}
-    >
-      <Text style={ui.h3}>⚙ {t("Innstillinger")}</Text>
-      <Text style={{ color: palette.ink }}>{t("Språk")}</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={
-          language === "nb" ? "Bytt til engelsk" : "Switch to Norwegian"
-        }
-        onPress={() => choose(language === "nb" ? "en" : "nb")}
-        style={{
-          alignSelf: "flex-start",
-          minWidth: 48,
-          minHeight: 48,
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 10,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: palette.border,
-          backgroundColor: palette.white,
-        }}
-      >
-        <Text style={{ fontSize: 26 }}>{language === "nb" ? "🇳🇴" : "🇬🇧"}</Text>
-      </Pressable>
-      <Text style={{ color: palette.ink }}>{t("Utseende")}</Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={t(
-          theme === "light" ? "Bytt til mørk modus" : "Bytt til lys modus",
-        )}
-        onPress={toggleTheme}
-        style={{
-          alignSelf: "flex-start",
-          minWidth: 48,
-          minHeight: 48,
-          alignItems: "center",
-          justifyContent: "center",
-          borderWidth: 1,
-          borderColor: palette.border,
-          borderRadius: 12,
-          backgroundColor: palette.white,
-        }}
-      >
-        <Text style={{ fontSize: 28, color: palette.ink }}>
-          {theme === "light" ? "☀" : "☾"}
-        </Text>
-      </Pressable>
+    <View style={[ui.card, { gap: 14 }]}>
+      <Text style={ui.h3}>{t("Innstillinger")}</Text>
+      <View style={row}>
+        <View style={{ flex: 1 }}>
+          <Text style={ui.text}>{t("Språk")}</Text>
+          <Text style={ui.muted}>
+            {language === "nb" ? "Norsk bokmål" : "English"}
+          </Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            language === "nb" ? "Bytt til engelsk" : "Switch to Norwegian"
+          }
+          onPress={() => choose(language === "nb" ? "en" : "nb")}
+          style={button}
+        >
+          <Text style={{ fontSize: 26 }}>
+            {language === "nb" ? "🇳🇴" : "🇬🇧"}
+          </Text>
+        </Pressable>
+      </View>
+      <View style={row}>
+        <View style={{ flex: 1 }}>
+          <Text style={ui.text}>{t("Utseende")}</Text>
+          <Text style={ui.muted}>
+            {t(theme === "light" ? "Lys modus" : "Mørk modus")}
+          </Text>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t(
+            theme === "light" ? "Bytt til mørk modus" : "Bytt til lys modus",
+          )}
+          onPress={toggleTheme}
+          style={button}
+        >
+          <Text style={{ fontSize: 28, color: palette.ink }}>
+            {theme === "light" ? "☀" : "☾"}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }

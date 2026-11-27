@@ -262,3 +262,174 @@ test("gavebeskrivelse og bedriftens kode vises med unik QR ved uthenting", async
     page.getByText("unique-redemption-token", { exact: true }),
   ).toBeVisible();
 });
+
+test("Min side lagrer profil, teller aktive koder og redigerer egne anmeldelser", async ({
+  page,
+}, testInfo) => {
+  const user = {
+    id: "00000000-0000-4000-8000-000000000001",
+    email: "kari@example.com",
+    aud: "authenticated",
+    role: "authenticated",
+    user_metadata: { display_name: "Kari" },
+    app_metadata: {},
+    created_at: new Date().toISOString(),
+  };
+  let profile = {
+    id: user.id,
+    role: "user",
+    display_name: "Kari Hansen",
+    home_city: "Oslo",
+  };
+  let review = {
+    id: "review1",
+    business_id: "b1",
+    business_name: "Testkafeen",
+    author_name: null,
+    is_anonymous: true,
+    rating: 4,
+    comment: "God kaffe",
+    business_reply: "Takk for besøket!",
+    replied_at: null,
+    created_at: "2026-11-27T10:00:00Z",
+    is_own: true,
+    status: "published",
+    business_status: "approved",
+  };
+  const jwt = `${Buffer.from('{"alg":"HS256"}').toString("base64url")}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test`;
+  await page.route("**/auth/v1/token?**", (route) =>
+    route.fulfill({
+      json: {
+        access_token: jwt,
+        refresh_token: "refresh-test",
+        expires_in: 3600,
+        token_type: "bearer",
+        user,
+      },
+    }),
+  );
+  await page.route("**/auth/v1/user", (route) => route.fulfill({ json: user }));
+  await page.route("**/rest/v1/profiles?**", (route) =>
+    route.fulfill({ json: profile }),
+  );
+  await page.route("**/rest/v1/favorites?**", (route) =>
+    route.fulfill({
+      json: [
+        { target_type: "business", target_id: "b1" },
+        { target_type: "deal", target_id: "d1" },
+      ],
+    }),
+  );
+  await page.route("**/rest/v1/deal_redemptions?**", (route) =>
+    route.fulfill({
+      json: [
+        { id: "active", status: "issued", expires_at: "2099-01-01T00:00:00Z" },
+        { id: "expired", status: "issued", expires_at: "2020-01-01T00:00:00Z" },
+        { id: "used", status: "redeemed", expires_at: "2099-01-01T00:00:00Z" },
+      ],
+    }),
+  );
+  await page.route("**/rest/v1/rpc/save_my_profile", (route) => {
+    const args = route.request().postDataJSON();
+    expect(Object.keys(args).sort()).toEqual(["p_display_name", "p_home_city"]);
+    profile = {
+      ...profile,
+      display_name: args.p_display_name,
+      home_city: args.p_home_city,
+    };
+    return route.fulfill({ json: null });
+  });
+  await page.route("**/rest/v1/rpc/list_my_reviews", (route) =>
+    route.fulfill({ json: [review] }),
+  );
+  await page.route("**/rest/v1/rpc/list_business_reviews", (route) =>
+    route.fulfill({ json: [review] }),
+  );
+  await page.route("**/rest/v1/rpc/submit_business_review", (route) => {
+    const args = route.request().postDataJSON();
+    review = {
+      ...review,
+      rating: args.p_rating,
+      comment: args.p_comment,
+      is_anonymous: args.p_anonymous,
+    };
+    return route.fulfill({ json: null });
+  });
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  const title = await page
+    .getByText("Bli en lokal venn", { exact: true })
+    .boundingBox();
+  const settings = await page
+    .getByText("Innstillinger", { exact: true })
+    .boundingBox();
+  expect(title!.y).toBeLessThan(settings!.y);
+  await page.getByLabel("E-post", { exact: true }).fill(user.email);
+  await page
+    .getByLabel("Passord (minst 8 tegn)", { exact: true })
+    .fill("testpassword");
+  await page.getByRole("button", { name: "Logg inn", exact: true }).click();
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  await expect(page.getByText("Kari Hansen", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Åpne aktive koder", exact: true }),
+  ).toContainText("1");
+  await expect(
+    page.getByRole("button", { name: "Åpne favoritter", exact: true }),
+  ).toContainText("2");
+  await page
+    .getByRole("button", { name: "Rediger profil", exact: true })
+    .click();
+  await page.getByLabel("Navnet ditt", { exact: true }).fill("Kari Ny");
+  await page.getByLabel("Hjemby (valgfritt)", { exact: true }).fill("Drammen");
+  await page
+    .getByRole("button", { name: "Lagre profilen min", exact: true })
+    .click();
+  await expect(
+    page.getByText("Profilen din er oppdatert.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Kari Ny", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  await expect(page.getByText("Kari Ny", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("min-side.png"),
+    fullPage: true,
+  });
+  await page
+    .getByRole("button", { name: "Mine anmeldelser", exact: true })
+    .click();
+  await expect(page.getByText("God kaffe", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Takk for besøket!", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Rediger anmeldelse hos Testkafeen",
+      exact: true,
+    })
+    .click();
+  await page.getByLabel("Anmeldelse", { exact: true }).fill("Enda bedre kaffe");
+  await page
+    .getByRole("button", { name: "Lagre anmeldelse", exact: true })
+    .click();
+  await expect(
+    page.getByText("Enda bedre kaffe", { exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page
+    .getByRole("button", { name: "Bytt til engelsk", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Switch to dark mode", exact: true })
+    .click();
+  await expect(page.getByText("My account", { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath("my-account-dark.png"),
+    fullPage: true,
+  });
+});

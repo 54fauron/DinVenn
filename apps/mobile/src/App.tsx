@@ -1,3 +1,4 @@
+import { MyAccount } from "./MyAccount";
 import { Reviews } from "./Reviews";
 import { themeStyles, themeColor, useTheme } from "./theme";
 import { LanguageSettings, useLanguage } from "./LanguageSettings";
@@ -33,6 +34,7 @@ import {
   type Favorite,
   type Redemption,
   type Session,
+  type Profile,
   type BusinessEvent,
   type NewsPost,
 } from "@dinvenn/core";
@@ -40,7 +42,6 @@ import { client, configured } from "./client";
 import { Explore, BusinessDetails, ContentDetails } from "./Explore";
 import MapScreen from "./MapScreen";
 import { Icon, palette, ui } from "./ui";
-import { initials } from "./discovery";
 const lightColors = {
   cream: "#fff7f0",
   ink: "#3b2a3a",
@@ -99,6 +100,8 @@ function AppBody() {
   const theme = useTheme();
   useLanguage();
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const currentUser = useRef<string | null>(null);
   const [authReady, setAuthReady] = useState(false);
   const [tab, setTab] = useState("Utforsk");
   const [businesses, setBusinesses] = useState<Business[]>([]);
@@ -165,10 +168,13 @@ function AppBody() {
   }
   async function loadPrivate(user: string) {
     if (!client) return;
-    const [f, r] = await Promise.all([
+    const [f, r, p] = await Promise.all([
       api(client).favorites(user),
       api(client).redemptions(user),
+      api(client).profile(user),
     ]);
+    if (currentUser.current !== user) return;
+    setProfile(p);
     setFavorites(f);
     setCodes(r);
   }
@@ -178,9 +184,11 @@ function AppBody() {
       return;
     }
     const { data: sub } = client.auth.onAuthStateChange((_event, next) => {
+      currentUser.current = next?.user.id ?? null;
       setSession(next);
       setAuthReady(true);
       if (!next) {
+        setProfile(null);
         setFavorites([]);
         setCodes([]);
         setCode(null);
@@ -280,10 +288,11 @@ function AppBody() {
     setSelectedEvent(null);
     setSelectedNews(null);
   }
-  const firstName =
-    (session?.user.user_metadata?.display_name as string | undefined)?.split(
-      " ",
-    )[0] || "venn";
+  const firstName = (
+    profile?.display_name ||
+    session?.user.user_metadata?.display_name ||
+    "venn"
+  ).split(" ")[0];
   const inlineAuthMessages = configured && tab === "Meg" && !session;
   const feedback = (
     <>
@@ -400,62 +409,44 @@ function AppBody() {
             </View>
           ) : tab === "Meg" ? (
             <>
-              <LanguageSettings />
               {inlineAuthMessages && feedback}
-              <Text style={s.h1}>
-                {session ? t("Hei, {0}!", firstName) : t("Bli en lokal venn")}
-              </Text>
+              {!session && (
+                <View>
+                  <Text style={ui.eyebrow}>{t("VELKOMMEN TIL DINVENN")}</Text>
+                  <Text style={s.h1}>{t("Bli en lokal venn")}</Text>
+                  <Text style={ui.muted}>
+                    {t(
+                      "Lagre favorittene dine og hent fordeler hos de lokale.",
+                    )}
+                  </Text>
+                </View>
+              )}
               {!authReady ? (
                 <ActivityIndicator />
               ) : session ? (
-                <View style={s.card}>
-                  <View style={s.accountHeading}>
-                    <View style={s.avatar}>
-                      <Text style={s.avatarText}>{initials(firstName)}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={ui.h3}>
-                        {session.user.user_metadata?.display_name ?? firstName}
-                      </Text>
-                      <Text style={s.small}>{session.user.email}</Text>
-                    </View>
-                  </View>
-                  <Text style={s.muted}>
-                    {" "}
-                    {t("Favorittene og kodene dine følger kontoen din.")}{" "}
-                  </Text>
-                  <View style={s.accountStats}>
-                    <Pressable
-                      accessibilityRole="button"
-                      style={s.accountStat}
-                      onPress={() => setTab("Favoritter")}
-                    >
-                      <Icon name="heart" />
-                      <Text style={s.accountNumber}>{favorites.length}</Text>
-                      <Text style={s.small}>{t("Favoritter")}</Text>
-                    </Pressable>
-                    <Pressable
-                      accessibilityRole="button"
-                      style={s.accountStat}
-                      onPress={() => setTab("Mine koder")}
-                    >
-                      <Icon name="qr" />
-                      <Text style={s.accountNumber}>{codes.length}</Text>
-                      <Text style={s.small}>{t("Dine koder")}</Text>
-                    </Pressable>
-                  </View>
-                  <Button
-                    title={t("Logg ut")}
-                    quiet
-                    disabled={busy}
-                    onPress={() =>
-                      void run(async () => {
-                        check(await client!.auth.signOut());
-                        setPassword("");
-                      })
-                    }
-                  />
-                </View>
+                <MyAccount
+                  key={session.user.id}
+                  db={client!}
+                  session={session}
+                  profile={profile}
+                  onProfile={setProfile}
+                  favorites={favorites.length}
+                  activeCodes={
+                    codes.filter(
+                      (r) =>
+                        r.status === "issued" && Date.parse(r.expires_at) > now,
+                    ).length
+                  }
+                  onFavorites={() => setTab("Favoritter")}
+                  onCodes={() => setTab("Mine koder")}
+                  busy={busy}
+                  onSignOut={() =>
+                    void run(async () => {
+                      check(await client!.auth.signOut());
+                      setPassword("");
+                    })
+                  }
+                />
               ) : (
                 <View style={s.card}>
                   {authMode === "register" && (
@@ -589,6 +580,7 @@ function AppBody() {
                   />
                 </View>
               )}
+              {!session && <LanguageSettings />}
             </>
           ) : tab === "Mine koder" ? (
             <>
