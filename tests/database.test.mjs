@@ -29,7 +29,8 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
         (x) =>
           x.endsWith(".sql") &&
           !x.includes("000015_") &&
-          !x.includes("000016_"),
+          !x.includes("000016_") &&
+          !x.includes("000017_"),
       )
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
@@ -1478,6 +1479,51 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           as("owner", () => query("select redeem_deal($1)", [r.token])),
           /allerede brukt/,
         );
+      },
+    );
+    await t.test(
+      "motstanderen vinner, blokkerer og velger sentrum",
+      async () => {
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000017_tic_tac_toe_strategy.sql",
+            "utf8",
+          ),
+        );
+        const d = (
+          await as("owner", () =>
+            query(
+              "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Strategi','percent',10,'active') returning id",
+              [business.id],
+            ),
+          )
+        )[0];
+        let g = (
+          await as("user", () =>
+            query("select start_deal_game($1) data", [d.id]),
+          )
+        )[0].data;
+        for (const [board, action, expected] of [
+          [["", "", "", "", "", "", "", "", ""], 0, 4],
+          [["X", "X", "", "", "O", "", "", "", ""], 8, 2],
+          [["O", "O", "", "X", "X", "", "", "", ""], 8, 2],
+        ]) {
+          await query(
+            "update deal_game_sessions set state=$1,completed_at=null where id=$2",
+            [JSON.stringify({ board, result: "" }), g.id],
+          );
+          g = (
+            await as("user", () =>
+              query("select play_deal_game($1,$2,$3) data", [
+                g.id,
+                g.revision,
+                action,
+              ]),
+            )
+          )[0].data;
+          assert.equal(g.state.board[expected], "O");
+          if (board[0] === "O") assert.equal(g.state.result, "O");
+        }
       },
     );
     await t.test(

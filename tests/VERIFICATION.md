@@ -116,3 +116,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Brett med animerte brikker, markert vinnerrad, rundestatus og ny-runde-knapp. Respekterer redusert bevegelse. React Native Web sin animasjon krever globalThis-alias i Vite; nettlesertester kontrollerer fravær av JavaScript-feil.
 - Typesjekk, begge produksjonsbygg og 63 kjerne-/databasetester bestått. Nettlesersuite med 14 tester bestått, deretter 4 fokuserte spilltester for seier og tap/nytt forsøk på mobil og PC. 17 native regresjonstester bestått ved omkjøring; første kjøring hadde én feil i eksisterende regresjonssuite.
 - Brukeren bekreftet at upgrade-tic-tac-toe-win.sql er kjørt i Supabase. Database- og nettlesertestene bruker lokale testdata/mocker.
+
+
+### 2026-11-27 – tenkepause og strategi
+
+- Migrasjon 17 kontrollerer vinner-, blokkerings- og sentrumsprioritering. 64 kjerne-/databasetester og typesjekk bestått.
+- Fire nettlesertester på mobil og PC bekrefter X først, tenkestatus uten O, videre spill, seier, nytt forsøk og QR. Ingen JavaScript-feil i testflyten.
+- Forbrukerens produksjonsbygg bestått. SQL-oppgradering leveres separat i upgrade-tic-tac-toe-strategy.sql.

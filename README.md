@@ -415,3 +415,7 @@ Dette påvirker ikke QR-koder som allerede er utstedt.
 ### Krav om seier
 
 Kjør `supabase/upgrade-tic-tac-toe-win.sql` én gang etter forrige spilloppgradering. Serveren krever X som vinner før nye QR-koder utstedes. Tap og uavgjort kan startes på nytt i samme reservasjon uten å forlenge utløpstiden. Utstedte QR-koder beholdes.
+
+### Smartere motstander og tenkepause
+
+Kjør `supabase/upgrade-tic-tac-toe-strategy.sql` én gang etter seier-oppgraderingen. Datamaskinen prioriterer egen seier, blokkering av X, sentrum, hjørner og kanter. Den er ikke en uslåelig minimax-motstander. Appen viser eget X med en gang og venter minst 650 ms før den viser serverens svar. Serveren validerer fortsatt begge trekk atomisk; nye trykk sperres mens svaret vises.

@@ -141,8 +141,17 @@ for (const retry of [false, true])
       path: info.outputPath("tic_tac_toe.png"),
       fullPage: true,
     });
+    await page.getByRole("button", { name: "Rute 1", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "Rute 1: X", exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("DinVenn tenker …", { exact: true }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /Rute .*: O/ })).toHaveCount(
+      0,
+    );
     if (retry) {
-      await page.getByRole("button", { name: "Rute 1", exact: true }).click();
       await expect(
         page.getByText("DinVenn vant denne runden", { exact: true }),
       ).toBeVisible();
@@ -157,6 +166,10 @@ for (const retry of [false, true])
         page.getByRole("button", { name: "Rute 1", exact: true }),
       ).toBeEnabled();
     }
+    if (!retry)
+      await expect(
+        page.getByRole("button", { name: "Rute 3", exact: true }),
+      ).toBeEnabled();
     {
       for (let i = 0; i < 5 && !game.completed; i++) {
         const square = state.board.indexOf("") + 1;

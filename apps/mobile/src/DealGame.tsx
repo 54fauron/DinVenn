@@ -56,15 +56,35 @@ export function DealGame({
   async function move(action: number) {
     if (!game || lock.current || busy) return;
     lock.current = true;
+    const request = epoch.current;
     setBusy(true);
     setError("");
+    // Show the player's move immediately; the server still validates both moves.
+    if (
+      action >= 0 &&
+      !game.state.result &&
+      game.state.board?.[action] === ""
+    ) {
+      const board = [...game.state.board];
+      board[action] = "X";
+      setGame({ ...game, state: { ...game.state, board } });
+    }
     try {
-      setGame(await api(db).playGame(game, action));
+      const [next] = await Promise.all([
+        api(db).playGame(game, action),
+        new Promise<void>((resolve) =>
+          setTimeout(resolve, action >= 0 ? 650 : 0),
+        ),
+      ]);
+      if (request === epoch.current) setGame(next);
     } catch (e) {
-      setError(message(e));
+      if (request === epoch.current) {
+        setGame(game);
+        setError(message(e));
+      }
     } finally {
       lock.current = false;
-      setBusy(false);
+      if (request === epoch.current) setBusy(false);
     }
   }
   async function claim() {
