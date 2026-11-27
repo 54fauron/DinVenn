@@ -553,9 +553,6 @@ function DealForm({
   const [description, setDescription] = useState(deal?.description ?? "");
   const [terms, setTerms] = useState(deal?.terms ?? "");
   const [details, setDetails] = useState(deal?.discount_details ?? "");
-  const [requiresGame, setRequiresGame] = useState(
-    deal?.requires_game ?? false,
-  );
   const [customCode, setCustomCode] = useState(!!deal?.promo_code);
   const [promoCode, setPromoCode] = useState(deal?.promo_code ?? "");
   const [kind, setKind] = useState<Deal["discount_type"]>(
@@ -583,7 +580,6 @@ function DealForm({
             void run(async () => {
               const values = {
                 business_id: business.id,
-                requires_game: requiresGame,
                 title: title.trim(),
                 description,
                 terms,
@@ -726,17 +722,9 @@ function DealForm({
               required
             />
           </div>
-          <label className="field-label">
-            <input
-              type="checkbox"
-              checked={requiresGame}
-              onChange={(e) => setRequiresGame(e.target.checked)}
-            />
-            {t("Krev et spill før venneprisen hentes")}
-          </label>
           <p className="muted">
             {t(
-              "DinVenn velger et tilfeldig spill. Fullført runde gir tilgang uansett resultat. Ingen betaling eller krav om å vinne.",
+              "Kunden fullfører én runde tre på rad før QR-koden hentes. Seier, tap og uavgjort gir samme rabatt.",
             )}
           </p>
           <label>

@@ -246,7 +246,7 @@ test("gavebeskrivelse og bedriftens kode vises med unik QR ved uthenting", async
     page.getByText("Gratis mineralvann når du kjøper lunsj", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Hent vennepris", exact: true })
+    .getByRole("button", { name: "Spill og hent venneprisen", exact: true })
     .click();
   await expect(page.getByText("LUNSJVENN", { exact: true })).toBeVisible();
   await expect(

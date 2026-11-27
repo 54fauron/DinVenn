@@ -99,3 +99,12 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Ti målrettede nettlesertester passerer på mobil/PC for alle fem spill helt til QR etter fullføring. To portaltester passerer for lagring av spillkravet. Skjermbilder av spillene gjennomgått.
 - Prosjekteier bekreftet SQL-oppgraderingen kjørt uten feil. Ingen reelle tilbud er satt til spillkrav og ingen ekte rabatter er hentet av agenten.
 - Avsluttende regresjon: 17 native komponenttester og hele brukerappens 22 nettlesertester bestått. TypeScript og begge produksjonsbygg bestått. Spillfeltets tilgjengelighet er kontrollert lesende i sky-Supabase.
+
+
+### 2026-11-27 – obligatorisk tre på rad
+
+- Fjernet de fire andre spillene fra appflyten og valget i tilbudsskjemaet.
+- Migrasjon 15 testet som oppgradering etter tidligere migrasjoner: alle tilbud krever spill, andre påbegynte spill konverteres, eksisterende QR beholdes.
+- Typesjekk og begge produksjonsbygg bestått.
+- 62 kjernetester/databasekontroller, 17 native mobiltester, 14 nettlesertester for forbruker og 2 relevante portaltester bestått. Nettlesertester bruker mockdata; databasekontroller bruker PGlite med mock av Supabase Auth/Storage.
+- Brukeren bekreftet at upgrade-required-tic-tac-toe.sql ble kjørt uten feil i Supabase.

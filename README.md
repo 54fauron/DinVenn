@@ -384,18 +384,9 @@ klient-API-et for å beskytte anonym forfatteridentitet.
 
 ## Spill for å hente en vennepris
 
-Kjør `supabase/upgrade-deal-games.sql` én gang i Supabase SQL Editor før denne
-versjonen publiseres. Eksisterende tilbud får `requires_game=false` og beholder
-normal uthenting. I tilbudsskjemaet kan bedriften velge **Krev et spill før
-venneprisen hentes**.
+Kjør `supabase/upgrade-required-tic-tac-toe.sql` én gang i Supabase SQL Editor etter den tidligere spilloppgraderingen. Ikke kjør setup.sql på en eksisterende database.
 
-DinVenn velger tilfeldig én av fem runder på serveren:
-
-- Memory: finn tre par.
-- Tre på rad: spill en runde mot datamaskinen. Seier, tap og uavgjort godtas.
-- Stein, saks, papir: spill tre runder, uansett resultat.
-- Burger: vend og server tre burgere.
-- Kebab: skjær fem skiver med sveip eller alternativ knapp, og server porsjonen.
+Alle nye uthentinger krever én fullført runde tre på rad. Bedriften har ikke lenger et valg for å skru spill av eller på. Seier, tap og uavgjort gir samme rabatt. De fire andre spillene er fjernet fra appen. Allerede utstedte QR-koder beholdes. Påbegynte andre spill byttes til tre på rad; fullførte runder kan fortsatt brukes.
 
 Det er ingen betaling for spill, tilfeldige premier, tidsbasert poengkrav eller
 krav om å vinne. Tilbud, rabatt og vilkår vises før spill. Ved tilbud med kapasitet
@@ -407,10 +398,10 @@ spillet på nytt, også etter sideoppdatering. Ingen omtrekking før runden er b
 eller utløpt. Eksisterende gyldig QR-kode åpnes uten ny runde.
 
 Spilltilstanden ligger i privat `deal_game_sessions`, uten klientens direkte
-lese-/skrivetilgang. Memory sender bare synlige/matchede kort til klienten.
+lese-/skrivetilgang.
 `start_deal_game` og `play_deal_game` kontrollerer bruker, tilbud, utløp, lovlige
 handlinger og revisjonsnummer. En trigger på `deal_redemptions` krever en
-fullført, ubrukt runde for nye QR-koder på spilltilbud. Den eksisterende
+fullført, ubrukt runde for alle nye QR-koder. Den eksisterende
 `claim_deal`/`redeem_deal`-flyten beholder grenser, låsing og engangsbruk.
 Serverkontrollen hindrer å hoppe direkte til «fullført» eller QR; den er ikke
 bevis på at et menneske fysisk har trykket, og kan ikke alene stoppe automatiserte

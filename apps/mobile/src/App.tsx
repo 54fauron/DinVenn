@@ -874,16 +874,11 @@ function AppBody() {
                     : t("Ingen fast sluttdato.")}
                 </Text>
                 <Button
-                  title={t(
-                    deal.requires_game
-                      ? "Spill og hent venneprisen"
-                      : "Hent vennepris",
-                  )}
+                  title={t("Spill og hent venneprisen")}
                   disabled={busy}
                   onPress={() => {
                     if (!needUser()) return;
                     if (
-                      deal.requires_game &&
                       !codes.some(
                         (r) =>
                           r.deal_id === deal.id &&

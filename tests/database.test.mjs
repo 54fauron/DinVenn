@@ -25,7 +25,7 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
  alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
  `);
     for (const name of (await readdir("supabase/migrations"))
-      .filter((x) => x.endsWith(".sql"))
+      .filter((x) => x.endsWith(".sql") && !x.includes("000015_"))
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
       sql = sql.replace(
@@ -1212,19 +1212,74 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
       },
     );
     await t.test(
-      "alle fem spill krever lovlige trekk før QR og beholder samme runde",
+      "obligatorisk tre på rad oppgraderer eksisterende tilbud",
       async () => {
-        for (const kind of [
-          "memory",
-          "tic_tac_toe",
-          "rock_paper_scissors",
-          "burgers",
-          "kebab",
-        ]) {
+        const legacy = (
+          await query(
+            "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Eksisterende pris','percent',10,'active') returning id",
+            [business.id],
+          )
+        )[0];
+        const voucher = (
+          await as("user", () =>
+            query("select * from claim_deal($1)", [legacy.id]),
+          )
+        )[0];
+        const oldRound = (
+          await query(
+            "insert into deal_game_sessions(user_id,deal_id,kind,state,expires_at) values($1,$2,'memory','{}',now()+interval '1 hour') returning id",
+            [ids.other, legacy.id],
+          )
+        )[0];
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000015_tic_tac_toe_required.sql",
+            "utf8",
+          ),
+        );
+        const converted = (
+          await query(
+            "select kind,state,revision from deal_game_sessions where id=$1",
+            [oldRound.id],
+          )
+        )[0];
+        assert.equal(converted.kind, "tic_tac_toe");
+        assert.equal(converted.state.board.length, 9);
+        assert.equal(converted.revision, 1);
+        assert.equal(
+          (
+            await as("user", () =>
+              query("select * from claim_deal($1)", [legacy.id]),
+            )
+          )[0].token,
+          voucher.token,
+        );
+        assert.equal(
+          (
+            await query(
+              "select count(*)::int n from deals where not requires_game",
+            )
+          )[0].n,
+          0,
+        );
+        await assert.rejects(
+          as("owner", () =>
+            query("update deals set requires_game=false where business_id=$1", [
+              business.id,
+            ]),
+          ),
+          /deals_game_required/,
+        );
+      },
+    );
+    await t.test(
+      "tre på rad krever lovlige trekk før QR og beholder samme runde",
+      async () => {
+        for (const kind of ["tic_tac_toe"]) {
           const d = (
             await as("owner", () =>
               query(
-                "insert into deals(business_id,title,discount_type,discount_value,status,requires_game) values($1,'Spillpris','percent',10,'active',true) returning id",
+                "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Spillpris','percent',10,'active') returning id",
                 [business.id],
               ),
             )
@@ -1236,15 +1291,7 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
               )
             )[0].data;
           let g = await start("user");
-          assert.ok(
-            [
-              "memory",
-              "tic_tac_toe",
-              "rock_paper_scissors",
-              "burgers",
-              "kebab",
-            ].includes(g.kind),
-          );
+          assert.equal(g.kind, "tic_tac_toe");
           assert.equal(g.id, (await start("user")).id);
           await assert.rejects(
             as("user", () => query("select * from claim_deal($1)", [d.id])),
@@ -1267,38 +1314,6 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
             as("user", () => query("select * from deal_game_sessions")),
             /permission denied/,
           );
-          const states = {
-            memory: {
-              board: [0, 1, 2, 0, 1, 2],
-              matched: [],
-              revealed: [],
-              pending: -1,
-            },
-            tic_tac_toe: {
-              board: ["", "", "", "", "", "", "", "", ""],
-              result: "",
-            },
-            rock_paper_scissors: { rounds: 0 },
-            burgers: { stages: [0, 0, 0] },
-            kebab: { cuts: 0 },
-          };
-          // Test-only deterministic selection; clients cannot set session kind/state.
-          await query(
-            "update deal_game_sessions set kind=$1,state=$2 where id=$3",
-            [kind, JSON.stringify(states[kind]), g.id],
-          );
-          g = await start("user");
-          if (kind === "memory") {
-            assert.equal("board" in g.state, false);
-            assert.deepEqual(g.state.faces, [
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-            ]);
-          }
           const step = async (action) => {
             g = (
               await as("user", () =>
@@ -1320,22 +1335,7 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
             ),
             /Ugyldig/,
           );
-          if (kind === "memory")
-            for (const i of [0, 3, 1, 4, 2, 5]) await step(i);
-          else if (kind === "tic_tac_toe") {
-            while (!g.completed) await step(g.state.board.indexOf(""));
-          } else if (kind === "rock_paper_scissors")
-            for (const i of [0, 1, 2]) await step(i);
-          else if (kind === "burgers")
-            for (const i of [0, 0, 1, 1, 2, 2]) await step(i);
-          else {
-            await assert.rejects(
-              as("user", () => query("select play_deal_game($1,0,1)", [g.id])),
-              /Ugyldig/,
-            );
-            for (let i = 0; i < 5; i++) await step(0);
-            await step(1);
-          }
+          while (!g.completed) await step(g.state.board.indexOf(""));
           assert.equal(g.completed, true);
           assert.equal((await start("user")).completed, true);
           const r = (

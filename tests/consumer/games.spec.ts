@@ -1,11 +1,5 @@
 import { test, expect } from "@playwright/test";
-for (const kind of [
-  "memory",
-  "tic_tac_toe",
-  "rock_paper_scissors",
-  "burgers",
-  "kebab",
-])
+for (const kind of ["tic_tac_toe"])
   test(`spillflyt ${kind} fullføres før QR`, async ({ page }, info) => {
     const user = {
       id: "u1",
@@ -17,16 +11,7 @@ for (const kind of [
       created_at: new Date().toISOString(),
     };
     const jwt = `${Buffer.from('{"alg":"HS256"}').toString("base64url")}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test`;
-    let state: any =
-      kind === "memory"
-        ? { faces: [null, null, null, null, null, null], matched: [] }
-        : kind === "tic_tac_toe"
-          ? { board: Array(9).fill(""), result: "" }
-          : kind === "rock_paper_scissors"
-            ? { rounds: 0 }
-            : kind === "burgers"
-              ? { stages: [0, 0, 0] }
-              : { cuts: 0 };
+    let state: any = { board: Array(9).fill(""), result: "" };
     let game = {
         id: "session1",
         kind,
@@ -106,38 +91,9 @@ for (const kind of [
       if (path.endsWith("/play_deal_game")) {
         expect(data.p_revision).toBe(game.revision);
         const a = data.p_action;
-        if (kind === "memory") {
-          if (pending < 0) {
-            state.faces = state.faces.map((_: unknown, i: number) =>
-              state.matched.includes(i) ? board[i] : null,
-            );
-            pending = a;
-            state.faces[a] = board[a];
-          } else {
-            state.faces[a] = board[a];
-            if (board[a] === board[pending]) state.matched.push(a, pending);
-            pending = -1;
-            game.completed = state.matched.length === 6;
-          }
-        } else if (kind === "tic_tac_toe") {
-          state.board[a] = "X";
-          if (!result(state.board)) {
-            state.board[state.board.indexOf("")] = "O";
-          }
-          game.completed = result(state.board);
-        } else if (kind === "rock_paper_scissors") {
-          state.rounds++;
-          state.player = a;
-          state.computer = (a + 1) % 3;
-          state.result = "loss";
-          game.completed = state.rounds === 3;
-        } else if (kind === "burgers") {
-          state.stages[a]++;
-          game.completed = state.stages.every((s: number) => s === 2);
-        } else {
-          if (a === 0) state.cuts++;
-          else game.completed = true;
-        }
+        state.board[a] = "X";
+        if (!result(state.board)) state.board[state.board.indexOf("")] = "O";
+        game.completed = result(state.board);
         game = { ...game, state, revision: game.revision + 1 };
         return send(game);
       }
@@ -168,12 +124,7 @@ for (const kind of [
       path: info.outputPath(`${kind}.png`),
       fullPage: true,
     });
-    if (kind === "memory")
-      for (const i of [0, 3, 1, 4, 2, 5])
-        await page
-          .getByRole("button", { name: `Snu kort ${i + 1}`, exact: true })
-          .click();
-    else if (kind === "tic_tac_toe") {
+    {
       for (let i = 0; i < 5 && !game.completed; i++) {
         const square = state.board.indexOf("") + 1;
         const response = page.waitForResponse((r) =>
@@ -184,26 +135,6 @@ for (const kind of [
           .click();
         await response;
       }
-    } else if (kind === "rock_paper_scissors")
-      for (let i = 0; i < 3; i++)
-        await page.getByRole("button", { name: "🪨", exact: true }).click();
-    else if (kind === "burgers")
-      for (let i = 1; i <= 3; i++) {
-        await page
-          .getByRole("button", { name: `Vend burger ${i}`, exact: true })
-          .click();
-        await page
-          .getByRole("button", { name: `Server burger ${i}`, exact: true })
-          .click();
-      }
-    else {
-      for (let i = 0; i < 5; i++)
-        await page
-          .getByRole("button", { name: "Skjær én skive", exact: true })
-          .click();
-      await page
-        .getByRole("button", { name: "Server kebaben", exact: true })
-        .click();
     }
     await expect(
       page.getByText("Runden er fullført!", { exact: true }),

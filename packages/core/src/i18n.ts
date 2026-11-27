@@ -1,6 +1,10 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Fullfør én runde tre på rad. Du trenger ikke vinne eller være rask.":
+    "Complete one round of tic-tac-toe. You do not need to win or be fast.",
+  "Kunden fullfører én runde tre på rad før QR-koden hentes. Seier, tap og uavgjort gir samme rabatt.":
+    "The customer completes one round of tic-tac-toe before claiming the QR code. Winning, losing and drawing give the same discount.",
   "Finn lokale par": "Find local pairs",
   "Tre på rad": "Tic-tac-toe",
   "Stein, saks, papir": "Rock, paper, scissors",

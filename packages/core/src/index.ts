@@ -218,7 +218,7 @@ export type OwnReview =
   Database["public"]["Functions"]["list_my_reviews"]["Returns"][number];
 export type DealGame = {
   id: string;
-  kind: "memory" | "tic_tac_toe" | "rock_paper_scissors" | "burgers" | "kebab";
+  kind: "tic_tac_toe";
   revision: number;
   completed: boolean;
   expires_at: string;
