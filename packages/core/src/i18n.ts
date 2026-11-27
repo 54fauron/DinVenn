@@ -1,6 +1,33 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  Memory: "Memory",
+  "FINN DE LOKALE FAVORITTENE": "FIND THE LOCAL FAVOURITES",
+  "{0} / 8 par": "{0} / 8 pairs",
+  "Finn åtte par. Du taper ved seks feil. Brettet blandes på nytt for hver nye runde.":
+    "Find eight pairs. Six mistakes end the round. The board is shuffled for each new round.",
+  "{0} feil igjen": "{0} mistakes left",
+  "Kort {0}: {1}": "Card {0}: {1}",
+  "Alle parene er funnet!": "All pairs found!",
+  "Seks feil – prøv en ny runde": "Six mistakes – try a new round",
+  "Ikke et par – husk kortene!": "Not a pair – remember these cards!",
+  "Et par! Fortsett slik.": "A pair! Keep going.",
+  "Snu to kort og finn et par": "Turn two cards and find a pair",
+  "Velg et spill og spill så ofte du vil. Ingen tilbud eller rabatt brukes.":
+    "Choose a game and play as often as you like. No offers or discounts are used.",
+  "Vinn spillet for å låse opp venneprisen. Du kan prøve igjen uten kostnad.":
+    "Win the game to unlock your offer. You can try again for free.",
+  "Kunden får tilfeldig Memory eller tre på rad og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.":
+    "Customers get Memory or tic-tac-toe at random and must win before claiming the QR code. They can try again after losing.",
+  "Vinn spillet før du henter venneprisen.":
+    "Win the game before claiming your offer.",
+  Avokado: "Avocado",
+  Jordbær: "Strawberry",
+  Smultring: "Doughnut",
+  Is: "Ice cream",
+  Drikke: "Drink",
+  "Pommes frites": "Fries",
+
   Spillhjørnet: "Game corner",
   "Spill tre på rad så ofte du vil. Ingen tilbud eller rabatt brukes.":
     "Play tic-tac-toe as often as you like. No offers or discounts are used.",

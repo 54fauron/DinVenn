@@ -129,3 +129,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 
 - Spillhjørnet tilbyr lokalt tre på rad uten innlogging, rabatt eller backend-RPC. Bruker samme brikkeanimasjoner og brettstil, med 650 ms pause og taktisk motstander.
 - Typesjekk, produksjonsbygg og 18 nettlesertester bestått. Ny test på mobil og PC kontrollerer åpning, X/O-trekk, ny runde, lukking under tenkepause og at ingen RPC kalles.
+
+
+### 2026-11-27 – Memory og tilfeldig rabattspill
+
+- Migrasjon 18: 16 blandede kort, to av hver av åtte verdier, seks-feil-grense, private skjulte kort og servervaliderte par/seier. Serveren trekker Memory/tre på rad med lik sannsynlighet for hver ny reservasjon; omstart beholder spilltypen og utløpet.
+- 65 kjerne-/databasetester bestått. Testet variasjon i spilltype og kortfordeling over 64 nye runder, nøyaktig to av hver verdi, at skjulte kort ikke sendes, feil bruker/revisjon/trekk, seks feil, gjenstart, åtte par og engangsinnløsning. Tilfeldighetstesten har svært lav, men ikke null, statistisk feilrisiko.
+- 24 nettlesertester bestått på mobil og PC, inkludert Memory i spillhjørnet, tap/nytt forsøk/seier/QR og eksisterende tre på rad-flyt. 17 native regresjonstester, typesjekk og begge produksjonsbygg bestått. Mobilskjermbilde visuelt kontrollert.
+- Lokale database- og nettlesertester bruker testdata/mocker. Brukeren bekreftet at upgrade-memory.sql er kjørt i Supabase uten problemer. Ingen ekte tilbud er hentet som del av testingen.

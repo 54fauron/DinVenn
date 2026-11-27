@@ -1,3 +1,4 @@
+import { MemoryBoard } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -61,6 +62,7 @@ export function DealGame({
     setError("");
     // Show the player's move immediately; the server still validates both moves.
     if (
+      game.kind === "tic_tac_toe" &&
       action >= 0 &&
       !game.state.result &&
       game.state.board?.[action] === ""
@@ -73,7 +75,10 @@ export function DealGame({
       const [next] = await Promise.all([
         api(db).playGame(game, action),
         new Promise<void>((resolve) =>
-          setTimeout(resolve, action >= 0 ? 650 : 0),
+          setTimeout(
+            resolve,
+            game.kind === "tic_tac_toe" && action >= 0 ? 650 : 0,
+          ),
         ),
       ]);
       if (request === epoch.current) setGame(next);
@@ -121,7 +126,9 @@ export function DealGame({
   return (
     <View style={s.page}>
       <Text style={ui.eyebrow}>{t("SPILL OG HENT VENNEPRISEN")}</Text>
-      <Text style={ui.h1}>{t("Tre på rad")}</Text>
+      <Text style={ui.h1}>
+        {t(game?.kind === "memory" ? "Memory" : "Tre på rad")}
+      </Text>
       <View style={ui.card}>
         <Text style={ui.h3}>{deal.title}</Text>
         <Text style={ui.text}>{discount(deal)}</Text>
@@ -129,7 +136,7 @@ export function DealGame({
         <Text style={ui.text}>{deal.discount_details || deal.description}</Text>
         <Text style={ui.muted}>
           {t(
-            "Vinn tre på rad for å låse opp venneprisen. Du kan prøve igjen uten kostnad.",
+            "Vinn spillet for å låse opp venneprisen. Du kan prøve igjen uten kostnad.",
           )}
         </Text>
       </View>
@@ -149,7 +156,16 @@ export function DealGame({
           </Pressable>
         </View>
       )}
-      {game && (
+      {game?.kind === "memory" && (
+        <MemoryBoard
+          state={game.state}
+          roundKey={`${game.id}:${game.revision}`}
+          busy={busy}
+          onMove={(i) => void move(i)}
+          onRestart={() => void move(-1)}
+        />
+      )}
+      {game?.kind === "tic_tac_toe" && (
         <View style={s.arena}>
           <View style={s.players}>
             <Text style={ui.h3}>{t("Du")} ×</Text>

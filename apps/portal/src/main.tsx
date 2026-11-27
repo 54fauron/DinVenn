@@ -724,7 +724,7 @@ function DealForm({
           </div>
           <p className="muted">
             {t(
-              "Kunden må vinne tre på rad før QR-koden hentes. Ved tap eller uavgjort kan kunden prøve igjen.",
+              "Kunden får tilfeldig Memory eller tre på rad og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.",
             )}
           </p>
           <label>

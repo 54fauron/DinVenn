@@ -30,7 +30,8 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           x.endsWith(".sql") &&
           !x.includes("000015_") &&
           !x.includes("000016_") &&
-          !x.includes("000017_"),
+          !x.includes("000017_") &&
+          !x.includes("000018_"),
       )
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
@@ -1524,6 +1525,163 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           assert.equal(g.state.board[expected], "O");
           if (board[0] === "O") assert.equal(g.state.result, "O");
         }
+      },
+    );
+    await t.test(
+      "Memory 4x4 er skjult, tilfeldig og krever seier med under seks feil",
+      async () => {
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000018_memory.sql",
+            "utf8",
+          ),
+        );
+        const kinds = new Set(),
+          boards = new Set();
+        let d, g;
+        for (let i = 0; i < 64; i++) {
+          d = (
+            await as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Memorytest','percent',10,'active') returning id",
+                [business.id],
+              ),
+            )
+          )[0];
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+          assert.ok(["memory", "tic_tac_toe"].includes(g.kind));
+          kinds.add(g.kind);
+          assert.equal(
+            (
+              await as("user", () =>
+                query("select start_deal_game($1) data", [d.id]),
+              )
+            )[0].data.id,
+            g.id,
+          );
+          if (g.kind === "memory") {
+            assert.equal("board" in g.state, false);
+            assert.deepEqual(g.state.faces, Array(16).fill(null));
+            const raw = (
+              await query("select state from deal_game_sessions where id=$1", [
+                g.id,
+              ])
+            )[0].state.board;
+            assert.equal(raw.length, 16);
+            for (let n = 0; n < 8; n++)
+              assert.equal(raw.filter((x) => x === n).length, 2);
+            boards.add(JSON.stringify(raw));
+          }
+        }
+        assert.equal(kinds.size, 2);
+        assert.ok(boards.size > 1);
+        // Trusted test setup only. Clients cannot read or write the hidden layout.
+        await query(
+          "update deal_game_sessions set kind='memory',state=$1 where id=$2",
+          [
+            JSON.stringify({
+              board: Array.from({ length: 16 }, (_, i) => i % 8),
+              matched: [],
+              revealed: [],
+              pending: -1,
+              mistakes: 0,
+              result: "",
+            }),
+            g.id,
+          ],
+        );
+        const start = async () => {
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+        };
+        const step = async (action) => {
+          g = (
+            await as("user", () =>
+              query("select play_deal_game($1,$2,$3) data", [
+                g.id,
+                g.revision,
+                action,
+              ]),
+            )
+          )[0].data;
+        };
+        await start();
+        await assert.rejects(
+          as("other", () =>
+            query("select play_deal_game($1,$2,0)", [g.id, g.revision]),
+          ),
+          /finnes ikke/,
+        );
+        await assert.rejects(
+          as("user", () => query("select play_deal_game($1,999,0)", [g.id])),
+          /oppdatert/,
+        );
+        await assert.rejects(
+          as("user", () =>
+            query("select play_deal_game($1,$2,16)", [g.id, g.revision]),
+          ),
+          /Ugyldig/,
+        );
+        await assert.rejects(
+          as("user", () => query("select new_memory_state()")),
+          /permission denied/,
+        );
+        for (let i = 0; i < 6; i++) {
+          await step(0);
+          assert.equal(g.state.faces.filter((x) => x !== null).length, 1);
+          await assert.rejects(
+            as("user", () =>
+              query("select play_deal_game($1,$2,0)", [g.id, g.revision]),
+            ),
+            /Ugyldig/,
+          );
+          await step(1);
+          assert.equal(g.state.mistakes, i + 1);
+        }
+        assert.equal(g.state.result, "loss");
+        assert.equal(g.completed, false);
+        await assert.rejects(
+          as("user", () => query("select claim_deal($1)", [d.id])),
+          /Vinn spillet/,
+        );
+        await assert.rejects(
+          as("user", () =>
+            query("select play_deal_game($1,$2,2)", [g.id, g.revision]),
+          ),
+          /Start en ny/,
+        );
+        const expiry = g.expires_at;
+        await step(-1);
+        assert.equal(g.expires_at, expiry);
+        assert.equal(g.state.mistakes, 0);
+        assert.deepEqual(g.state.faces, Array(16).fill(null));
+        const board = (
+          await query("select state from deal_game_sessions where id=$1", [
+            g.id,
+          ])
+        )[0].state.board;
+        for (let value = 0; value < 8; value++) {
+          for (let i = 0; i < 16; i++) if (board[i] === value) await step(i);
+        }
+        assert.equal(g.state.result, "win");
+        assert.equal(g.completed, true);
+        assert.equal(g.state.matched.length, 16);
+        const r = (
+          await as("user", () => query("select * from claim_deal($1)", [d.id]))
+        )[0];
+        assert.ok(r.token);
+        await as("owner", () => query("select redeem_deal($1)", [r.token]));
+        await assert.rejects(
+          as("owner", () => query("select redeem_deal($1)", [r.token])),
+          /allerede brukt/,
+        );
       },
     );
     await t.test(

@@ -1,3 +1,4 @@
+import { PracticeMemory } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { t } from "@dinvenn/core";
@@ -40,6 +41,9 @@ export function practiceBot(board: string[]) {
 }
 export function PracticeGames() {
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<"tic_tac_toe" | "memory">(
+    "tic_tac_toe",
+  );
   const [board, setBoard] = useState<string[]>(Array(9).fill(""));
   const [thinking, setThinking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,9 +85,31 @@ export function PracticeGames() {
       <Text style={ui.h2}>{t("Spillhjørnet")}</Text>
       <Text style={ui.muted}>
         {t(
-          "Spill tre på rad så ofte du vil. Ingen tilbud eller rabatt brukes.",
+          "Velg et spill og spill så ofte du vil. Ingen tilbud eller rabatt brukes.",
         )}
       </Text>
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        {(["tic_tac_toe", "memory"] as const).map((kind) => (
+          <Pressable
+            key={kind}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selected === kind }}
+            style={[
+              ui.button,
+              { flex: 1, opacity: selected === kind ? 1 : 0.65 },
+            ]}
+            onPress={() => {
+              reset();
+              setOpen(false);
+              setSelected(kind);
+            }}
+          >
+            <Text style={ui.buttonText}>
+              {t(kind === "memory" ? "Memory" : "Tre på rad")}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
       {!open ? (
         <Pressable
           accessibilityRole="button"
@@ -95,6 +121,17 @@ export function PracticeGames() {
         >
           <Text style={ui.buttonText}>{t("Spill for moro skyld")}</Text>
         </Pressable>
+      ) : selected === "memory" ? (
+        <>
+          <PracticeMemory />
+          <Pressable
+            accessibilityRole="button"
+            style={s.quiet}
+            onPress={() => setOpen(false)}
+          >
+            <Text style={ui.link}>{t("Lukk spillet")}</Text>
+          </Pressable>
+        </>
       ) : (
         <View style={s.arena}>
           <View style={s.players}>

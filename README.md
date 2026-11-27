@@ -384,9 +384,9 @@ klient-API-et for å beskytte anonym forfatteridentitet.
 
 ## Spill for å hente en vennepris
 
-Kjør `supabase/upgrade-required-tic-tac-toe.sql` én gang i Supabase SQL Editor etter den tidligere spilloppgraderingen. Ikke kjør setup.sql på en eksisterende database.
+For nyeste spillversjon: kjør `supabase/upgrade-memory.sql` én gang i Supabase SQL Editor etter `upgrade-tic-tac-toe-win.sql`. Den inkluderer smartere tre på rad. Ikke kjør setup.sql på en eksisterende database.
 
-Alle nye uthentinger krever seier i tre på rad. Bedriften har ikke lenger et valg for å skru spill av eller på. Ved tap og uavgjort kan spilleren prøve igjen uten kostnad. De fire andre spillene er fjernet fra appen. Allerede utstedte QR-koder beholdes. Påbegynte andre spill byttes til tre på rad; fullførte runder kan fortsatt brukes.
+Alle nye uthentinger krever seier i spillet som serveren velger tilfeldig: Memory eller tre på rad, med lik sannsynlighet. Valget beholdes når runden gjenåpnes eller spilleren prøver igjen. Bedriften har ikke et valg for å skru spill av eller på. Ved tap og uavgjort kan spilleren prøve igjen uten kostnad. Allerede utstedte QR-koder og påbegynte tre på rad-runder beholdes.
 
 Det er ingen betaling for spill, tilfeldige premier, tidsbasert poengkrav eller
 krav til reaksjonshastighet. Tilbud, rabatt og vilkår vises før spill. Ved tilbud med kapasitet
@@ -422,4 +422,9 @@ Kjør `supabase/upgrade-tic-tac-toe-strategy.sql` én gang etter seier-oppgrader
 
 ### Spillhjørnet på Min side
 
-Knappen «Spill for moro skyld» åpner fritt tre på rad, også uten innlogging. Spillet kjører lokalt og krever ingen databaseoppgradering. Det bruker ingen tilbud, reservasjoner eller QR-koder, og seire her kan ikke brukes til å hente rabatt. Ny runde og lukking avbryter ventende datamaskintrekk.
+Velg Memory eller tre på rad under Spillhjørnet, og trykk «Spill for moro skyld», også uten innlogging. Spillet kjører lokalt og krever ingen databaseoppgradering. Det bruker ingen tilbud, reservasjoner eller QR-koder, og seire her kan ikke brukes til å hente rabatt. Ny runde og lukking avbryter ventende datamaskintrekk.
+
+
+### Memory
+
+Memory har et 4 × 4-brett med åtte par. Seks feil avslutter runden; nytt forsøk blander de 16 kortene på nytt. I spillhjørnet blandes kortene lokalt med Fisher–Yates. Rabattspillet blander og lagrer kortene på serveren, som bare sender synlige og matchede kort til klienten. Nye trekk, feilgrensen og seier kontrolleres med bruker, låsing og revisjonsnummer. Nytt forsøk beholder reservasjonens opprinnelige utløp og spilltype. Alle åtte par må finnes med færre enn seks feil før QR-koden kan hentes.
