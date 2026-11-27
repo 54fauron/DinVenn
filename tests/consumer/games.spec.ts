@@ -146,14 +146,14 @@ for (const retry of [false, true])
       page.getByRole("button", { name: "Rute 1: X", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("DinVenn tenker …", { exact: true }),
+      page.getByText("Din Venn tenker …", { exact: true }),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /Rute .*: O/ })).toHaveCount(
       0,
     );
     if (retry) {
       await expect(
-        page.getByText("DinVenn vant denne runden", { exact: true }),
+        page.getByText("Din Venn vant denne runden", { exact: true }),
       ).toBeVisible();
       await expect(
         page.getByRole("button", { name: "Hent venneprisen min", exact: true }),

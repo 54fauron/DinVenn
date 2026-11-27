@@ -100,7 +100,7 @@ export function PracticeGames() {
           <View style={s.players}>
             <Text style={ui.h3}>{t("Du")} ×</Text>
             <Text style={ui.muted}>{t("mot")}</Text>
-            <Text style={ui.h3}>○ DinVenn</Text>
+            <Text style={ui.h3}>○ Din Venn</Text>
           </View>
           <Text style={ui.h2}>{t("Tre på rad")}</Text>
           <Text accessibilityLiveRegion="polite" style={ui.text}>
@@ -108,11 +108,11 @@ export function PracticeGames() {
               result === "X"
                 ? "Du vant!"
                 : result === "O"
-                  ? "DinVenn vant denne runden"
+                  ? "Din Venn vant denne runden"
                   : result === "draw"
                     ? "Uavgjort – prøv igjen"
                     : thinking
-                      ? "DinVenn tenker …"
+                      ? "Din Venn tenker …"
                       : "Din tur – velg en rute",
             )}
           </Text>

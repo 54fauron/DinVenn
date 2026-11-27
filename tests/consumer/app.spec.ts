@@ -478,7 +478,7 @@ test("spillhjørnet fungerer uten konto og bruker ingen rabatt", async ({
     page.getByRole("button", { name: "Rute 1: X", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("DinVenn tenker …", { exact: true }),
+    page.getByText("Din Venn tenker …", { exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Rute 5: O", exact: true }),

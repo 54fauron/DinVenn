@@ -154,18 +154,18 @@ export function DealGame({
           <View style={s.players}>
             <Text style={ui.h3}>{t("Du")} ×</Text>
             <Text style={ui.muted}>{t("mot")}</Text>
-            <Text style={ui.h3}>○ DinVenn</Text>
+            <Text style={ui.h3}>○ Din Venn</Text>
           </View>
           <Text accessibilityLiveRegion="polite" style={ui.h3}>
             {t(
               result === "X"
                 ? "Du vant!"
                 : result === "O"
-                  ? "DinVenn vant denne runden"
+                  ? "Din Venn vant denne runden"
                   : result === "draw"
                     ? "Uavgjort – prøv igjen"
                     : busy
-                      ? "DinVenn tenker …"
+                      ? "Din Venn tenker …"
                       : "Din tur – velg en rute",
             )}
           </Text>

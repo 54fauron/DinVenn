@@ -12,9 +12,9 @@ const english: Record<string, string> = {
   "Kunden må vinne tre på rad før QR-koden hentes. Ved tap eller uavgjort kan kunden prøve igjen.":
     "Customers must win tic-tac-toe before claiming the QR code. After a loss or draw they can try again.",
   "Du vant!": "You won!",
-  "DinVenn vant denne runden": "DinVenn won this round",
+  "Din Venn vant denne runden": "Din Venn won this round",
   "Uavgjort – prøv igjen": "A draw – try again",
-  "DinVenn tenker …": "DinVenn is thinking …",
+  "Din Venn tenker …": "Din Venn is thinking …",
   "Din tur – velg en rute": "Your turn – choose a square",
   "Ingen rabatt brukt. Start en ny runde og prøv igjen.":
     "No offer used. Start a new round and try again.",
