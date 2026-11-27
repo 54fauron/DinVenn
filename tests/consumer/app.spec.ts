@@ -355,6 +355,9 @@ test("Min side lagrer profil, teller aktive koder og redigerer egne anmeldelser"
     };
     return route.fulfill({ json: null });
   });
+  await page.route("**/rest/v1/rpc/delete_business_review", (route) =>
+    route.fulfill({ json: null }),
+  );
   await page.goto("/");
   await page.getByRole("tab", { name: "Meg", exact: true }).click();
   const title = await page
@@ -416,6 +419,29 @@ test("Min side lagrer profil, teller aktive koder og redigerer egne anmeldelser"
   await expect(
     page.getByText("Enda bedre kaffe", { exact: true }),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Slett min anmeldelse", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Avbryt sletting", exact: true })
+    .click();
+  await expect(
+    page.getByText("Enda bedre kaffe", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Slett min anmeldelse", exact: true })
+    .click();
+  const deletion = page.waitForRequest((r) =>
+    r.url().endsWith("/rpc/delete_business_review"),
+  );
+  await page
+    .getByRole("button", { name: "Ja, slett anmeldelsen", exact: true })
+    .click();
+  expect((await deletion).postDataJSON()).toEqual({ p_review_id: "review1" });
+  await expect(
+    page.getByText("Din første anmeldelse venter", { exact: true }),
+  ).toBeVisible();
+
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

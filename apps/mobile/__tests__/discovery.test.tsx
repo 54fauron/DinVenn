@@ -127,6 +127,7 @@ const mockApi = {
   catalog: jest.fn(),
   reviews: jest.fn(),
   review: jest.fn(),
+  deleteReview: jest.fn(),
   favorites: jest.fn(),
   redemptions: jest.fn(),
 };
@@ -146,6 +147,7 @@ beforeEach(() => {
   });
   mockApi.reviews.mockResolvedValue([]);
   mockApi.review.mockResolvedValue(undefined);
+  mockApi.deleteReview.mockResolvedValue(undefined);
   mockApi.favorites.mockResolvedValue([]);
   mockApi.redemptions.mockResolvedValue([]);
 });
@@ -563,4 +565,47 @@ test("kartet holder avdelinger adskilt og åpner opprinnelig profil", async () =
   fireEvent.press(screen.getByText("Vis liste"));
   expect(screen.getByText("Hjørnekafeen · Øst")).toBeTruthy();
   expect(screen.getByText("Hjørnekafeen · Vest")).toBeTruthy();
+});
+
+test("egen anmeldelse kan slettes med bekreftelse uten å slette andres", async () => {
+  mockApi.reviews.mockResolvedValue([
+    {
+      id: "own",
+      business_id: "b1",
+      business_name: "Hjørnekafeen",
+      is_own: true,
+      is_anonymous: true,
+      rating: 5,
+      comment: "Min tekst",
+      business_reply: "Takk for min tekst",
+      created_at: "2026-11-27T10:00:00Z",
+    },
+    {
+      id: "other",
+      business_id: "b1",
+      business_name: "Hjørnekafeen",
+      is_own: false,
+      is_anonymous: false,
+      author_name: "Annen kunde",
+      rating: 4,
+      comment: "En annens tekst",
+      created_at: "2026-11-27T10:00:00Z",
+    },
+  ]);
+  render(
+    <Reviews db={{} as any} businessId="b1" userId="u1" onLogin={jest.fn()} />,
+  );
+  fireEvent.press(
+    await screen.findByRole("button", { name: "Slett min anmeldelse" }),
+  );
+  fireEvent.press(screen.getByRole("button", { name: "Avbryt sletting" }));
+  expect(mockApi.deleteReview).not.toHaveBeenCalled();
+  fireEvent.press(screen.getByRole("button", { name: "Slett min anmeldelse" }));
+  fireEvent.press(
+    screen.getByRole("button", { name: "Ja, slett anmeldelsen" }),
+  );
+  await waitFor(() => expect(mockApi.deleteReview).toHaveBeenCalledWith("own"));
+  await waitFor(() => expect(screen.queryByText("Min tekst")).toBeNull());
+  expect(screen.getByText("En annens tekst")).toBeTruthy();
+  expect(screen.queryByText("Takk for min tekst")).toBeNull();
 });

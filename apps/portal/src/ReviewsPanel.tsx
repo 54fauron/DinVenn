@@ -64,7 +64,7 @@ export function ReviewsPanel({
       <h2>{t(businessId ? "Anmeldelser" : "Moderering av anmeldelser")}</h2>
       <p>
         {t(
-          "Bare bedriften kan svare. Bare administrator kan slette anmeldelser.",
+          "Du kan redigere eller slette bedriftens svar. Bare forfatteren og administrator kan slette selve anmeldelsen.",
         )}
       </p>
       <p>
@@ -144,6 +144,38 @@ export function ReviewsPanel({
                 {t("Lagre svar")}
               </button>
             </form>
+          )}
+          {businessId && r.business_reply && (
+            <button
+              type="button"
+              className="quiet delete-button"
+              disabled={busy}
+              onClick={() => {
+                if (
+                  !window.confirm(
+                    t(
+                      "Vil du slette bedriftens svar? Kundens anmeldelse beholdes.",
+                    ),
+                  )
+                )
+                  return;
+                void run(async () => {
+                  setNotice("");
+                  await api(db).deleteReply(r.id);
+                  setDrafts((current) => ({ ...current, [r.id]: "" }));
+                  setRows((current) =>
+                    current.map((row) =>
+                      row.id === r.id
+                        ? { ...row, business_reply: null, replied_at: null }
+                        : row,
+                    ),
+                  );
+                  setNotice("Svaret er slettet.");
+                });
+              }}
+            >
+              {t("Slett bedriftens svar")}
+            </button>
           )}
           {admin && (
             <button

@@ -2246,6 +2246,10 @@ export type Database = {
         Args: { p_at?: string; p_deal_id: string };
         Returns: boolean;
       };
+      delete_business_reply: {
+        Args: { p_review_id: string };
+        Returns: undefined;
+      };
       delete_business_review: {
         Args: { p_review_id: string };
         Returns: undefined;

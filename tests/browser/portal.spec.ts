@@ -108,6 +108,14 @@ async function backend(
       );
       return send(null);
     }
+    if (path.endsWith("/rpc/delete_business_reply")) {
+      reviews = reviews.map((r) =>
+        r.id === data.p_review_id
+          ? { ...r, business_reply: null, replied_at: null }
+          : r,
+      );
+      return send(null);
+    }
     if (path.endsWith("/rpc/delete_business_review")) {
       if (!admin) return send({ message: "Ikke tilgang" }, 403);
       reviews = reviews.filter((r) => r.id !== data.p_review_id);
@@ -1072,4 +1080,58 @@ test("gratisgave og 2-for-1 har forklaring og valgfri egen kode", async ({
   expect((await update).postDataJSON().discount_details).toBe(
     "To mineralvann for prisen av ett",
   );
+});
+
+test("bedrift kan slette eget svar men ikke kundens anmeldelse", async ({
+  page,
+}) => {
+  await backend(page, false, undefined, "123456789", [
+    {
+      id: "review1",
+      business_id: businessId,
+      business_name: "Hjørnekafeen",
+      author_name: "Kunde",
+      rating: 4,
+      comment: "God kaffe",
+      is_anonymous: false,
+      is_own: false,
+      business_reply: "Takk for besøket",
+      created_at: "2026-11-27T10:00:00Z",
+    },
+  ]);
+  await login(page);
+  await page.getByRole("button", { name: "Anmeldelser", exact: true }).click();
+  await expect(
+    page.locator("blockquote").getByText("Takk for besøket", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Slett anmeldelse", exact: true }),
+  ).toHaveCount(0);
+  page.once("dialog", (d) => d.dismiss());
+  await page
+    .getByRole("button", { name: "Slett bedriftens svar", exact: true })
+    .click();
+  await expect(
+    page.locator("blockquote").getByText("Takk for besøket", { exact: true }),
+  ).toBeVisible();
+  page.once("dialog", (d) => d.accept());
+  await page
+    .getByRole("button", { name: "Slett bedriftens svar", exact: true })
+    .click();
+  await expect(
+    page.getByText("Svaret er slettet.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("God kaffe", { exact: true })).toBeVisible();
+  await expect(
+    page.locator("blockquote").getByText("Takk for besøket", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Svar på anmeldelse fra Kunde", { exact: true }),
+  ).toHaveValue("");
+  await page.reload();
+  await page.getByRole("button", { name: "Anmeldelser", exact: true }).click();
+  await expect(page.getByText("God kaffe", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Slett bedriftens svar", exact: true }),
+  ).toHaveCount(0);
 });

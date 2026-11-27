@@ -864,7 +864,7 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
       },
     );
     await t.test(
-      "bare egen bedrift kan svare og bare admin kan slette",
+      "bedriften svarer, rå sletting nektes og administrator kan moderere",
       async () => {
         const r = (
           await as("other", () =>
@@ -908,10 +908,11 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
             as(who, () => query("delete from reviews where id=$1", [r.id])),
             /permission denied/,
           );
-          await assert.rejects(
-            as(who, () => query("select delete_business_review($1)", [r.id])),
-            /administrator/,
-          );
+          if (who !== "other")
+            await assert.rejects(
+              as(who, () => query("select delete_business_review($1)", [r.id])),
+              /egne anmeldelser/,
+            );
         }
         await as("admin", () =>
           query("select delete_business_review($1)", [r.id]),
@@ -1131,6 +1132,82 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           query("update businesses set status='approved' where id=$1", [
             business.id,
           ]),
+        );
+      },
+    );
+    await t.test(
+      "forfatter sletter egen anmeldelse og bedriften sletter bare sitt svar",
+      async () => {
+        const rows = await query(
+          "select id,user_id,comment,rating,is_anonymous,status from reviews where business_id=$1",
+          [business.id],
+        );
+        const own = rows.find((r) => r.user_id === ids.user),
+          other = rows.find((r) => r.user_id === ids.other);
+        assert.ok(own);
+        assert.ok(other);
+        await as("owner", () =>
+          query("select reply_to_review($1,'Svar som kan slettes')", [own.id]),
+        );
+        for (const who of ["user", "other", "owner2", "admin"])
+          await assert.rejects(
+            as(who, () => query("select delete_business_reply($1)", [own.id])),
+            /egen bedrift/,
+          );
+        await assert.rejects(
+          as(
+            null,
+            () => query("select delete_business_reply($1)", [own.id]),
+            "anon",
+          ),
+          /permission denied/,
+        );
+        await as("owner", () =>
+          query("select delete_business_reply($1)", [own.id]),
+        );
+        const after = (
+          await query("select * from reviews where id=$1", [own.id])
+        )[0];
+        assert.equal(after.business_reply, null);
+        assert.equal(after.replied_at, null);
+        for (const field of ["comment", "rating", "is_anonymous", "status"])
+          assert.equal(after[field], own[field]);
+        for (const who of ["other", "owner", "owner2"])
+          await assert.rejects(
+            as(who, () => query("select delete_business_review($1)", [own.id])),
+            /egne anmeldelser/,
+          );
+        await assert.rejects(
+          as(
+            null,
+            () => query("select delete_business_review($1)", [own.id]),
+            "anon",
+          ),
+          /permission denied/,
+        );
+        await as("owner", () =>
+          query(
+            "select reply_to_review($1,'Dette svaret følger anmeldelsen')",
+            [own.id],
+          ),
+        );
+        await as("user", () =>
+          query("select delete_business_review($1)", [own.id]),
+        );
+        assert.equal(
+          (await query("select * from reviews where id=$1", [own.id])).length,
+          0,
+        );
+        assert.equal(
+          (await query("select * from reviews where id=$1", [other.id])).length,
+          1,
+        );
+        await as("admin", () =>
+          query("select delete_business_review($1)", [other.id]),
+        );
+        assert.equal(
+          (await query("select * from reviews where id=$1", [other.id])).length,
+          0,
         );
       },
     );

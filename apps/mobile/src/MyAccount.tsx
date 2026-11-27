@@ -1,3 +1,4 @@
+import { DeleteReviewButton } from "./DeleteReviewButton";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -150,11 +151,22 @@ function MyReviews({ db, userId }: { db: Client; userId: string }) {
                 {t("Bedriften er ikke tilgjengelig for redigering nå.")}
               </Text>
             )}
+            {editing !== row.id && (
+              <DeleteReviewButton
+                db={db}
+                reviewId={row.id}
+                onDeleted={() =>
+                  setRows((current) => current.filter((r) => r.id !== row.id))
+                }
+              />
+            )}
           </View>
         ))
       )}
       <Text style={ui.muted}>
-        {t("Bare administrator kan slette anmeldelser.")}
+        {t(
+          "Du kan slette din egen anmeldelse. Administrator kan også moderere anmeldelser.",
+        )}
       </Text>
     </View>
   );

@@ -1,6 +1,25 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Slett min anmeldelse": "Delete my review",
+  "Vil du slette anmeldelsen din?": "Delete your review?",
+  "Dette kan ikke angres. Eventuelt svar fra bedriften fjernes også.":
+    "This cannot be undone. Any reply from the business will also be removed.",
+  "Ja, slett anmeldelsen": "Yes, delete the review",
+  "Avbryt sletting": "Cancel deletion",
+  "Du kan slette din egen anmeldelse. Administrator kan også moderere anmeldelser.":
+    "You can delete your own review. Administrators can also moderate reviews.",
+  "Du kan redigere eller slette bedriftens svar. Bare forfatteren og administrator kan slette selve anmeldelsen.":
+    "You can edit or delete your business's reply. Only the author and administrators can delete the review itself.",
+  "Vil du slette bedriftens svar? Kundens anmeldelse beholdes.":
+    "Delete the business reply? The customer's review will be kept.",
+  "Slett bedriftens svar": "Delete business reply",
+  "Svaret er slettet.": "The reply has been deleted.",
+  "Du kan bare slette egne anmeldelser. Administrator kan moderere alle.":
+    "You can only delete your own reviews. Administrators can moderate all reviews.",
+  "Du kan bare slette svar fra din egen bedrift.":
+    "You can only delete replies from your own business.",
+
   "Lys modus": "Light mode",
   "Mørk modus": "Dark mode",
   "Min side": "My account",

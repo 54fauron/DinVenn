@@ -83,3 +83,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Ny nettlesertest passerer på mobil og PC med simulert backend: utlogget rekkefølge, profilredigering og reload, korrekt antall aktive koder, anmeldelsesredigering og bedriftssvar, språk og mørk modus. Skjermbilder gjennomgått visuelt.
 - Prosjekteier bekreftet SQL-oppgraderingen kjørt uten feil. Ingen kontosletting eller e-post er sendt av agenten. Kontaktknapper vises bare når offentlig støtteadresse er konfigurert.
 - Hele brukerappens nettlesersuite bestått (12 tester). Skyfunksjonen `list_my_reviews` er kontrollert å finnes og avvise anonym tilgang; ingen private brukerdata er hentet av agenten.
+
+### Sletting av egne anmeldelser og svar – 27. november 2026
+
+- 58 kjernetester bestått med alle tretten migrasjoner i ren PGlite. Tilgang testet som forfatter, annen bruker, egen bedrift, annen bedrift, administrator og anonym.
+- Bedriften kan nullstille bare sitt svar og tidspunkt. Anmeldelsens tekst, stjerner, status og anonymitet beholdes. Forfatteren kan slette egen anmeldelse med svar; administrator beholder moderering.
+- Native slettetest dekker bekreftelse/avbryt og at andre anmeldelser beholdes. Nettlesertester på mobil og PC dekker egen anmeldelse fra Min side, bekreftet/avbrutt svar-sletting, vedvarende resultat og uendret administratormoderering.
+- Prosjekteier bekreftet oppgraderingen kjørt uten feil. Ingen ekte anmeldelser eller svar slettet av agenten i produksjon.

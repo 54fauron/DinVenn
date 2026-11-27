@@ -1,3 +1,4 @@
+import { DeleteReviewButton } from "./DeleteReviewButton";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -195,8 +196,26 @@ export function Reviews({
                   {anonymous ? "☑" : "☐"} {t("Vis anmeldelsen anonymt")}
                 </Text>
               </Pressable>
+              {own && (
+                <DeleteReviewButton
+                  db={db}
+                  reviewId={own.id}
+                  onBusyChange={setBusy}
+                  disabled={busy}
+                  onDeleted={() => {
+                    setReviews((rows) => rows.filter((r) => r.id !== own.id));
+                    setComment("");
+                    setRating(5);
+                    setAnonymous(false);
+                    setNotice("Anmeldelsen er slettet.");
+                    onSaved?.();
+                  }}
+                />
+              )}
               <Text style={ui.muted}>
-                {t("Bare administrator kan slette anmeldelser.")}
+                {t(
+                  "Du kan slette din egen anmeldelse. Administrator kan også moderere anmeldelser.",
+                )}
               </Text>
               <Text style={ui.muted}>
                 {t(

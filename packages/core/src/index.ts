@@ -258,6 +258,9 @@ export const api = (db: Client) => ({
       }),
     );
   },
+  async deleteReply(reviewId: string) {
+    check(await db.rpc("delete_business_reply", { p_review_id: reviewId }));
+  },
   async deleteReview(reviewId: string) {
     check(await db.rpc("delete_business_review", { p_review_id: reviewId }));
   },

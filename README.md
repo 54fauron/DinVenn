@@ -180,7 +180,7 @@ Bygg for iOS Simulator: `npx eas-cli build --platform ios --profile simulator`. 
 
 ### Anmeldelser og privat organisasjonsnummer
 
-Mobilens bedriftsprofil har anmeldelser med 1–5 stjerner (5 som standard), tekst og valgfri anonym visning. Innlogging kreves for å skrive; én anmeldelse per bruker og bedrift kan redigeres av forfatteren. Bedriften svarer på sin egen side **Anmeldelser** i portalen. Andre brukere kan ikke svare. Kun administrator kan slette gjennom **Moderering av anmeldelser**.
+Mobilens bedriftsprofil har anmeldelser med 1–5 stjerner (5 som standard), tekst og valgfri anonym visning. Innlogging kreves for å skrive; én anmeldelse per bruker og bedrift kan redigeres av forfatteren. Bedriften svarer på sin egen side **Anmeldelser** i portalen. Andre brukere kan ikke svare. Forfatteren kan slette sin egen anmeldelse; administrator kan moderere alle gjennom **Moderering av anmeldelser**. Bedriften kan slette sitt eget svar, men ikke kundens anmeldelse.
 
 Rå anmeldelsesrader er ikke tilgjengelige gjennom klient-API-et, fordi de inneholder forfatterens bruker-ID. `list_business_reviews` returnerer bare visningsdata og et `is_own`-flagg; anonyme anmeldelser inneholder verken forfatternavn eller bruker-ID. Klienter kan ikke slette profiler direkte for å omgå sletteforbudet gjennom kaskadesletting. Eventuell kontosletting må håndteres gjennom server/admin.
 
@@ -348,7 +348,7 @@ Auth-metadata er ikke profilens kilde etter at profilen er lastet.
 valgfri bruker-ID. Den viser bare egne anmeldelser, også skjulte anmeldelser og
 anmeldelser av bedrifter som ikke lenger er godkjent. Redigering er tilgjengelig
 når bedriften er godkjent, gjennom eksisterende anmeldelsesfunksjon og ordfilter.
-Bare administrator kan fortsatt slette anmeldelser. Anonym visning beholdes.
+Forfatteren kan slette egne anmeldelser, og administrator kan moderere alle. Anonym visning beholdes.
 
 Den offentlige kontaktadressen konfigureres med `EXPO_PUBLIC_SUPPORT_EMAIL` ved
 bygging. Når den er satt, viser Hjelp og personvern knapper som åpner e-postklienten
@@ -356,3 +356,28 @@ for støtte/problemrapportering og forespørsel om kontosletting. Brukeren må s
 meldingen selv; det slettes ikke automatisk data. Uten en konfigurert adresse
 skjules disse knappene. Denne kontoinformasjonen erstatter ikke en fullstendig
 personvernerklæring for offentlig drift.
+
+
+## Sletting av egne anmeldelser og bedriftssvar
+
+Kjør hele `supabase/upgrade-review-deletion.sql` én gang i Supabase SQL Editor for
+å aktivere de nye rettighetene. Oppgraderingen sletter ingen data. For nye tomme
+databaser er den inkludert i `setup.sql`.
+
+Forfatteren får **Slett min anmeldelse** ved sin anmeldelse og under
+**Min side → Mine anmeldelser**. Sletting krever bekreftelse og fjerner hele
+anmeldelsen, inkludert bedriftens svar. Det fungerer også for egne skjulte
+anmeldelser og anmeldelser av bedrifter som ikke lenger er godkjent via Min side.
+Andre brukere og bedrifter kan ikke slette kundens anmeldelse. Administrator
+beholder retten til å moderere alle anmeldelser.
+
+I portalen får bedriften **Slett bedriftens svar**. Bekreftet sletting nullstiller
+bare `business_reply` og `replied_at`; stjerner, anmeldelsestekst og anonymitet
+beholdes. Medlemmer av samme bedrift administrerer det felles bedriftssvaret,
+i likhet med dagens tilgang til å skrive/redigere det. Medlemmer av en annen
+bedrift har ikke tilgang. Urelaterte administratorer får ikke automatisk
+svarrettigheter; deres eksisterende moderering av hele anmeldelser beholdes.
+
+Begge operasjoner skjer i avgrensede databasefunksjoner med kontroll av den
+innloggede brukeren. Rå lesing og sletting fra `reviews` er fortsatt sperret i
+klient-API-et for å beskytte anonym forfatteridentitet.
