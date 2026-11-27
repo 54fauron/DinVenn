@@ -459,3 +459,42 @@ test("Min side lagrer profil, teller aktive koder og redigerer egne anmeldelser"
     fullPage: true,
   });
 });
+
+test("spillhjørnet fungerer uten konto og bruker ingen rabatt", async ({
+  page,
+}) => {
+  const rpcCalls: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/rpc/")) rpcCalls.push(request.url());
+  });
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Spill for moro skyld", exact: true })
+    .click();
+  await expect(page.getByText("Tre på rad", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Rute 1", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Rute 1: X", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("DinVenn tenker …", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Rute 5: O", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Ny runde", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Rute 1", exact: true }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "Rute 1", exact: true }).click();
+  await page.getByRole("button", { name: "Lukk spillet", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Spill for moro skyld", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Rute 5: O", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Lukk spillet", exact: true }).click();
+  expect(rpcCalls).toEqual([]);
+});

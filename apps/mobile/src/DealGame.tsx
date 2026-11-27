@@ -288,7 +288,7 @@ const s = themeStyles({
   food: { fontSize: 48, textAlign: "center" },
 });
 
-function Piece({ mark }: { mark: string }) {
+export function Piece({ mark }: { mark: string }) {
   const scale = useRef(new Animated.Value(mark ? 1 : 0)).current;
   const [reduce, setReduce] = useState(true);
   useEffect(() => {
@@ -330,3 +330,5 @@ function Piece({ mark }: { mark: string }) {
     </Animated.Text>
   );
 }
+
+export { s as gameStyles };

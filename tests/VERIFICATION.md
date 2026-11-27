@@ -123,3 +123,9 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Migrasjon 17 kontrollerer vinner-, blokkerings- og sentrumsprioritering. 64 kjerne-/databasetester og typesjekk bestått.
 - Fire nettlesertester på mobil og PC bekrefter X først, tenkestatus uten O, videre spill, seier, nytt forsøk og QR. Ingen JavaScript-feil i testflyten.
 - Forbrukerens produksjonsbygg bestått. SQL-oppgradering leveres separat i upgrade-tic-tac-toe-strategy.sql.
+
+
+### 2026-11-27 – fritt spill fra Min side
+
+- Spillhjørnet tilbyr lokalt tre på rad uten innlogging, rabatt eller backend-RPC. Bruker samme brikkeanimasjoner og brettstil, med 650 ms pause og taktisk motstander.
+- Typesjekk, produksjonsbygg og 18 nettlesertester bestått. Ny test på mobil og PC kontrollerer åpning, X/O-trekk, ny runde, lukking under tenkepause og at ingen RPC kalles.

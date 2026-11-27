@@ -419,3 +419,7 @@ Kjør `supabase/upgrade-tic-tac-toe-win.sql` én gang etter forrige spilloppgrad
 ### Smartere motstander og tenkepause
 
 Kjør `supabase/upgrade-tic-tac-toe-strategy.sql` én gang etter seier-oppgraderingen. Datamaskinen prioriterer egen seier, blokkering av X, sentrum, hjørner og kanter. Den er ikke en uslåelig minimax-motstander. Appen viser eget X med en gang og venter minst 650 ms før den viser serverens svar. Serveren validerer fortsatt begge trekk atomisk; nye trykk sperres mens svaret vises.
+
+### Spillhjørnet på Min side
+
+Knappen «Spill for moro skyld» åpner fritt tre på rad, også uten innlogging. Spillet kjører lokalt og krever ingen databaseoppgradering. Det bruker ingen tilbud, reservasjoner eller QR-koder, og seire her kan ikke brukes til å hente rabatt. Ny runde og lukking avbryter ventende datamaskintrekk.

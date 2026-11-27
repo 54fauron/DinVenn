@@ -1,6 +1,12 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  Spillhjørnet: "Game corner",
+  "Spill tre på rad så ofte du vil. Ingen tilbud eller rabatt brukes.":
+    "Play tic-tac-toe as often as you like. No offers or discounts are used.",
+  "Spill for moro skyld": "Play for fun",
+  "Ny runde": "New round",
+  "Lukk spillet": "Close game",
   "Vinn tre på rad for å låse opp venneprisen. Du kan prøve igjen uten kostnad.":
     "Win tic-tac-toe to unlock your offer. You can try again for free.",
   "Kunden må vinne tre på rad før QR-koden hentes. Ved tap eller uavgjort kan kunden prøve igjen.":

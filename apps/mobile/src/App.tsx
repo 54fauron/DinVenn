@@ -1,3 +1,4 @@
+import { PracticeGames } from "./PracticeGames";
 import { DealGame } from "./DealGame";
 import { MyAccount } from "./MyAccount";
 import { Reviews } from "./Reviews";
@@ -417,6 +418,7 @@ function AppBody() {
           ) : tab === "Meg" ? (
             <>
               {inlineAuthMessages && feedback}
+              <PracticeGames />
               {!session && (
                 <View>
                   <Text style={ui.eyebrow}>{t("VELKOMMEN TIL DINVENN")}</Text>
