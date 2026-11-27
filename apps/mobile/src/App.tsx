@@ -418,7 +418,6 @@ function AppBody() {
           ) : tab === "Meg" ? (
             <>
               {inlineAuthMessages && feedback}
-              <PracticeGames />
               {!session && (
                 <View>
                   <Text style={ui.eyebrow}>{t("VELKOMMEN TIL DINVENN")}</Text>
@@ -590,6 +589,7 @@ function AppBody() {
                 </View>
               )}
               {!session && <LanguageSettings />}
+              <PracticeGames />
             </>
           ) : tab === "Mine koder" ? (
             <>
