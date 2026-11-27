@@ -1,6 +1,59 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Finn lokale par": "Find local pairs",
+  "Tre på rad": "Tic-tac-toe",
+  "Stein, saks, papir": "Rock, paper, scissors",
+  "Flipp burgerne": "Flip the burgers",
+  "Skjær kebaben": "Slice the kebab",
+  "SPILL OG HENT VENNEPRISEN": "PLAY AND CLAIM YOUR OFFER",
+  "Velger spill …": "Choosing a game \u2026",
+  "Fullfør runden. Du trenger ikke vinne eller være rask. Rabatten er den samme uansett spill.":
+    "Complete the round. You do not need to win or be fast. The discount is the same for every game.",
+  "Last spillrunden på nytt": "Reload game round",
+  "Finn tre par. Trykk på kortene for å snu dem.":
+    "Find three pairs. Tap the cards to turn them over.",
+  "Snu kort {0}": "Turn card {0}",
+  "Du er X. Spill én runde mot O. Seier, tap og uavgjort gir samme rabatt.":
+    "You are X. Play one round against O. Winning, losing and drawing give the same discount.",
+  "Rute {0}": "Square {0}",
+  "Spill tre runder. Velg stein, papir eller saks.":
+    "Play three rounds. Choose rock, paper or scissors.",
+  "Runder: {0} / 3": "Rounds: {0} / 3",
+  "Du: {0} · Datamaskinen: {1}": "You: {0} \u00b7 Computer: {1}",
+  "Vend og server tre burgere. Trykk to ganger på hver burger, én handling om gangen.":
+    "Flip and serve three burgers. Tap each burger twice, one action at a time.",
+  "Vend burger {0}": "Flip burger {0}",
+  "Server burger {0}": "Serve burger {0}",
+  "Burger {0} er servert": "Burger {0} is served",
+  "Skjær fem skiver og server porsjonen. Sveip over kebaben, eller bruk knappen.":
+    "Cut five slices and serve the portion. Swipe across the kebab or use the button.",
+  "Skiver: {0} / 5": "Slices: {0} / 5",
+  "Skjær én skive": "Cut one slice",
+  "Server kebaben": "Serve the kebab",
+  "Plassen holdes av i opptil én time mens du spiller, så lenge tilbudet fortsatt er aktivt.":
+    "Your place is held for up to one hour while you play, as long as the offer remains active.",
+  "Runden er fullført!": "Round complete!",
+  "Venneprisen er klar til å hentes. Trykk nedenfor for å få QR-koden.":
+    "Your offer is ready to claim. Tap below to get your QR code.",
+  "Hent venneprisen min": "Claim my offer",
+  "Tilbake til tilbudet": "Back to the offer",
+  "Spill og hent venneprisen": "Play and claim the offer",
+  "Krev et spill før venneprisen hentes":
+    "Require a game before claiming the offer",
+  "DinVenn velger et tilfeldig spill. Fullført runde gir tilgang uansett resultat. Ingen betaling eller krav om å vinne.":
+    "DinVenn chooses a random game. Completing a round unlocks the offer regardless of the result. No payment or win required.",
+  "Du har allerede hentet eller brukt dette tilbudet":
+    "You have already claimed or used this offer",
+  "Spillrunden finnes ikke.": "The game round was not found.",
+  "Spillrunden er utløpt. Start på nytt.":
+    "This game round has expired. Start again.",
+  "Spillet er oppdatert. Last runden på nytt.":
+    "The game has changed. Reload the round.",
+  "Ugyldig spilltrekk.": "Invalid move.",
+  "Fullfør spillet før du henter venneprisen.":
+    "Complete the game before claiming the offer.",
+
   "Slett min anmeldelse": "Delete my review",
   "Vil du slette anmeldelsen din?": "Delete your review?",
   "Dette kan ikke angres. Eventuelt svar fra bedriften fjernes også.":

@@ -381,3 +381,42 @@ svarrettigheter; deres eksisterende moderering av hele anmeldelser beholdes.
 Begge operasjoner skjer i avgrensede databasefunksjoner med kontroll av den
 innloggede brukeren. Rå lesing og sletting fra `reviews` er fortsatt sperret i
 klient-API-et for å beskytte anonym forfatteridentitet.
+
+## Spill for å hente en vennepris
+
+Kjør `supabase/upgrade-deal-games.sql` én gang i Supabase SQL Editor før denne
+versjonen publiseres. Eksisterende tilbud får `requires_game=false` og beholder
+normal uthenting. I tilbudsskjemaet kan bedriften velge **Krev et spill før
+venneprisen hentes**.
+
+DinVenn velger tilfeldig én av fem runder på serveren:
+
+- Memory: finn tre par.
+- Tre på rad: spill en runde mot datamaskinen. Seier, tap og uavgjort godtas.
+- Stein, saks, papir: spill tre runder, uansett resultat.
+- Burger: vend og server tre burgere.
+- Kebab: skjær fem skiver med sveip eller alternativ knapp, og server porsjonen.
+
+Det er ingen betaling for spill, tilfeldige premier, tidsbasert poengkrav eller
+krav om å vinne. Tilbud, rabatt og vilkår vises før spill. Ved tilbud med kapasitet
+reserverer en påbegynt runde én plass i opptil én time, begrenset av tilbudets
+sluttid. En pause/suspensjon eller endring av tilbudets grenser kan fortsatt gjøre
+uthenting utilgjengelig. Spillet har ingen kort nedtelling eller krav til
+reaksjonshastighet. En runde som er startet, hentes igjen når samme bruker åpner
+spillet på nytt, også etter sideoppdatering. Ingen omtrekking før runden er brukt
+eller utløpt. Eksisterende gyldig QR-kode åpnes uten ny runde.
+
+Spilltilstanden ligger i privat `deal_game_sessions`, uten klientens direkte
+lese-/skrivetilgang. Memory sender bare synlige/matchede kort til klienten.
+`start_deal_game` og `play_deal_game` kontrollerer bruker, tilbud, utløp, lovlige
+handlinger og revisjonsnummer. En trigger på `deal_redemptions` krever en
+fullført, ubrukt runde for nye QR-koder på spilltilbud. Den eksisterende
+`claim_deal`/`redeem_deal`-flyten beholder grenser, låsing og engangsbruk.
+Serverkontrollen hindrer å hoppe direkte til «fullført» eller QR; den er ikke
+bevis på at et menneske fysisk har trykket, og kan ikke alene stoppe automatiserte
+klienter som sender en lovlig sekvens av handlinger.
+
+Sessioner slettes ved kontosletting eller sletting av tilbudet. Ved regelmessig
+vedlikehold kan prosjekteier også rydde eldre historikk i SQL Editor, for eksempel
+`delete from public.deal_game_sessions where expires_at < now() - interval '7 days';`.
+Dette påvirker ikke QR-koder som allerede er utstedt.

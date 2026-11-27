@@ -90,3 +90,12 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Bedriften kan nullstille bare sitt svar og tidspunkt. Anmeldelsens tekst, stjerner, status og anonymitet beholdes. Forfatteren kan slette egen anmeldelse med svar; administrator beholder moderering.
 - Native slettetest dekker bekreftelse/avbryt og at andre anmeldelser beholdes. Nettlesertester på mobil og PC dekker egen anmeldelse fra Min side, bekreftet/avbrutt svar-sletting, vedvarende resultat og uendret administratormoderering.
 - Prosjekteier bekreftet oppgraderingen kjørt uten feil. Ingen ekte anmeldelser eller svar slettet av agenten i produksjon.
+
+### Fem spill før vennepris – 27. november 2026
+
+- 61 kjernetester bestått. Fjorten migrasjoner kjørt i ren PGlite-testdatabase.
+- Alle fem serverregler er gjennomspilt før QR-uthenting. Direkte uthenting før fullføring, annen brukers runde, rå tilstandsendring, ugyldige trekk, gammel revisjon og utløpte runder avvises. Runde-ID og fullføring beholdes ved nytt start-kall. Memorys skjulte brett er ikke med i klientresponsen.
+- Kapasitetsreservasjon og frigjøring ved utløp er testet sekvensielt. Ekte samtidighet mot sky-PostgreSQL er ikke lasttestet.
+- Ti målrettede nettlesertester passerer på mobil/PC for alle fem spill helt til QR etter fullføring. To portaltester passerer for lagring av spillkravet. Skjermbilder av spillene gjennomgått.
+- Prosjekteier bekreftet SQL-oppgraderingen kjørt uten feil. Ingen reelle tilbud er satt til spillkrav og ingen ekte rabatter er hentet av agenten.
+- Avsluttende regresjon: 17 native komponenttester og hele brukerappens 22 nettlesertester bestått. TypeScript og begge produksjonsbygg bestått. Spillfeltets tilgjengelighet er kontrollert lesende i sky-Supabase.

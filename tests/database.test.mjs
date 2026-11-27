@@ -1212,6 +1212,195 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
       },
     );
     await t.test(
+      "alle fem spill krever lovlige trekk før QR og beholder samme runde",
+      async () => {
+        for (const kind of [
+          "memory",
+          "tic_tac_toe",
+          "rock_paper_scissors",
+          "burgers",
+          "kebab",
+        ]) {
+          const d = (
+            await as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type,discount_value,status,requires_game) values($1,'Spillpris','percent',10,'active',true) returning id",
+                [business.id],
+              ),
+            )
+          )[0];
+          const start = async (who) =>
+            (
+              await as(who, () =>
+                query("select start_deal_game($1) data", [d.id]),
+              )
+            )[0].data;
+          let g = await start("user");
+          assert.ok(
+            [
+              "memory",
+              "tic_tac_toe",
+              "rock_paper_scissors",
+              "burgers",
+              "kebab",
+            ].includes(g.kind),
+          );
+          assert.equal(g.id, (await start("user")).id);
+          await assert.rejects(
+            as("user", () => query("select * from claim_deal($1)", [d.id])),
+            /Fullfør spillet/,
+          );
+          await assert.rejects(
+            as("other", () => query("select play_deal_game($1,0,0)", [g.id])),
+            /finnes ikke/,
+          );
+          await assert.rejects(
+            as("user", () =>
+              query(
+                "update deal_game_sessions set completed_at=now() where id=$1",
+                [g.id],
+              ),
+            ),
+            /permission denied/,
+          );
+          await assert.rejects(
+            as("user", () => query("select * from deal_game_sessions")),
+            /permission denied/,
+          );
+          const states = {
+            memory: {
+              board: [0, 1, 2, 0, 1, 2],
+              matched: [],
+              revealed: [],
+              pending: -1,
+            },
+            tic_tac_toe: {
+              board: ["", "", "", "", "", "", "", "", ""],
+              result: "",
+            },
+            rock_paper_scissors: { rounds: 0 },
+            burgers: { stages: [0, 0, 0] },
+            kebab: { cuts: 0 },
+          };
+          // Test-only deterministic selection; clients cannot set session kind/state.
+          await query(
+            "update deal_game_sessions set kind=$1,state=$2 where id=$3",
+            [kind, JSON.stringify(states[kind]), g.id],
+          );
+          g = await start("user");
+          if (kind === "memory") {
+            assert.equal("board" in g.state, false);
+            assert.deepEqual(g.state.faces, [
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+            ]);
+          }
+          const step = async (action) => {
+            g = (
+              await as("user", () =>
+                query("select play_deal_game($1,$2,$3) data", [
+                  g.id,
+                  g.revision,
+                  action,
+                ]),
+              )
+            )[0].data;
+          };
+          await assert.rejects(
+            as("user", () => query("select play_deal_game($1,999,0)", [g.id])),
+            /oppdatert/,
+          );
+          await assert.rejects(
+            as("user", () =>
+              query("select play_deal_game($1,$2,99)", [g.id, g.revision]),
+            ),
+            /Ugyldig/,
+          );
+          if (kind === "memory")
+            for (const i of [0, 3, 1, 4, 2, 5]) await step(i);
+          else if (kind === "tic_tac_toe") {
+            while (!g.completed) await step(g.state.board.indexOf(""));
+          } else if (kind === "rock_paper_scissors")
+            for (const i of [0, 1, 2]) await step(i);
+          else if (kind === "burgers")
+            for (const i of [0, 0, 1, 1, 2, 2]) await step(i);
+          else {
+            await assert.rejects(
+              as("user", () => query("select play_deal_game($1,0,1)", [g.id])),
+              /Ugyldig/,
+            );
+            for (let i = 0; i < 5; i++) await step(0);
+            await step(1);
+          }
+          assert.equal(g.completed, true);
+          assert.equal((await start("user")).completed, true);
+          const r = (
+            await as("user", () =>
+              query("select * from claim_deal($1)", [d.id]),
+            )
+          )[0];
+          assert.ok(r.token);
+          assert.equal(
+            (
+              await as("user", () =>
+                query("select * from claim_deal($1)", [d.id]),
+              )
+            )[0].token,
+            r.token,
+          );
+          await as("owner", () => query("select redeem_deal($1)", [r.token]));
+          await assert.rejects(
+            as("user", () => query("select * from claim_deal($1)", [d.id])),
+            /allerede brukt/,
+          );
+        }
+      },
+    );
+    await t.test(
+      "spillreservasjon respekterer kapasitet og utløp",
+      async () => {
+        const d = (
+          await as("owner", () =>
+            query(
+              "insert into deals(business_id,title,discount_type,discount_value,status,requires_game,max_redemptions) values($1,'Siste plass','percent',10,'active',true,1) returning id",
+              [business.id],
+            ),
+          )
+        )[0];
+        const g = (
+          await as("user", () =>
+            query("select start_deal_game($1) data", [d.id]),
+          )
+        )[0].data;
+        await assert.rejects(
+          as("other", () => query("select start_deal_game($1)", [d.id])),
+          /utsolgt/,
+        );
+        await query(
+          "update deal_game_sessions set expires_at=now()-interval '1 second' where id=$1",
+          [g.id],
+        );
+        await assert.rejects(
+          as("user", () => query("select play_deal_game($1,0,0)", [g.id])),
+          /utløpt/,
+        );
+        const other = (
+          await as("other", () =>
+            query("select start_deal_game($1) data", [d.id]),
+          )
+        )[0].data;
+        assert.ok(other.id);
+        await assert.rejects(
+          as(null, () => query("select start_deal_game($1)", [d.id]), "anon"),
+          /permission denied/,
+        );
+      },
+    );
+    await t.test(
       "offentlig bedriftsdata røper ikke nummer, og nummerendring krever ny godkjenning",
       async () => {
         assert.equal(

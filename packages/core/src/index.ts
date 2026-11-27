@@ -50,6 +50,7 @@ export type Deal = {
   image_url: string | null;
   discount_type: "percent" | "amount" | "freebie" | "other";
   discount_value: number | null;
+  requires_game?: boolean;
   discount_details?: string | null;
   promo_code?: string | null;
   starts_at: string;
@@ -215,7 +216,39 @@ export type Review = Omit<
 };
 export type OwnReview =
   Database["public"]["Functions"]["list_my_reviews"]["Returns"][number];
+export type DealGame = {
+  id: string;
+  kind: "memory" | "tic_tac_toe" | "rock_paper_scissors" | "burgers" | "kebab";
+  revision: number;
+  completed: boolean;
+  expires_at: string;
+  state: {
+    faces?: (number | null)[];
+    matched?: number[];
+    board?: string[];
+    result?: string;
+    rounds?: number;
+    player?: number;
+    computer?: number;
+    stages?: number[];
+    cuts?: number;
+  };
+};
 export const api = (db: Client) => ({
+  async startGame(id: string) {
+    return unwrap(
+      await db.rpc("start_deal_game", { p_deal_id: id }),
+    ) as unknown as DealGame;
+  },
+  async playGame(game: DealGame, action: number) {
+    return unwrap(
+      await db.rpc("play_deal_game", {
+        p_session_id: game.id,
+        p_revision: game.revision,
+        p_action: action,
+      }),
+    ) as unknown as DealGame;
+  },
   async myReviews() {
     return unwrap(await db.rpc("list_my_reviews", {}));
   },

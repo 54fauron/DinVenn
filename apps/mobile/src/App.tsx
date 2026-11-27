@@ -1,3 +1,4 @@
+import { DealGame } from "./DealGame";
 import { MyAccount } from "./MyAccount";
 import { Reviews } from "./Reviews";
 import { themeStyles, themeColor, useTheme } from "./theme";
@@ -122,6 +123,7 @@ function AppBody() {
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
   const [deal, setDeal] = useState<Deal | null>(null);
+  const [playing, setPlaying] = useState(false);
   const [business, setBusiness] = useState<Business | null>(null);
   const [code, setCode] = useState<Redemption | null>(null);
   const [showRedemptionToken, setShowRedemptionToken] = useState(false);
@@ -188,6 +190,8 @@ function AppBody() {
       setSession(next);
       setAuthReady(true);
       if (!next) {
+        setPlaying(false);
+        setDeal(null);
         setProfile(null);
         setFavorites([]);
         setCodes([]);
@@ -241,6 +245,7 @@ function AppBody() {
   }, [code?.id, session?.user.id]);
   function needUser() {
     if (session) return true;
+    setPlaying(false);
     setDeal(null);
     setBusiness(null);
     setSelectedEvent(null);
@@ -272,6 +277,7 @@ function AppBody() {
         ? businesses.find((b) => b.id === selectedNews.business_id)
         : business;
   function openMap(b?: Business) {
+    setPlaying(false);
     setMapRequest((request) => request + 1);
     setMapTarget(b?.id ?? null);
     setDeal(null);
@@ -282,6 +288,7 @@ function AppBody() {
     setTab("Kart");
   }
   function closeDetails() {
+    setPlaying(false);
     setDeal(null);
     setBusiness(null);
     setCode(null);
@@ -722,7 +729,21 @@ function AppBody() {
               </Text>
             ) : null}
             {busy && <ActivityIndicator />}
-            {code ? (
+            {playing && deal ? (
+              <DealGame
+                key={deal.id}
+                db={client!}
+                deal={deal}
+                onClose={() => setPlaying(false)}
+                onClaim={async () => {
+                  const r = await api(client!).claim(deal.id);
+                  if (currentUser.current !== session?.user.id) return;
+                  setCode(r);
+                  setPlaying(false);
+                  await loadPrivate(session!.user.id);
+                }}
+              />
+            ) : code ? (
               <View style={s.card}>
                 <Text style={s.eyebrow}>{t("DIN VENNEPRIS")}</Text>
                 <Text style={ui.h2}>
@@ -853,10 +874,26 @@ function AppBody() {
                     : t("Ingen fast sluttdato.")}
                 </Text>
                 <Button
-                  title={t("Hent vennepris")}
+                  title={t(
+                    deal.requires_game
+                      ? "Spill og hent venneprisen"
+                      : "Hent vennepris",
+                  )}
                   disabled={busy}
                   onPress={() => {
                     if (!needUser()) return;
+                    if (
+                      deal.requires_game &&
+                      !codes.some(
+                        (r) =>
+                          r.deal_id === deal.id &&
+                          r.status === "issued" &&
+                          Date.parse(r.expires_at) > now,
+                      )
+                    ) {
+                      setPlaying(true);
+                      return;
+                    }
                     void run(async () => {
                       const r = await api(client!).claim(deal.id);
                       setCode(r);

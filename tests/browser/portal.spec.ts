@@ -1032,6 +1032,12 @@ test("gratisgave og 2-for-1 har forklaring og valgfri egen kode", async ({
   await page.getByRole("button", { name: "+ Ny vennepris" }).click();
   await page.getByLabel("Tittel", { exact: true }).fill("Lunsjgave");
   await page
+    .getByRole("checkbox", {
+      name: "Krev et spill før venneprisen hentes",
+      exact: true,
+    })
+    .check();
+  await page
     .getByRole("combobox", { name: "Type rabatt", exact: true })
     .selectOption("freebie");
   await page
@@ -1051,6 +1057,7 @@ test("gratisgave og 2-for-1 har forklaring og valgfri egen kode", async ({
     .getByRole("button", { name: "Lagre vennepris", exact: true })
     .click();
   const body = (await request).postDataJSON();
+  expect(body.requires_game).toBe(true);
   expect(body.discount_details).toBe("Gratis mineralvann når du kjøper lunsj");
   expect(body.promo_code).toBe("LUNSJVENN");
   expect(body.discount_value).toBeNull();

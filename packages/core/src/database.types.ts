@@ -739,6 +739,7 @@ export type Database = {
           max_redemptions: number | null;
           min_group_size: number;
           promo_code: string | null;
+          requires_game: boolean;
           redeem_method: Database["public"]["Enums"]["redeem_method"];
           starts_at: string;
           status: Database["public"]["Enums"]["content_status"];
@@ -764,6 +765,7 @@ export type Database = {
           max_redemptions?: number | null;
           min_group_size?: number;
           promo_code?: string | null;
+          requires_game?: boolean;
           redeem_method?: Database["public"]["Enums"]["redeem_method"];
           starts_at?: string;
           status?: Database["public"]["Enums"]["content_status"];
@@ -788,6 +790,7 @@ export type Database = {
           max_redemptions?: number | null;
           min_group_size?: number;
           promo_code?: string | null;
+          requires_game?: boolean;
           redeem_method?: Database["public"]["Enums"]["redeem_method"];
           starts_at?: string;
           status?: Database["public"]["Enums"]["content_status"];
@@ -2291,6 +2294,11 @@ export type Database = {
           isOneToOne: true;
           isSetofReturn: false;
         };
+      };
+      start_deal_game: { Args: { p_deal_id: string }; Returns: Json };
+      play_deal_game: {
+        Args: { p_session_id: string; p_revision: number; p_action: number };
+        Returns: Json;
       };
       save_my_profile: {
         Args: { p_display_name: string; p_home_city?: string | null };
