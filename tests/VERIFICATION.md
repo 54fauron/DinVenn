@@ -155,3 +155,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - 69 database-/kjernetester, typesjekk og begge produksjonsbygg bestått. 36 nettlesertester på mobil og PC bestått, pluss to lydfeiltester. Etter justering av server-/lydstart bestod alle seks rytmetestene på nytt, inkludert hele 66-sekunders runden med ekte Web Audio, automatisk timede trykk og QR etter seier.
 - 17 native regresjonstester bestått. Native lydspill på fysisk iPhone/Android er ikke testet. Nettleserens mobiltest bruker Chromium med iPhone-format, ikke fysisk Safari. Scene visuelt kontrollert på PC-skjermbilde.
 - Brukeren bekreftet upgrade-cheese-rhythm.sql kjørt. Testene bruker lokale database-/Auth-mocker; ingen ekte tilbud er hentet.
+
+
+### 2026-11-27 – tegnet ost og kontakt med bordet
+
+- Byttet ost-/sokke-emojier og løse ansiktsprikker med egen SVG-ost. Sokkevarianten har to festede sokker og samme bunnlinje som vanlig ost.
+- Fjernet vipping og skalering som løftet figuren. Ost, skygge, mål og nedslått klokke bruker samme bordnivå; klokka tegnes foran fanget ost.
+- Typesjekk og forbrukerens produksjonsbygg bestått. To fokuserte nettlesertester på mobil og PC bekrefter SVG-figurene, fravær av emojier/prikker, konstant bordkontakt og ingen JavaScript-feil. Begge variantene visuelt kontrollert på skjermbilder.
+- Ingen endringer i lyd, poeng eller database; ingen SQL-oppgradering kreves.

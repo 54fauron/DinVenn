@@ -221,3 +221,72 @@ test("lydfeil gir nytt forsøk uten å starte en runde", async ({ page }) => {
   ).toBeEnabled();
   await expect(page.getByTestId("rhythm-catch")).toHaveCount(0);
 });
+
+test("osten og sokkeosten har tegnet kropp og fast bordkontakt", async ({
+  page,
+}, info) => {
+  await observeAudio(page);
+  await page.addInitScript(() => {
+    const Base = window.AudioContext;
+    (window as any).__cheeseOffset = 0;
+    class AdjustableAudio extends Base {
+      get currentTime() {
+        return super.currentTime + ((window as any).__cheeseOffset ?? 0);
+      }
+    }
+    window.AudioContext = AdjustableAudio;
+  });
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.route("https://dinvenn-test.supabase.co/**", (r) =>
+    r.fulfill({ json: [] }),
+  );
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Ost på rømmen", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Spill for moro skyld", exact: true })
+    .click();
+  const cheese = page.getByTestId("rhythm-cheese"),
+    counter = page.getByTestId("rhythm-counter");
+  await expect(
+    page.getByTestId("rhythm-cheese-art").locator("svg"),
+  ).toBeVisible();
+  const before = await cheese.boundingBox(),
+    table = await counter.boundingBox();
+  expect(before!.y + before!.height).toBeGreaterThan(table!.y);
+  expect(before!.y + before!.height).toBeLessThan(
+    table!.y + table!.height * 0.35,
+  );
+  await counter
+    .locator("..")
+    .screenshot({ path: info.outputPath("grounded-cheese.png") });
+  await page.getByRole("button", { name: "Start runden", exact: true }).click();
+  await expect(page.getByTestId("rhythm-catch")).toBeVisible();
+  await page.evaluate(() => {
+    (window as any).__cheeseOffset = 25;
+  });
+  await expect(
+    page.getByTestId("rhythm-sock-cheese").locator("svg"),
+  ).toBeVisible();
+  const after = await cheese.boundingBox();
+  const afterTable = await counter.boundingBox();
+  expect(
+    Math.abs(
+      after!.y +
+        after!.height -
+        afterTable!.y -
+        (before!.y + before!.height - table!.y),
+    ),
+  ).toBeLessThan(1);
+  await expect(cheese).not.toContainText("🧀");
+  await expect(cheese).not.toContainText("🧦");
+  await expect(cheese).not.toContainText("••");
+  await counter
+    .locator("..")
+    .screenshot({ path: info.outputPath("grounded-sock-cheese.png") });
+  await page.getByRole("button", { name: "Lukk spillet", exact: true }).click();
+  expect(errors).toEqual([]);
+});

@@ -1,3 +1,4 @@
+import { CheeseArt } from "./CheeseArt";
 import { useEffect, useRef, useState } from "react";
 import {
   AccessibilityInfo,
@@ -220,7 +221,7 @@ export function RhythmBoard({
     : 0;
   const demoCatch = demo && Math.abs(local - (phrase?.note ?? 0)) < 0.2;
   const caught = feedback === "hit" || demoCatch;
-  const left = reduced ? 50 : 20 + progress * 40;
+  const left = reduced ? 60 : 20 + progress * 40;
   const finalScore =
     phase === "done"
       ? score
@@ -249,34 +250,34 @@ export function RhythmBoard({
         <View style={s.clock}>
           <Text style={s.clockText}>◷</Text>
         </View>
-        <View style={s.counter} />
+        <View testID="rhythm-counter" style={s.counter} />
         <View style={s.target} />
-        <View
-          style={[s.bell, { transform: [{ translateY: caught ? 22 : 0 }] }]}
-        >
-          <Text style={s.bellHandle}>●</Text>
-        </View>
         {(!active || phrase) && (
           <View
+            testID="rhythm-cheese"
             style={[
               s.cheese,
               {
                 left: `${active ? left : 20}%`,
-                transform: [
-                  { scale: caught ? 0.85 : 1 },
-                  {
-                    rotate: reduced
-                      ? "0deg"
-                      : `${Math.sin(beat * Math.PI) * 4}deg`,
-                  },
-                ],
+                opacity: caught ? 0.25 : 1,
               },
             ]}
           >
-            <Text style={s.cheeseText}>{phrase?.sock ? "🧀🧦" : "🧀"}</Text>
-            <Text style={s.face}>{caught ? "◡" : "••"}</Text>
+            <View testID="rhythm-cheese-shadow" style={s.cheeseShadow} />
+            <View
+              testID={phrase?.sock ? "rhythm-sock-cheese" : "rhythm-cheese-art"}
+              style={{ width: "100%", height: "100%" }}
+            >
+              <CheeseArt sock={!!phrase?.sock} />
+            </View>
           </View>
         )}
+        <View
+          testID="rhythm-bell"
+          style={[s.bell, { bottom: caught ? "30%" : "50%" }]}
+        >
+          <Text style={s.bellHandle}>●</Text>
+        </View>
         <Text accessibilityLiveRegion="polite" style={s.cue}>
           {t(
             !active
@@ -422,7 +423,7 @@ const s = themeStyles({
   target: {
     position: "absolute",
     left: "58%",
-    bottom: "22%",
+    bottom: "28%",
     width: "14%",
     height: 10,
     borderRadius: 8,
@@ -431,7 +432,7 @@ const s = themeStyles({
   bell: {
     position: "absolute",
     left: "55%",
-    top: "28%",
+    bottom: "50%",
     width: "25%",
     height: "24%",
     borderTopLeftRadius: 45,
@@ -443,12 +444,20 @@ const s = themeStyles({
   bellHandle: { position: "absolute", top: -17, left: "42%", color: "#fff0c5" },
   cheese: {
     position: "absolute",
-    bottom: "28%",
+    bottom: "30%",
     width: "16%",
+    height: "27%",
     alignItems: "center",
   },
-  cheeseText: { fontSize: 34 },
-  face: { fontSize: 14, color: "#20253b" },
+  cheeseShadow: {
+    position: "absolute",
+    bottom: -2,
+    left: "12%",
+    width: "80%",
+    height: 5,
+    borderRadius: 10,
+    backgroundColor: "#27605e66",
+  },
   cue: {
     position: "absolute",
     bottom: 12,
