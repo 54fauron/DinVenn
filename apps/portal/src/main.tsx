@@ -724,7 +724,7 @@ function DealForm({
           </div>
           <p className="muted">
             {t(
-              "Kunden fullfører én runde tre på rad før QR-koden hentes. Seier, tap og uavgjort gir samme rabatt.",
+              "Kunden må vinne tre på rad før QR-koden hentes. Ved tap eller uavgjort kan kunden prøve igjen.",
             )}
           </p>
           <label>

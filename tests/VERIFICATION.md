@@ -108,3 +108,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Typesjekk og begge produksjonsbygg bestått.
 - 62 kjernetester/databasekontroller, 17 native mobiltester, 14 nettlesertester for forbruker og 2 relevante portaltester bestått. Nettlesertester bruker mockdata; databasekontroller bruker PGlite med mock av Supabase Auth/Storage.
 - Brukeren bekreftet at upgrade-required-tic-tac-toe.sql ble kjørt uten feil i Supabase.
+
+
+### 2026-11-27 – seier og oppusset tre på rad
+
+- Ny migrasjon 16 krever serverbekreftet X-seier for nye QR-koder. Tap og uavgjort kan nullstilles med revisjonskontroll; reservasjonens utløp forlenges ikke. Utstedte QR beholdes.
+- Brett med animerte brikker, markert vinnerrad, rundestatus og ny-runde-knapp. Respekterer redusert bevegelse. React Native Web sin animasjon krever globalThis-alias i Vite; nettlesertester kontrollerer fravær av JavaScript-feil.
+- Typesjekk, begge produksjonsbygg og 63 kjerne-/databasetester bestått. Nettlesersuite med 14 tester bestått, deretter 4 fokuserte spilltester for seier og tap/nytt forsøk på mobil og PC. 17 native regresjonstester bestått ved omkjøring; første kjøring hadde én feil i eksisterende regresjonssuite.
+- Brukeren bekreftet at upgrade-tic-tac-toe-win.sql er kjørt i Supabase. Database- og nettlesertestene bruker lokale testdata/mocker.

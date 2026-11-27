@@ -77,6 +77,7 @@ export default defineConfig(({ mode }) => {
       ],
     },
     define: {
+      global: "globalThis",
       "process.env.EXPO_PUBLIC_SUPPORT_EMAIL": JSON.stringify(
         env.EXPO_PUBLIC_SUPPORT_EMAIL || "",
       ),

@@ -1,6 +1,22 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Vinn tre på rad for å låse opp venneprisen. Du kan prøve igjen uten kostnad.":
+    "Win tic-tac-toe to unlock your offer. You can try again for free.",
+  "Kunden må vinne tre på rad før QR-koden hentes. Ved tap eller uavgjort kan kunden prøve igjen.":
+    "Customers must win tic-tac-toe before claiming the QR code. After a loss or draw they can try again.",
+  "Du vant!": "You won!",
+  "DinVenn vant denne runden": "DinVenn won this round",
+  "Uavgjort – prøv igjen": "A draw – try again",
+  "DinVenn tenker …": "DinVenn is thinking …",
+  "Din tur – velg en rute": "Your turn – choose a square",
+  "Ingen rabatt brukt. Start en ny runde og prøv igjen.":
+    "No offer used. Start a new round and try again.",
+  "Venneprisen er låst opp!": "Your offer is unlocked!",
+  "Rute {0}: {1}": "Square {0}: {1}",
+  mot: "vs",
+  Du: "You",
+
   "Fullfør én runde tre på rad. Du trenger ikke vinne eller være rask.":
     "Complete one round of tic-tac-toe. You do not need to win or be fast.",
   "Kunden fullfører én runde tre på rad før QR-koden hentes. Seier, tap og uavgjort gir samme rabatt.":

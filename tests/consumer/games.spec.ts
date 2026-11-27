@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
-for (const kind of ["tic_tac_toe"])
-  test(`spillflyt ${kind} fullføres før QR`, async ({ page }, info) => {
+for (const retry of [false, true])
+  test(`seier før QR, prøv igjen: ${retry}`, async ({ page }, info) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
     const user = {
       id: "u1",
       email: "game@example.com",
@@ -14,7 +16,7 @@ for (const kind of ["tic_tac_toe"])
     let state: any = { board: Array(9).fill(""), result: "" };
     let game = {
         id: "session1",
-        kind,
+        kind: "tic_tac_toe",
         state,
         revision: 0,
         completed: false,
@@ -24,8 +26,8 @@ for (const kind of ["tic_tac_toe"])
       claimed = false,
       claimCalls = 0;
     const board = [0, 1, 2, 0, 1, 2];
-    const result = (b: string[]) =>
-      [
+    const result = (b: string[]) => {
+      const line = [
         [0, 1, 2],
         [3, 4, 5],
         [6, 7, 8],
@@ -34,8 +36,9 @@ for (const kind of ["tic_tac_toe"])
         [2, 5, 8],
         [0, 4, 8],
         [2, 4, 6],
-      ].some((line) => b[line[0]] && line.every((i) => b[i] === b[line[0]])) ||
-      !b.includes("");
+      ].find((line) => b[line[0]] && line.every((i) => b[i] === b[line[0]]));
+      return line ? b[line[0]] : b.includes("") ? "" : "draw";
+    };
     const redemption = {
       id: "r1",
       deal_id: "d1",
@@ -91,9 +94,23 @@ for (const kind of ["tic_tac_toe"])
       if (path.endsWith("/play_deal_game")) {
         expect(data.p_revision).toBe(game.revision);
         const a = data.p_action;
+        if (a === -1) {
+          state = { board: Array(9).fill(""), result: "" };
+          game = { ...game, state, revision: game.revision + 1 };
+          return send(game);
+        }
+        if (retry && game.revision === 0) {
+          state = {
+            board: ["O", "O", "O", "X", "X", "", "", "", ""],
+            result: "O",
+          };
+          game = { ...game, state, revision: 1 };
+          return send(game);
+        }
         state.board[a] = "X";
         if (!result(state.board)) state.board[state.board.indexOf("")] = "O";
-        game.completed = result(state.board);
+        state.result = result(state.board);
+        game.completed = state.result === "X";
         game = { ...game, state, revision: game.revision + 1 };
         return send(game);
       }
@@ -121,9 +138,25 @@ for (const kind of ["tic_tac_toe"])
     ).toBeVisible();
     expect(claimCalls).toBe(0);
     await page.screenshot({
-      path: info.outputPath(`${kind}.png`),
+      path: info.outputPath("tic_tac_toe.png"),
       fullPage: true,
     });
+    if (retry) {
+      await page.getByRole("button", { name: "Rute 1", exact: true }).click();
+      await expect(
+        page.getByText("DinVenn vant denne runden", { exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Hent venneprisen min", exact: true }),
+      ).toHaveCount(0);
+      expect(claimCalls).toBe(0);
+      await page
+        .getByRole("button", { name: "Prøv igjen", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: "Rute 1", exact: true }),
+      ).toBeEnabled();
+    }
     {
       for (let i = 0; i < 5 && !game.completed; i++) {
         const square = state.board.indexOf("") + 1;
@@ -137,7 +170,7 @@ for (const kind of ["tic_tac_toe"])
       }
     }
     await expect(
-      page.getByText("Runden er fullført!", { exact: true }),
+      page.getByText("Venneprisen er låst opp!", { exact: true }),
     ).toBeVisible();
     expect(claimCalls).toBe(0);
     await page
@@ -147,6 +180,7 @@ for (const kind of ["tic_tac_toe"])
       page.getByRole("img", { name: "QR", exact: true }),
     ).toBeVisible();
     expect(claimCalls).toBe(1);
+    expect(errors).toEqual([]);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,

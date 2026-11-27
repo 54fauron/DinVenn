@@ -25,7 +25,12 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
  alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;
  `);
     for (const name of (await readdir("supabase/migrations"))
-      .filter((x) => x.endsWith(".sql") && !x.includes("000015_"))
+      .filter(
+        (x) =>
+          x.endsWith(".sql") &&
+          !x.includes("000015_") &&
+          !x.includes("000016_"),
+      )
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
       sql = sql.replace(
@@ -1397,6 +1402,81 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
         await assert.rejects(
           as(null, () => query("select start_deal_game($1)", [d.id]), "anon"),
           /permission denied/,
+        );
+      },
+    );
+    await t.test(
+      "seier kreves, tap og uavgjort kan startes på nytt",
+      async () => {
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000016_tic_tac_toe_win.sql",
+            "utf8",
+          ),
+        );
+        const d = (
+          await as("owner", () =>
+            query(
+              "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Vinn en pris','percent',10,'active') returning id",
+              [business.id],
+            ),
+          )
+        )[0];
+        let g = (
+          await as("user", () =>
+            query("select start_deal_game($1) data", [d.id]),
+          )
+        )[0].data;
+        const step = async (a) => {
+          g = (
+            await as("user", () =>
+              query("select play_deal_game($1,$2,$3) data", [
+                g.id,
+                g.revision,
+                a,
+              ]),
+            )
+          )[0].data;
+        };
+        await assert.rejects(
+          as("user", () => query("select claim_deal($1)", [d.id])),
+          /Vinn tre på rad/,
+        );
+        for (const result of ["O", "draw"]) {
+          await query("update deal_game_sessions set state=$1 where id=$2", [
+            JSON.stringify({
+              board: ["O", "O", "O", "X", "X", "", "", "", ""],
+              result,
+            }),
+            g.id,
+          ]);
+          await assert.rejects(
+            as("user", () => query("select claim_deal($1)", [d.id])),
+            /Vinn tre på rad/,
+          );
+          await step(-1);
+          assert.deepEqual(g.state.board, Array(9).fill(""));
+          assert.equal(g.completed, false);
+        }
+        // Set up a legal near-win position; clients cannot alter this table.
+        await query("update deal_game_sessions set state=$1 where id=$2", [
+          JSON.stringify({
+            board: ["X", "X", "", "O", "O", "", "", "", ""],
+            result: "",
+          }),
+          g.id,
+        ]);
+        await step(2);
+        assert.equal(g.state.result, "X");
+        assert.equal(g.completed, true);
+        const r = (
+          await as("user", () => query("select * from claim_deal($1)", [d.id]))
+        )[0];
+        assert.ok(r.token);
+        await as("owner", () => query("select redeem_deal($1)", [r.token]));
+        await assert.rejects(
+          as("owner", () => query("select redeem_deal($1)", [r.token])),
+          /allerede brukt/,
         );
       },
     );
