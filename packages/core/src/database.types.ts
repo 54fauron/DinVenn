@@ -549,6 +549,7 @@ export type Database = {
           shared_deal_id: string | null;
           status: Database["public"]["Enums"]["redemption_state"];
           token: string;
+          display_code: string | null;
           user_id: string;
         };
         ComputedFields: never;
@@ -563,6 +564,7 @@ export type Database = {
           shared_deal_id?: string | null;
           status?: Database["public"]["Enums"]["redemption_state"];
           token?: string;
+          display_code?: string | null;
           user_id: string;
         };
         Update: {
@@ -576,6 +578,7 @@ export type Database = {
           shared_deal_id?: string | null;
           status?: Database["public"]["Enums"]["redemption_state"];
           token?: string;
+          display_code?: string | null;
           user_id?: string;
         };
         Relationships: [
@@ -726,6 +729,7 @@ export type Database = {
           description: string | null;
           discount_type: Database["public"]["Enums"]["discount_type"];
           discount_value: number | null;
+          discount_details: string | null;
           ends_at: string | null;
           flash_radius_m: number | null;
           id: string;
@@ -750,6 +754,7 @@ export type Database = {
           description?: string | null;
           discount_type?: Database["public"]["Enums"]["discount_type"];
           discount_value?: number | null;
+          discount_details?: string | null;
           ends_at?: string | null;
           flash_radius_m?: number | null;
           id?: string;
@@ -773,6 +778,7 @@ export type Database = {
           description?: string | null;
           discount_type?: Database["public"]["Enums"]["discount_type"];
           discount_value?: number | null;
+          discount_details?: string | null;
           ends_at?: string | null;
           flash_radius_m?: number | null;
           id?: string;
@@ -2207,6 +2213,7 @@ export type Database = {
           shared_deal_id: string | null;
           status: Database["public"]["Enums"]["redemption_state"];
           token: string;
+          display_code: string | null;
           user_id: string;
         };
         SetofOptions: {
@@ -2335,6 +2342,7 @@ export type Database = {
           shared_deal_id: string | null;
           status: Database["public"]["Enums"]["redemption_state"];
           token: string;
+          display_code: string | null;
           user_id: string;
         };
         SetofOptions: {

@@ -303,3 +303,30 @@ felles profilen med samme tilbud og favoritt-ID. Utforsk og profilens praktiske
 informasjon bruker fortsatt hovedadressen. Avdelinger hos bedrifter som ikke er
 godkjent inngår ikke i den offentlige katalogen. Ingen ny SQL-oppgradering kreves
 for kartvisningen utover `upgrade-business-locations.sql`.
+
+## Gave, 2-for-1 og egen rabattkode
+
+Kjør hele `supabase/upgrade-deal-details.sql` én gang i SQL Editor på en eksisterende
+pilotdatabase, før den nye portalversjonen tas i bruk. Nye tomme databaser bruker
+`setup.sql`. Eksisterende tilbud og innløsninger beholdes.
+
+Ved **Gratis gave** eller **Annet / 2 for 1** fyller bedriften inn hva kunden får,
+og eventuelle kjøpskrav, i eget felt (maks 500 tegn). Beskrivelsen vises i
+forhåndsvisningen og i tilbudsdetaljene hos brukeren. Prisavslag i prosent/kroner
+beholder tallfeltet. Nye gaver/andre tilbud krever beskrivelse i databasen også;
+eldre tilbud uten denne informasjonen kan fortsatt pauses, mens redigering i
+portalen ber om en utfylt forklaring.
+
+**Valg av rabattkode → Egen rabattkode** lar bedriften angi en kode på 1–64 tegn.
+Koden vises på brukerens kodekort i stedet for tilfeldig kodetekst. Hver uthenting
+har fortsatt en unik QR-token, og bedriften må skanne denne eller bruke den unike
+innløsningskoden for at DinVenn skal håndheve engangsbruk og kapasitet. Brukeren
+kan velge **Vis innløsningskode** hvis kameraet ikke kan brukes. Den felles
+rabattkoden er ikke en erstatning for registrert innløsning, og koder brukt i
+bedriftens eksterne kasse/nettbutikk må også kontrolleres av det systemet.
+Tilbudskoden ligger på offentlig tilbudsdata og skal ikke brukes som en hemmelighet.
+
+Visningskoden fryses på innløsningen ved uthenting. Endret tilbudskode påvirker
+bare nye uthentinger; gamle kodekort beholdes. Eksisterende innløsninger fra før
+oppgraderingen viser sin opprinnelige tilfeldige kode. Valget **Automatisk kode**
+fjerner tilbudets egen kode ved lagring og bruker normal QR/engangskodeflyt igjen.

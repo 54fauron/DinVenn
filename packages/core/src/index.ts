@@ -49,6 +49,8 @@ export type Deal = {
   image_url: string | null;
   discount_type: "percent" | "amount" | "freebie" | "other";
   discount_value: number | null;
+  discount_details?: string | null;
+  promo_code?: string | null;
   starts_at: string;
   ends_at: string | null;
   max_redemptions: number | null;
@@ -64,6 +66,7 @@ export type Redemption = {
   deal_id: string;
   user_id: string;
   token: string;
+  display_code?: string | null;
   status: "issued" | "redeemed" | "expired";
   issued_at: string;
   redeemed_at: string | null;
@@ -164,6 +167,20 @@ export function filterDeals(
   });
 }
 export function validateDeal(d: Partial<Deal>) {
+  if (
+    ["freebie", "other"].includes(d.discount_type ?? "") &&
+    !d.discount_details?.trim()
+  )
+    throw new Error("Beskriv hva gaven eller tilbudet gjelder.");
+  if ((d.discount_details?.trim().length ?? 0) > 500)
+    throw new Error("Tilbudsbeskrivelsen kan ha maks 500 tegn.");
+  if (
+    d.promo_code != null &&
+    (!d.promo_code.trim() ||
+      d.promo_code.trim().length > 64 ||
+      /[\u0000-\u001f\u007f]/.test(d.promo_code))
+  )
+    throw new Error("Rabattkoden må ha mellom 1 og 64 tegn uten linjeskift.");
   if (!d.title?.trim()) throw new Error("Skriv en tittel.");
   if (!d.starts_at || !Number.isFinite(Date.parse(d.starts_at)))
     throw new Error("Velg gyldig starttid.");

@@ -1,6 +1,30 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Vis innløsningskode": "Show redemption token",
+  "Skjul innløsningskode": "Hide redemption token",
+  "Beskriv hva gaven eller tilbudet gjelder.": "Describe the gift or offer.",
+  "Tilbudsbeskrivelsen kan ha maks 500 tegn.":
+    "The offer details must be at most 500 characters.",
+  "Rabattkoden må ha mellom 1 og 64 tegn uten linjeskift.":
+    "The discount code must have 1 to 64 characters without line breaks.",
+  "Hva får kunden i gave?": "What gift does the customer receive?",
+  "Hva gjelder tilbudet?": "What does the offer include?",
+  "For eksempel: Gratis flaske mineralvann ved kjøp av en lunsjrett.":
+    "For example: A free bottle of sparkling water when buying a lunch dish.",
+  "For eksempel: Kjøp to mineralvann og betal for én.":
+    "For example: Buy two sparkling waters and pay for one.",
+  "Valg av rabattkode": "Discount code option",
+  "Automatisk kode": "Automatic code",
+  "Egen rabattkode": "Custom discount code",
+  "Koden er felles for kundene. Skann kundens unike QR-kode for å registrere innløsning og håndheve grensene.":
+    "Customers share this code. Scan each customer's unique QR code to record redemption and enforce limits.",
+  "Rabattkode: {0}": "Discount code: {0}",
+  "Dette er bedriftens rabattkode. Vis også QR-koden slik at bedriften kan registrere engangsinnløsningen.":
+    "This is the business's discount code. Show the QR code as well so the business can record your single-use redemption.",
+  "Skann kundens unike QR-kode eller lim inn innløsningskoden. En felles rabattkode kan ikke brukes til å identifisere kundens innløsning.":
+    "Scan the customer's unique QR code or paste their redemption token. A shared discount code cannot identify a customer's redemption.",
+
   "Avdelingen finnes ikke lenger, eller du mangler tilgang.":
     "The location no longer exists, or you do not have access.",
   "Avdelinger og flere adresser": "Locations and additional addresses",

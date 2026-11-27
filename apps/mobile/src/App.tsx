@@ -121,6 +121,8 @@ function AppBody() {
   const [deal, setDeal] = useState<Deal | null>(null);
   const [business, setBusiness] = useState<Business | null>(null);
   const [code, setCode] = useState<Redemption | null>(null);
+  const [showRedemptionToken, setShowRedemptionToken] = useState(false);
+  useEffect(() => setShowRedemptionToken(false), [code?.id]);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -742,8 +744,35 @@ function AppBody() {
                       <QRCode value={code.token} size={230} />
                     </View>
                     <Text selectable style={s.code}>
-                      {code.token}
+                      {code.display_code || code.token}
                     </Text>
+                    {!!code.display_code && (
+                      <>
+                        <Button
+                          quiet
+                          title={t(
+                            showRedemptionToken
+                              ? "Skjul innløsningskode"
+                              : "Vis innløsningskode",
+                          )}
+                          onPress={() =>
+                            setShowRedemptionToken((value) => !value)
+                          }
+                        />
+                        {showRedemptionToken && (
+                          <Text selectable style={s.code}>
+                            {code.token}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                    {!!code.display_code && (
+                      <Text style={s.text}>
+                        {t(
+                          "Dette er bedriftens rabattkode. Vis også QR-koden slik at bedriften kan registrere engangsinnløsningen.",
+                        )}
+                      </Text>
+                    )}
                     <Text style={s.text}>
                       {" "}
                       {t(
@@ -814,6 +843,9 @@ function AppBody() {
                 <Text style={s.discount}>{discount(deal)}</Text>
                 <Text style={s.h1}>{deal.title}</Text>
                 <Text style={s.text}>{deal.description}</Text>
+                {!!deal.discount_details && (
+                  <Text style={s.text}>{deal.discount_details}</Text>
+                )}
                 <Text style={s.h2}>{t("Vilkår")}</Text>
                 <Text style={s.text}>
                   {deal.terms || t("Ingen ekstra vilkår oppgitt.")}

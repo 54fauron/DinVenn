@@ -51,3 +51,37 @@ test("validering fanger ugyldig rabatt, grenser og tidsrom", () => {
   ])
     assert.throws(() => validateDeal({ ...valid, ...update }));
 });
+
+test("gave og andre tilbud krever forklaring og egendefinert kode valideres", () => {
+  const base = {
+    title: "Gave",
+    starts_at: "2026-11-27T10:00:00Z",
+    max_per_user: 1,
+  };
+  for (const discount_type of ["freebie", "other"]) {
+    assert.throws(
+      () => validateDeal({ ...base, discount_type }),
+      /Beskriv hva/,
+    );
+    assert.doesNotThrow(() =>
+      validateDeal({
+        ...base,
+        discount_type,
+        discount_details: "Mineralvann med lunsj",
+        promo_code: "LUNSJ20",
+      }),
+    );
+  }
+  for (const promo_code of [" ", "a".repeat(65), "CODE\nCODE"]) {
+    assert.throws(
+      () =>
+        validateDeal({
+          ...base,
+          discount_type: "percent",
+          discount_value: 20,
+          promo_code,
+        }),
+      /Rabattkoden/,
+    );
+  }
+});

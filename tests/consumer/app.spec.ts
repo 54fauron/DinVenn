@@ -174,3 +174,91 @@ test("avdelingsnavn vises som tekst i kartetiketter", async ({ page }) => {
   );
   await expect(page.locator(".leaflet-tooltip b")).toHaveCount(0);
 });
+
+test("gavebeskrivelse og bedriftens kode vises med unik QR ved uthenting", async ({
+  page,
+}) => {
+  const user = {
+    id: "00000000-0000-4000-8000-000000000001",
+    email: "test@example.com",
+    aud: "authenticated",
+    role: "authenticated",
+    user_metadata: { display_name: "Test" },
+    app_metadata: {},
+    created_at: new Date().toISOString(),
+  };
+  const jwt = `${Buffer.from('{"alg":"HS256"}').toString("base64url")}.${Buffer.from(JSON.stringify({ sub: user.id, exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url")}.test`;
+  const redemption = {
+    id: "r1",
+    deal_id: "gift1",
+    user_id: user.id,
+    token: "unique-redemption-token",
+    display_code: "LUNSJVENN",
+    status: "issued",
+    issued_at: new Date().toISOString(),
+    expires_at: "2099-01-01T00:00:00Z",
+  };
+  await page.route("**/auth/v1/token?**", (route) =>
+    route.fulfill({
+      json: {
+        access_token: jwt,
+        refresh_token: "refresh-test",
+        expires_in: 3600,
+        token_type: "bearer",
+        user,
+      },
+    }),
+  );
+  await page.route("**/auth/v1/user", (route) => route.fulfill({ json: user }));
+  await page.route("**/rest/v1/deals?**", (route) =>
+    route.fulfill({
+      json: [
+        {
+          id: "gift1",
+          business_id: "b1",
+          title: "Gave med lunsj",
+          discount_type: "freebie",
+          discount_details: "Gratis mineralvann når du kjøper lunsj",
+          promo_code: "NYKODE",
+          max_per_user: 1,
+          status: "active",
+          starts_at: "2026-01-01T00:00:00Z",
+          ends_at: null,
+        },
+      ],
+    }),
+  );
+  await page.route("**/rest/v1/rpc/claim_deal", (route) =>
+    route.fulfill({ json: redemption }),
+  );
+  await page.route("**/rest/v1/deal_redemptions?**", (route) =>
+    route.fulfill({ json: [redemption] }),
+  );
+  await page.goto("/");
+  await page.getByRole("tab", { name: "Meg", exact: true }).click();
+  await page.getByLabel("E-post", { exact: true }).fill(user.email);
+  await page
+    .getByLabel("Passord (minst 8 tegn)", { exact: true })
+    .fill("testpassword");
+  await page.getByRole("button", { name: "Logg inn", exact: true }).click();
+  await page.getByText("Gave med lunsj", { exact: true }).first().click();
+  await expect(
+    page.getByText("Gratis mineralvann når du kjøper lunsj", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Hent vennepris", exact: true })
+    .click();
+  await expect(page.getByText("LUNSJVENN", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("unique-redemption-token", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("img", { name: "QR", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Vis innløsningskode", exact: true })
+    .click();
+  await expect(
+    page.getByText("unique-redemption-token", { exact: true }),
+  ).toBeVisible();
+});

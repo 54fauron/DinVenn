@@ -552,6 +552,9 @@ function DealForm({
   const [title, setTitle] = useState(deal?.title ?? "");
   const [description, setDescription] = useState(deal?.description ?? "");
   const [terms, setTerms] = useState(deal?.terms ?? "");
+  const [details, setDetails] = useState(deal?.discount_details ?? "");
+  const [customCode, setCustomCode] = useState(!!deal?.promo_code);
+  const [promoCode, setPromoCode] = useState(deal?.promo_code ?? "");
   const [kind, setKind] = useState<Deal["discount_type"]>(
     deal?.discount_type ?? "percent",
   );
@@ -581,6 +584,11 @@ function DealForm({
                 description,
                 terms,
                 discount_type: kind,
+                discount_details:
+                  kind === "freebie" || kind === "other"
+                    ? details.trim()
+                    : null,
+                promo_code: customCode ? promoCode.trim() : null,
                 discount_value:
                   kind === "percent" || kind === "amount"
                     ? Number(value)
@@ -655,6 +663,36 @@ function DealForm({
                 required
               />
             )}
+            {(kind === "freebie" || kind === "other") && (
+              <label>
+                <span className="field-label">
+                  {t(
+                    kind === "freebie"
+                      ? "Hva får kunden i gave?"
+                      : "Hva gjelder tilbudet?",
+                  )}
+                  <span className="required-marker" aria-hidden="true">
+                    *
+                  </span>
+                </span>
+                <textarea
+                  aria-label={t(
+                    kind === "freebie"
+                      ? "Hva får kunden i gave?"
+                      : "Hva gjelder tilbudet?",
+                  )}
+                  required
+                  maxLength={500}
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                  placeholder={t(
+                    kind === "freebie"
+                      ? "For eksempel: Gratis flaske mineralvann ved kjøp av en lunsjrett."
+                      : "For eksempel: Kjøp to mineralvann og betal for én.",
+                  )}
+                />
+              </label>
+            )}
             <Field
               label={t("Starter (lokal tid)")}
               type="datetime-local"
@@ -684,6 +722,35 @@ function DealForm({
               required
             />
           </div>
+          <label>
+            <span>{t("Valg av rabattkode")}</span>
+            <select
+              aria-label={t("Valg av rabattkode")}
+              value={customCode ? "custom" : "automatic"}
+              onChange={(e) => setCustomCode(e.target.value === "custom")}
+            >
+              <option value="automatic">{t("Automatisk kode")}</option>
+              <option value="custom">{t("Egen rabattkode")}</option>
+            </select>
+          </label>
+          {customCode && (
+            <>
+              <Field
+                label={t("Egen rabattkode")}
+                markRequired
+                required
+                maxLength={64}
+                value={promoCode}
+                placeholder="VENNEPRIS20"
+                onChange={(e) => setPromoCode(e.target.value)}
+              />
+              <p className="muted">
+                {t(
+                  "Koden er felles for kundene. Skann kundens unike QR-kode for å registrere innløsning og håndheve grensene.",
+                )}
+              </p>
+            </>
+          )}
           <label>
             {" "}
             {t("Vilkår")}{" "}
@@ -756,6 +823,12 @@ function DealForm({
                       : t("Vennepris")}
               </p>
               <h3>{title || t("Din neste vennepris")}</h3>
+              {(kind === "freebie" || kind === "other") && details && (
+                <p className="preserve-lines">{details}</p>
+              )}
+              {customCode && promoCode && (
+                <p>{t("Rabattkode: {0}", promoCode)}</p>
+              )}
               <p className="preserve-lines">
                 {description || t("Et godt tilbud fra et lokalt sted.")}
               </p>
@@ -1355,7 +1428,7 @@ function App() {
                   <p>
                     {" "}
                     {t(
-                      "Skann kundens QR-kode eller lim inn koden. Kontroller koden og trykk «Bekreft innløsning».",
+                      "Skann kundens unike QR-kode eller lim inn innløsningskoden. En felles rabattkode kan ikke brukes til å identifisere kundens innløsning.",
                     )}{" "}
                   </p>
                   <button

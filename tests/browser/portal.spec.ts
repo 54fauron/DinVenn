@@ -1014,3 +1014,62 @@ test("avdelinger kan ikke overskrives når lasting feiler, og kan lastes på nyt
     page.getByRole("button", { name: "Legg til avdeling", exact: true }),
   ).toBeEnabled();
 });
+
+test("gratisgave og 2-for-1 har forklaring og valgfri egen kode", async ({
+  page,
+}) => {
+  await backend(page);
+  await login(page);
+  await page.getByRole("button", { name: "Vennepriser", exact: true }).click();
+  await page.getByRole("button", { name: "+ Ny vennepris" }).click();
+  await page.getByLabel("Tittel", { exact: true }).fill("Lunsjgave");
+  await page
+    .getByRole("combobox", { name: "Type rabatt", exact: true })
+    .selectOption("freebie");
+  await page
+    .getByLabel("Hva får kunden i gave?", { exact: true })
+    .fill("Gratis mineralvann når du kjøper lunsj");
+  await page
+    .getByRole("combobox", { name: "Valg av rabattkode", exact: true })
+    .selectOption("custom");
+  await page.getByLabel("Egen rabattkode", { exact: true }).fill("LUNSJVENN");
+  await expect(
+    page.getByText("Rabattkode: LUNSJVENN", { exact: true }),
+  ).toBeVisible();
+  const request = page.waitForRequest(
+    (r) => r.url().includes("/rest/v1/deals") && r.method() === "POST",
+  );
+  await page
+    .getByRole("button", { name: "Lagre vennepris", exact: true })
+    .click();
+  const body = (await request).postDataJSON();
+  expect(body.discount_details).toBe("Gratis mineralvann når du kjøper lunsj");
+  expect(body.promo_code).toBe("LUNSJVENN");
+  expect(body.discount_value).toBeNull();
+  await page.getByRole("button", { name: "Rediger", exact: true }).click();
+  await expect(page.getByLabel("Egen rabattkode", { exact: true })).toHaveValue(
+    "LUNSJVENN",
+  );
+  await expect(
+    page.getByLabel("Hva får kunden i gave?", { exact: true }),
+  ).toHaveValue(body.discount_details);
+  await page
+    .getByRole("combobox", { name: "Type rabatt", exact: true })
+    .selectOption("other");
+  await page
+    .getByLabel("Hva gjelder tilbudet?", { exact: true })
+    .fill("To mineralvann for prisen av ett");
+  await page
+    .getByRole("combobox", { name: "Valg av rabattkode", exact: true })
+    .selectOption("automatic");
+  const update = page.waitForRequest(
+    (r) => r.url().includes("/rest/v1/deals") && r.method() === "PATCH",
+  );
+  await page
+    .getByRole("button", { name: "Lagre vennepris", exact: true })
+    .click();
+  expect((await update).postDataJSON().promo_code).toBeNull();
+  expect((await update).postDataJSON().discount_details).toBe(
+    "To mineralvann for prisen av ett",
+  );
+});

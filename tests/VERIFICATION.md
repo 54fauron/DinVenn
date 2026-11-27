@@ -68,3 +68,10 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - Åtte nettleserkontroller bestått ved mobil- og PC-bredde: eksisterende kontoflyt og kartkort, flere avdelinger i samme bedrift, filtrering, valg/lukking og ren tekst i kartetiketter.
 - Lesetilgang til sky-Supabase kontrollert: den ekstra offentlige avdelingen finnes med lagrede koordinater. Ingen data er endret i skyen.
 - Etter publisering: kontrollert direkte på dinvenn.app at hovedadressen og den ekstra avdelingen vises som to markører. Valg av avdelingen viste riktig adresse, uten JavaScript-feil.
+
+### Tilbudsbeskrivelse og egen kode – 27. november 2026
+
+- 54 kjernetester bestått, inkludert alle elleve migrasjoner i ren PGlite-testdatabase.
+- Ny databasetest dekker gave/2-for-1-beskrivelse, trimming, ugyldig kode, frosset visningskode, unike QR-token for ulike brukere, gjenbruk av reservasjon og avvisning av dobbelt innløst kode. En felles rabattkode kan ikke innløses som en personlig token.
+- Fire målrettede nettlesertester bestått med simulert backend på mobil/PC: oppretting/redigering av gave og 2-for-1, egen/automatisk kode, brukerens uthenting med riktig beskrivelse og frosset kode samt manuell visning av unik innløsningskode.
+- TypeScript og begge produksjonsbygg bestått. Prosjekteier oppga at SQL-oppgraderingen var kjørt uten feil. Ingen ekte innløsning eller prøveordre er opprettet i produksjon av agenten.

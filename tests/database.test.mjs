@@ -930,6 +930,120 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
       },
     );
     await t.test(
+      "gavebeskrivelse og egen kode lagres mens QR fortsatt er unik og engangs",
+      async () => {
+        for (const kind of ["freebie", "other"]) {
+          await assert.rejects(
+            as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type) values($1,'Mangler forklaring',$2)",
+                [business.id, kind],
+              ),
+            ),
+            /Beskriv hva/,
+          );
+        }
+        const gift = (
+          await as("owner", () =>
+            query(
+              "insert into deals(business_id,title,discount_type,discount_details,promo_code,status,max_redemptions) values($1,'Lunsjgave','freebie',' Gratis mineralvann ved kjøp av lunsj ',' LUNSJVENN ','active',2) returning *",
+              [business.id],
+            ),
+          )
+        )[0];
+        assert.equal(
+          gift.discount_details,
+          "Gratis mineralvann ved kjøp av lunsj",
+        );
+        assert.equal(gift.promo_code, "LUNSJVENN");
+        await assert.rejects(
+          as("owner", () =>
+            query("update deals set discount_details=' ' where id=$1", [
+              gift.id,
+            ]),
+          ),
+          /Beskriv hva/,
+        );
+        await assert.rejects(
+          as("owner", () =>
+            query("update deals set promo_code=$1 where id=$2", [
+              "a".repeat(65),
+              gift.id,
+            ]),
+          ),
+          /check constraint/,
+        );
+        await assert.rejects(
+          as("owner", () =>
+            query("update deals set promo_code=$1 where id=$2", [
+              "CODE\nCODE",
+              gift.id,
+            ]),
+          ),
+          /check constraint/,
+        );
+        const first = (
+          await as("user", () =>
+            query("select * from claim_deal($1)", [gift.id]),
+          )
+        )[0];
+        assert.equal(first.display_code, "LUNSJVENN");
+        assert.notEqual(first.token, first.display_code);
+        await as("owner", () =>
+          query("update deals set promo_code='NYKODE' where id=$1", [gift.id]),
+        );
+        const again = (
+          await as("user", () =>
+            query("select * from claim_deal($1)", [gift.id]),
+          )
+        )[0];
+        assert.equal(again.display_code, "LUNSJVENN");
+        assert.equal(again.token, first.token);
+        const second = (
+          await as("other", () =>
+            query("select * from claim_deal($1)", [gift.id]),
+          )
+        )[0];
+        assert.equal(second.display_code, "NYKODE");
+        assert.notEqual(second.token, first.token);
+        await assert.rejects(
+          as("owner", () => query("select * from redeem_deal('NYKODE')")),
+          /Ugyldig kode/,
+        );
+        await as("owner", () =>
+          query("select * from redeem_deal($1)", [first.token]),
+        );
+        await assert.rejects(
+          as("owner", () =>
+            query("select * from redeem_deal($1)", [first.token]),
+          ),
+          /allerede brukt/,
+        );
+        await assert.rejects(
+          as("user", () => query("select * from claim_deal($1)", [gift.id])),
+          /allerede brukt/,
+        );
+        await as("owner", () =>
+          query("select * from redeem_deal($1)", [second.token]),
+        );
+        const pair = (
+          await as("owner", () =>
+            query(
+              "insert into deals(business_id,title,discount_type,discount_details,status) values($1,'To for én','other','To mineralvann for prisen av ett','active') returning *",
+              [business.id],
+            ),
+          )
+        )[0];
+        const normal = (
+          await as("user", () =>
+            query("select * from claim_deal($1)", [pair.id]),
+          )
+        )[0];
+        assert.equal(normal.display_code, null);
+        assert.ok(normal.token);
+      },
+    );
+    await t.test(
       "offentlig bedriftsdata røper ikke nummer, og nummerendring krever ny godkjenning",
       async () => {
         assert.equal(
