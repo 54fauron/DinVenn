@@ -2295,6 +2295,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      finish_rhythm_game: {
+        Args: { p_session_id: string; p_revision: number; p_taps: number[] };
+        Returns: Json;
+      };
       start_deal_game: { Args: { p_deal_id: string }; Returns: Json };
       play_deal_game: {
         Args: { p_session_id: string; p_revision: number; p_action: number };

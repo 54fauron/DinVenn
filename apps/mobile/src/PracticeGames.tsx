@@ -1,3 +1,4 @@
+import { RhythmBoard } from "./RhythmGame";
 import { PracticeSideGame, gameNames } from "./SideGames";
 import { PracticeMemory } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
@@ -89,26 +90,32 @@ export function PracticeGames() {
         )}
       </Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-        {(["tic_tac_toe", "memory", "burgers", "sliding_puzzle"] as const).map(
-          (kind) => (
-            <Pressable
-              key={kind}
-              accessibilityRole="button"
-              accessibilityState={{ selected: selected === kind }}
-              style={[
-                ui.button,
-                { width: "48%", opacity: selected === kind ? 1 : 0.65 },
-              ]}
-              onPress={() => {
-                reset();
-                setOpen(false);
-                setSelected(kind);
-              }}
-            >
-              <Text style={ui.buttonText}>{t(gameNames[kind])}</Text>
-            </Pressable>
-          ),
-        )}
+        {(
+          [
+            "tic_tac_toe",
+            "memory",
+            "burgers",
+            "sliding_puzzle",
+            "cheese_rhythm",
+          ] as const
+        ).map((kind) => (
+          <Pressable
+            key={kind}
+            accessibilityRole="button"
+            accessibilityState={{ selected: selected === kind }}
+            style={[
+              ui.button,
+              { width: "48%", opacity: selected === kind ? 1 : 0.65 },
+            ]}
+            onPress={() => {
+              reset();
+              setOpen(false);
+              setSelected(kind);
+            }}
+          >
+            <Text style={ui.buttonText}>{t(gameNames[kind])}</Text>
+          </Pressable>
+        ))}
       </View>
       {!open ? (
         <Pressable
@@ -121,6 +128,17 @@ export function PracticeGames() {
         >
           <Text style={ui.buttonText}>{t("Spill for moro skyld")}</Text>
         </Pressable>
+      ) : selected === "cheese_rhythm" ? (
+        <>
+          <RhythmBoard />
+          <Pressable
+            accessibilityRole="button"
+            style={s.quiet}
+            onPress={() => setOpen(false)}
+          >
+            <Text style={ui.link}>{t("Lukk spillet")}</Text>
+          </Pressable>
+        </>
       ) : selected === "burgers" || selected === "sliding_puzzle" ? (
         <>
           <PracticeSideGame key={selected} kind={selected} />

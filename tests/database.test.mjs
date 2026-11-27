@@ -32,7 +32,8 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           !x.includes("000016_") &&
           !x.includes("000017_") &&
           !x.includes("000018_") &&
-          !x.includes("000019_"),
+          !x.includes("000019_") &&
+          !x.includes("000020_"),
       )
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
@@ -1837,6 +1838,131 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
             )
           )[0].data;
         }
+      },
+    );
+    await t.test(
+      "Ost på rømmen krever full runde, rytmetrykk og riktig bruker",
+      async () => {
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000020_cheese_rhythm.sql",
+            "utf8",
+          ),
+        );
+        const { cheeseTargets } = await import("../apps/mobile/src/rhythm.ts");
+        const times = cheeseTargets.map((t) => Math.round(t * 1000));
+        let d, g;
+        const kinds = new Set();
+        for (let i = 0; i < 128; i++) {
+          d = (
+            await as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Ostepris','percent',10,'active') returning id",
+                [business.id],
+              ),
+            )
+          )[0];
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+          kinds.add(g.kind);
+        }
+        assert.equal(kinds.size, 5);
+        assert.ok(kinds.has("cheese_rhythm"));
+        await query(
+          "update deal_game_sessions set kind='cheese_rhythm',state=$2 where id=$1",
+          [g.id, JSON.stringify({ phase: "ready", result: "" })],
+        );
+        const begin = async () => {
+          g = (
+            await as("user", () =>
+              query("select play_deal_game($1,$2,-2) data", [g.id, g.revision]),
+            )
+          )[0].data;
+        };
+        const finish = async (taps) => {
+          g = (
+            await as("user", () =>
+              query("select finish_rhythm_game($1,$2,$3) data", [
+                g.id,
+                g.revision,
+                taps,
+              ]),
+            )
+          )[0].data;
+        };
+        await assert.rejects(
+          as("user", () =>
+            query("select finish_rhythm_game($1,$2,$3)", [
+              g.id,
+              g.revision,
+              times,
+            ]),
+          ),
+          /Start rytmerunden/,
+        );
+        await begin();
+        await assert.rejects(
+          as("user", () =>
+            query("select finish_rhythm_game($1,$2,$3)", [
+              g.id,
+              g.revision,
+              times,
+            ]),
+          ),
+          /Spill ferdig/,
+        );
+        await assert.rejects(
+          as("other", () =>
+            query("select finish_rhythm_game($1,$2,$3)", [
+              g.id,
+              g.revision,
+              times,
+            ]),
+          ),
+          /finnes ikke/,
+        );
+        await query(
+          "update deal_game_sessions set state=jsonb_set(state,'{started_at}',to_jsonb(now()-interval '70 seconds')) where id=$1",
+          [g.id],
+        );
+        await assert.rejects(
+          as("user", () =>
+            query("select finish_rhythm_game($1,$2,$3)", [
+              g.id,
+              g.revision,
+              [times[0], times[0]],
+            ]),
+          ),
+          /Ugyldige/,
+        );
+        await finish(times.slice(0, 13));
+        assert.equal(g.completed, false);
+        assert.equal(g.state.hits, 13);
+        await assert.rejects(
+          as("user", () => query("select claim_deal($1)", [d.id])),
+          /Vinn spillet/,
+        );
+        await begin();
+        await query(
+          "update deal_game_sessions set state=jsonb_set(state,'{started_at}',to_jsonb(now()-interval '70 seconds')) where id=$1",
+          [g.id],
+        );
+        await finish(times.slice(0, 14));
+        assert.equal(g.completed, true);
+        assert.equal(g.state.hits, 14);
+        assert.equal(g.state.extras, 0);
+        const r = (
+          await as("user", () => query("select * from claim_deal($1)", [d.id]))
+        )[0];
+        assert.ok(r.token);
+        await as("owner", () => query("select redeem_deal($1)", [r.token]));
+        await assert.rejects(
+          as("owner", () => query("select redeem_deal($1)", [r.token])),
+          /allerede brukt/,
+        );
       },
     );
     await t.test(

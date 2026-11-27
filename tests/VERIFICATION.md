@@ -145,3 +145,13 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - 66 kjerne-/databasetester bestått: 96 nye reservasjoner gir alle fire typer, varierte oppgaver, løsbart 3x3-paritet, riktige ingredienser, ugyldige trekk, bruker/revisjonstilgang, tap/omstart og seier med engangs-QR. Statistikktesten har svært lav, men ikke null, feilrisiko.
 - 32 nettlesertester på mobil og PC og 17 native regresjonstester bestått. Etter justering av førstegangs brikkelayout bestod fire fokuserte nettlesertester på nytt. Burger/puslespill-skjermbilder visuelt kontrollert etter at animasjonene var ferdige. Typesjekk og begge produksjonsbygg bestått.
 - Brukeren bekreftet upgrade-burger-sliding.sql kjørt i Supabase. Lokale tester bruker testdata/mocker og henter ingen ekte rabatt.
+
+
+### 2026-11-27 – Utakt: Ost på rømmen
+
+- Tilpasset nivå 1 fra ren lokal Utakt-kopi, commit c20ffddfb7fff0935bb312288ee2843ab1bb89c8. GitHub-connector returnerte 404. Kilden er dokumentert i docs/sources/utakt.md; ingen separat musikkfil er kopiert.
+- Generert lyd fra den opprinnelige synteseoppskriften; noteplan med 116 BPM, to demonstrasjoner og 17 fangster beholdt. DinVenn-grense: minst 14 treff og høyst fem feiltrykk. Web Audio-klokke styrer scenen og treffvinduet; Expo Audio er koblet til native-varianten.
+- Migrasjon 20 legger til femveis spillvalg og serverberegnet resultat: eier, revisjon, aktivt tilbud, utløp, minimum 66 sekunder, monotone tidspunkter og poeng. Klientens tidsrapportering er ikke bevis på menneskelig input; se kildedokumentets begrensninger.
+- 69 database-/kjernetester, typesjekk og begge produksjonsbygg bestått. 36 nettlesertester på mobil og PC bestått, pluss to lydfeiltester. Etter justering av server-/lydstart bestod alle seks rytmetestene på nytt, inkludert hele 66-sekunders runden med ekte Web Audio, automatisk timede trykk og QR etter seier.
+- 17 native regresjonstester bestått. Native lydspill på fysisk iPhone/Android er ikke testet. Nettleserens mobiltest bruker Chromium med iPhone-format, ikke fysisk Safari. Scene visuelt kontrollert på PC-skjermbilde.
+- Brukeren bekreftet upgrade-cheese-rhythm.sql kjørt. Testene bruker lokale database-/Auth-mocker; ingen ekte tilbud er hentet.

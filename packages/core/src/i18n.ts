@@ -1,6 +1,39 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Ost på rømmen": "Cheese on the run",
+  "Fang osten under klokka. Lytt til to pip; et ekstra skvikk betyr at du venter et halvt slag til.":
+    "Catch the cheese under the bell. Listen for two beeps; an extra squeak means waiting another half beat.",
+  "Mål: minst 14 av 17 oster og høyst 5 feiltrykk. To demonstrasjoner viser rytmen først.":
+    "Goal: catch at least 14 of 17 cheeses, with no more than 5 extra taps. Two demonstrations show the rhythms.",
+  "Runden ble avbrutt. Start på nytt når du er klar.":
+    "The round was interrupted. Start again when you are ready.",
+  "Lyden kunne ikke starte. Prøv igjen.":
+    "Audio could not start. Please try again.",
+  "Klar for å fange ost?": "Ready to catch cheese?",
+  "Se og lytt": "Watch and listen",
+  "På slaget!": "Right on the beat!",
+  "Litt utenfor": "A little off the beat",
+  "Følg rytmen": "Follow the rhythm",
+  "Din tur": "Your turn",
+  Sokkeost: "Sock cheese",
+  "{0} / 17 fanget": "{0} / 17 caught",
+  "{0} feiltrykk": "{0} extra taps",
+  "{0} sekunder igjen": "{0} seconds left",
+  "Fang osten": "Catch the cheese",
+  "Trykk på knappen eller bruk mellomrom. Trykk under demonstrasjonene teller ikke.":
+    "Tap the button or use the space bar. Taps during demonstrations do not count.",
+  "Avslutt runden": "End round",
+  "Prøv rytmen en gang til": "Try the rhythm again",
+  "Laster lyd …": "Loading audio …",
+  "Spill igjen": "Play again",
+  "Start runden": "Start round",
+  "Fra Utakt · Akademiet KI-lab. Tilpasset for DinVenn.":
+    "From Utakt · Akademiet KI-lab. Adapted for DinVenn.",
+  "Kunden får ett av fem tilfeldige spill og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.":
+    "Customers get one of five random games and must win before claiming the QR code. They can try again after losing.",
+  "Spill ferdig rytmerunden først.": "Finish the rhythm round first.",
+
   "Bygg burgeren": "Build the burger",
   Skyvepuslespill: "Sliding puzzle",
   Burgerbunn: "Bottom bun",

@@ -1,3 +1,4 @@
+import { RhythmBoard } from "./RhythmGame";
 import { BurgerBoard, SlidingBoard, gameNames } from "./SideGames";
 import { MemoryBoard } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
@@ -160,6 +161,9 @@ export function DealGame({
             <Text style={ui.link}>{t("Last spillrunden på nytt")}</Text>
           </Pressable>
         </View>
+      )}
+      {game?.kind === "cheese_rhythm" && (
+        <RhythmBoard db={db} game={game} onUpdate={setGame} />
       )}
       {game?.kind === "burgers" && (
         <BurgerBoard

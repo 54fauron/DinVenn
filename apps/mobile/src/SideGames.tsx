@@ -16,6 +16,7 @@ export const gameNames = {
   memory: "Memory",
   burgers: "Bygg burgeren",
   sliding_puzzle: "Skyvepuslespill",
+  cheese_rhythm: "Ost på rømmen",
 };
 const ingredientNames = [
   "Burgerbunn",

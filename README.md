@@ -384,9 +384,9 @@ klient-API-et for å beskytte anonym forfatteridentitet.
 
 ## Spill for å hente en vennepris
 
-For nyeste spillversjon: kjør `supabase/upgrade-burger-sliding.sql` én gang i Supabase SQL Editor etter `upgrade-memory.sql`. Ikke kjør setup.sql på en eksisterende database.
+For nyeste spillversjon: kjør `supabase/upgrade-cheese-rhythm.sql` én gang i Supabase SQL Editor etter `upgrade-burger-sliding.sql`. Ikke kjør setup.sql på en eksisterende database.
 
-Alle nye uthentinger krever seier i spillet som serveren velger tilfeldig: Memory, tre på rad, Bygg burgeren eller Skyvepuslespill, med lik sannsynlighet. Valget beholdes når runden gjenåpnes eller spilleren prøver igjen. Bedriften har ikke et valg for å skru spill av eller på. Ved tap og uavgjort kan spilleren prøve igjen uten kostnad. Allerede utstedte QR-koder og påbegynte tre på rad-runder beholdes.
+Alle nye uthentinger krever seier i spillet som serveren velger tilfeldig: Memory, tre på rad, Bygg burgeren, Skyvepuslespill eller Ost på rømmen, med lik sannsynlighet. Valget beholdes når runden gjenåpnes eller spilleren prøver igjen. Bedriften har ikke et valg for å skru spill av eller på. Ved tap og uavgjort kan spilleren prøve igjen uten kostnad. Allerede utstedte QR-koder og påbegynte tre på rad-runder beholdes.
 
 Det er ingen betaling for spill, tilfeldige premier, tidsbasert poengkrav eller
 krav til reaksjonshastighet. Tilbud, rabatt og vilkår vises før spill. Ved tilbud med kapasitet
@@ -422,7 +422,7 @@ Kjør `supabase/upgrade-tic-tac-toe-strategy.sql` én gang etter seier-oppgrader
 
 ### Spillhjørnet på Min side
 
-Velg blant de fire spillene under Spillhjørnet, og trykk «Spill for moro skyld», også uten innlogging. Spillet kjører lokalt og krever ingen databaseoppgradering. Det bruker ingen tilbud, reservasjoner eller QR-koder, og seire her kan ikke brukes til å hente rabatt. Ny runde og lukking avbryter ventende datamaskintrekk.
+Velg blant de fem spillene under Spillhjørnet, og trykk «Spill for moro skyld», også uten innlogging. Spillet kjører lokalt og krever ingen databaseoppgradering. Det bruker ingen tilbud, reservasjoner eller QR-koder, og seire her kan ikke brukes til å hente rabatt. Ny runde og lukking avbryter ventende datamaskintrekk.
 
 
 ### Memory
@@ -436,4 +436,11 @@ Bygg burgeren gir en tilfeldig bestilling med seks lag: bunn, fire ingredienser 
 
 Skyvepuslespillet har åtte nummererte brikker og ett tomt felt på et 3 × 3-brett. Bare nabobrikker kan flyttes. Brettet blandes gjennom 32 lovlige trekk uten direkte tilbakeskritt og starter aldri ferdig løst. Alle brett kan derfor løses. Målet er 1–8 i rekkefølge med tomt felt nederst til høyre, uten tids- eller trekkgrense. Brikkene glir animert mellom rutene. Begge spill følger redusert bevegelse og kan også spilles lokalt uten rabatt.
 
-Serveren kontrollerer ingrediensrekkefølge, feil, lovlige flytt og sluttstilling før rabatt. De fire spillene trekkes likt for nye reservasjoner; eksisterende runder og QR-koder beholdes.
+Serveren kontrollerer ingrediensrekkefølge, feil, lovlige flytt og sluttstilling før rabatt. Spillene trekkes likt for nye reservasjoner; eksisterende runder og QR-koder beholdes.
+
+
+### Ost på rømmen
+
+Utakt-nivået er tilgjengelig i spillhjørnet og blant rabattspillene. Runden varer omtrent 66 sekunder ved 116 BPM. To demonstrasjoner viser rytmen. Fang minst 14 av 17 oster, med høyst fem feiltrykk. Lyden starter bare etter et trykk; nettleseren bruker Web Audio, mens native bruker Expo Audio. Runden avbrytes når appen går i bakgrunnen eller spillet lukkes. Hodetelefoner med forsinkelse kan påvirke presisjonen.
+
+Kjør `supabase/upgrade-cheese-rhythm.sql` én gang etter forrige oppgradering. Serveren beregner poeng fra rapporterte trykktidspunkter, avviser for tidlig innsending og kontrollerer samme tilgang, utløp og engangs-QR som de andre spillene. Se [kilde og tekniske begrensninger](docs/sources/utakt.md).

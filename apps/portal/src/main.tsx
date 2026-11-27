@@ -724,7 +724,7 @@ function DealForm({
           </div>
           <p className="muted">
             {t(
-              "Kunden får ett av fire tilfeldige spill og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.",
+              "Kunden får ett av fem tilfeldige spill og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.",
             )}
           </p>
           <label>

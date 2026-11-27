@@ -218,7 +218,8 @@ export type OwnReview =
   Database["public"]["Functions"]["list_my_reviews"]["Returns"][number];
 export type DealGame = {
   id: string;
-  kind: "tic_tac_toe" | "memory" | "burgers" | "sliding_puzzle";
+  kind:
+    "tic_tac_toe" | "memory" | "burgers" | "sliding_puzzle" | "cheese_rhythm";
   revision: number;
   completed: boolean;
   expires_at: string;
@@ -227,6 +228,9 @@ export type DealGame = {
     stack?: number[];
     tiles?: number[];
     moves?: number;
+    phase?: string;
+    hits?: number;
+    extras?: number;
     faces?: (number | null)[];
     revealed?: number[];
     mistakes?: number;
@@ -245,6 +249,15 @@ export const api = (db: Client) => ({
   async startGame(id: string) {
     return unwrap(
       await db.rpc("start_deal_game", { p_deal_id: id }),
+    ) as unknown as DealGame;
+  },
+  async finishRhythm(game: DealGame, taps: number[]) {
+    return unwrap(
+      await db.rpc("finish_rhythm_game", {
+        p_session_id: game.id,
+        p_revision: game.revision,
+        p_taps: taps,
+      }),
     ) as unknown as DealGame;
   },
   async playGame(game: DealGame, action: number) {
