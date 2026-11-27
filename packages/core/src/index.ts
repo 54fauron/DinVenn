@@ -218,11 +218,15 @@ export type OwnReview =
   Database["public"]["Functions"]["list_my_reviews"]["Returns"][number];
 export type DealGame = {
   id: string;
-  kind: "tic_tac_toe" | "memory";
+  kind: "tic_tac_toe" | "memory" | "burgers" | "sliding_puzzle";
   revision: number;
   completed: boolean;
   expires_at: string;
   state: {
+    target?: number[];
+    stack?: number[];
+    tiles?: number[];
+    moves?: number;
     faces?: (number | null)[];
     revealed?: number[];
     mistakes?: number;

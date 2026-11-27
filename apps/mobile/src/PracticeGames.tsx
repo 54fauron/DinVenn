@@ -1,3 +1,4 @@
+import { PracticeSideGame, gameNames } from "./SideGames";
 import { PracticeMemory } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -41,9 +42,8 @@ export function practiceBot(board: string[]) {
 }
 export function PracticeGames() {
   const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<"tic_tac_toe" | "memory">(
-    "tic_tac_toe",
-  );
+  const [selected, setSelected] =
+    useState<keyof typeof gameNames>("tic_tac_toe");
   const [board, setBoard] = useState<string[]>(Array(9).fill(""));
   const [thinking, setThinking] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -88,27 +88,27 @@ export function PracticeGames() {
           "Velg et spill og spill så ofte du vil. Ingen tilbud eller rabatt brukes.",
         )}
       </Text>
-      <View style={{ flexDirection: "row", gap: 10 }}>
-        {(["tic_tac_toe", "memory"] as const).map((kind) => (
-          <Pressable
-            key={kind}
-            accessibilityRole="button"
-            accessibilityState={{ selected: selected === kind }}
-            style={[
-              ui.button,
-              { flex: 1, opacity: selected === kind ? 1 : 0.65 },
-            ]}
-            onPress={() => {
-              reset();
-              setOpen(false);
-              setSelected(kind);
-            }}
-          >
-            <Text style={ui.buttonText}>
-              {t(kind === "memory" ? "Memory" : "Tre på rad")}
-            </Text>
-          </Pressable>
-        ))}
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        {(["tic_tac_toe", "memory", "burgers", "sliding_puzzle"] as const).map(
+          (kind) => (
+            <Pressable
+              key={kind}
+              accessibilityRole="button"
+              accessibilityState={{ selected: selected === kind }}
+              style={[
+                ui.button,
+                { width: "48%", opacity: selected === kind ? 1 : 0.65 },
+              ]}
+              onPress={() => {
+                reset();
+                setOpen(false);
+                setSelected(kind);
+              }}
+            >
+              <Text style={ui.buttonText}>{t(gameNames[kind])}</Text>
+            </Pressable>
+          ),
+        )}
       </View>
       {!open ? (
         <Pressable
@@ -121,6 +121,17 @@ export function PracticeGames() {
         >
           <Text style={ui.buttonText}>{t("Spill for moro skyld")}</Text>
         </Pressable>
+      ) : selected === "burgers" || selected === "sliding_puzzle" ? (
+        <>
+          <PracticeSideGame key={selected} kind={selected} />
+          <Pressable
+            accessibilityRole="button"
+            style={s.quiet}
+            onPress={() => setOpen(false)}
+          >
+            <Text style={ui.link}>{t("Lukk spillet")}</Text>
+          </Pressable>
+        </>
       ) : selected === "memory" ? (
         <>
           <PracticeMemory />

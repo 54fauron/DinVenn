@@ -522,3 +522,36 @@ test("Memory kan velges i spillhjørnet uten innlogging", async ({ page }) => {
     page.getByRole("button", { name: "Spill for moro skyld", exact: true }),
   ).toBeVisible();
 });
+
+for (const game of ["Bygg burgeren", "Skyvepuslespill"])
+  test(`fritt spill: ${game}`, async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("tab", { name: "Meg", exact: true }).click();
+    await page.getByRole("button", { name: game, exact: true }).click();
+    await page
+      .getByRole("button", { name: "Spill for moro skyld", exact: true })
+      .click();
+    if (game === "Bygg burgeren") {
+      await page
+        .getByRole("button", { name: "Legg til Burgerbunn", exact: true })
+        .click();
+      await expect(page.getByText("1 / 6 lag", { exact: true })).toBeVisible();
+    } else {
+      await expect(
+        page.getByRole("button", { name: /^Flytt brikke \d$/ }),
+      ).toHaveCount(8);
+      await page
+        .getByRole("button", { name: /^Flytt brikke \d$/ })
+        .and(page.locator(':not([disabled]):not([aria-disabled="true"])'))
+        .first()
+        .click();
+      await expect(page.getByText("1 trekk", { exact: true })).toBeVisible();
+    }
+    await page.getByRole("button", { name: "Ny runde", exact: true }).click();
+    await page
+      .getByRole("button", { name: "Lukk spillet", exact: true })
+      .click();
+    await expect(
+      page.getByRole("button", { name: "Spill for moro skyld", exact: true }),
+    ).toBeVisible();
+  });

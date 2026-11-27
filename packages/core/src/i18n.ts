@@ -1,6 +1,37 @@
 // Interface text only: business names and user-authored content are never translated.
 export type Language = "nb" | "en";
 const english: Record<string, string> = {
+  "Bygg burgeren": "Build the burger",
+  Skyvepuslespill: "Sliding puzzle",
+  Burgerbunn: "Bottom bun",
+  Burger: "Patty",
+  Ost: "Cheese",
+  Tomat: "Tomato",
+  Salat: "Lettuce",
+  Burgertopp: "Top bun",
+  "PÅ KJØKKENET": "IN THE KITCHEN",
+  "Følg bestillingen fra bunnen og opp. Tre feil avslutter runden.":
+    "Follow the order from bottom to top. Three mistakes end the round.",
+  "{0} / 6 lag": "{0} / 6 layers",
+  "Tallerkenen er klar": "Your plate is ready",
+  "Bestillingen er klar!": "Order ready!",
+  "Tre feil – prøv en ny bestilling": "Three mistakes – try a new order",
+  "Velg neste ingrediens": "Choose the next ingredient",
+  "Legg til {0}": "Add {0}",
+  "BIT FOR BIT": "PIECE BY PIECE",
+  "Trykk på en brikke ved det tomme feltet. Sett tallene i rekkefølge fra 1 til 8, med tomt felt nederst til høyre.":
+    "Tap a tile next to the empty space. Arrange numbers 1 to 8, leaving the bottom right empty.",
+  "{0} trekk": "{0} moves",
+  "Ingen tidsgrense": "No time limit",
+  "Flytt brikke {0}": "Move tile {0}",
+  "Alle brikkene er på plass!": "All tiles are in place!",
+  "Flytt en brikke til det tomme feltet": "Move a tile into the empty space",
+  "Bland på nytt": "Shuffle again",
+  "Flytt en brikke ved siden av det tomme feltet.":
+    "Move a tile next to the empty space.",
+  "Kunden får ett av fire tilfeldige spill og må vinne før QR-koden hentes. Kunden kan prøve igjen ved tap.":
+    "Customers get one of four random games and must win before claiming the QR code. They can try again after losing.",
+
   Memory: "Memory",
   "FINN DE LOKALE FAVORITTENE": "FIND THE LOCAL FAVOURITES",
   "{0} / 8 par": "{0} / 8 pairs",

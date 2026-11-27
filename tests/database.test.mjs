@@ -31,7 +31,8 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           !x.includes("000015_") &&
           !x.includes("000016_") &&
           !x.includes("000017_") &&
-          !x.includes("000018_"),
+          !x.includes("000018_") &&
+          !x.includes("000019_"),
       )
       .sort()) {
       let sql = await readFile(`supabase/migrations/${name}`, "utf8");
@@ -1682,6 +1683,160 @@ test("Pilotens migrasjoner og tilgangsregler i PostgreSQL (PGlite, mock av Supab
           as("owner", () => query("select redeem_deal($1)", [r.token])),
           /allerede brukt/,
         );
+      },
+    );
+    await t.test(
+      "burger og skyvepuslespill er tilfeldige, lovlige og krever seier",
+      async () => {
+        await db.exec(
+          await readFile(
+            "supabase/migrations/20261127000019_burger_sliding.sql",
+            "utf8",
+          ),
+        );
+        const kinds = new Set(),
+          puzzles = new Set(),
+          recipes = new Set();
+        let d, g;
+        for (let i = 0; i < 96; i++) {
+          d = (
+            await as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Sidespill','percent',10,'active') returning id",
+                [business.id],
+              ),
+            )
+          )[0];
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+          kinds.add(g.kind);
+          assert.ok(
+            ["memory", "tic_tac_toe", "burgers", "sliding_puzzle"].includes(
+              g.kind,
+            ),
+          );
+          if (g.kind === "sliding_puzzle") {
+            const tiles = g.state.tiles;
+            assert.deepEqual(
+              [...tiles].sort((a, b) => a - b),
+              [0, 1, 2, 3, 4, 5, 6, 7, 8],
+            );
+            assert.notDeepEqual(tiles, [1, 2, 3, 4, 5, 6, 7, 8, 0]);
+            let inversions = 0;
+            const numbers = tiles.filter((n) => n);
+            for (let a = 0; a < 8; a++)
+              for (let b = a + 1; b < 8; b++)
+                if (numbers[a] > numbers[b]) inversions++;
+            assert.equal(inversions % 2, 0);
+            puzzles.add(JSON.stringify(tiles));
+          }
+          if (g.kind === "burgers") {
+            assert.equal(g.state.target[0], 0);
+            assert.equal(g.state.target[5], 5);
+            assert.deepEqual([...g.state.target].sort(), [0, 1, 2, 3, 4, 5]);
+            recipes.add(JSON.stringify(g.state.target));
+          }
+        }
+        assert.equal(kinds.size, 4);
+        assert.ok(puzzles.size > 1);
+        assert.ok(recipes.size > 1);
+        const step = async (a) => {
+          g = (
+            await as("user", () =>
+              query("select play_deal_game($1,$2,$3) data", [
+                g.id,
+                g.revision,
+                a,
+              ]),
+            )
+          )[0].data;
+        };
+        for (const kind of ["burgers", "sliding_puzzle"]) {
+          await query(
+            "update deal_game_sessions set kind=$1,state=new_side_game_state($1),completed_at=null,consumed_at=null where id=$2",
+            [kind, g.id],
+          );
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+          await assert.rejects(
+            as("user", () => query("select claim_deal($1)", [d.id])),
+            /Vinn spillet/,
+          );
+          await assert.rejects(
+            as("other", () =>
+              query("select play_deal_game($1,$2,0)", [g.id, g.revision]),
+            ),
+            /finnes ikke/,
+          );
+          await assert.rejects(
+            as("user", () => query("select play_deal_game($1,999,0)", [g.id])),
+            /oppdatert/,
+          );
+          if (kind === "burgers") {
+            for (let i = 0; i < 3; i++) await step(5);
+            assert.equal(g.state.result, "loss");
+            assert.equal(g.completed, false);
+            await assert.rejects(
+              as("user", () => query("select claim_deal($1)", [d.id])),
+              /Vinn spillet/,
+            );
+            const expiry = g.expires_at;
+            await step(-1);
+            assert.equal(g.expires_at, expiry);
+            for (const ingredient of [...g.state.target])
+              await step(ingredient);
+            assert.equal(g.state.result, "win");
+          } else {
+            await query("update deal_game_sessions set state=$1 where id=$2", [
+              JSON.stringify({
+                tiles: [1, 2, 3, 4, 5, 6, 7, 0, 8],
+                moves: 0,
+                result: "",
+              }),
+              g.id,
+            ]);
+            await assert.rejects(
+              as("user", () =>
+                query("select play_deal_game($1,$2,0)", [g.id, g.revision]),
+              ),
+              /Flytt en brikke/,
+            );
+            await step(8);
+            assert.equal(g.state.result, "win");
+            assert.equal(g.state.moves, 1);
+          }
+          const r = (
+            await as("user", () =>
+              query("select * from claim_deal($1)", [d.id]),
+            )
+          )[0];
+          assert.ok(r.token);
+          await as("owner", () => query("select redeem_deal($1)", [r.token]));
+          await assert.rejects(
+            as("owner", () => query("select redeem_deal($1)", [r.token])),
+            /allerede brukt/,
+          );
+          // A separate offer is needed for the next game, since the voucher is consumed.
+          d = (
+            await as("owner", () =>
+              query(
+                "insert into deals(business_id,title,discount_type,discount_value,status) values($1,'Neste sidespill','percent',10,'active') returning id",
+                [business.id],
+              ),
+            )
+          )[0];
+          g = (
+            await as("user", () =>
+              query("select start_deal_game($1) data", [d.id]),
+            )
+          )[0].data;
+        }
       },
     );
     await t.test(

@@ -1,3 +1,4 @@
+import { BurgerBoard, SlidingBoard, gameNames } from "./SideGames";
 import { MemoryBoard } from "./MemoryGame";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -77,7 +78,11 @@ export function DealGame({
         new Promise<void>((resolve) =>
           setTimeout(
             resolve,
-            game.kind === "tic_tac_toe" && action >= 0 ? 650 : 0,
+            game.kind === "tic_tac_toe" && action >= 0
+              ? 650
+              : game.kind === "sliding_puzzle"
+                ? 260
+                : 0,
           ),
         ),
       ]);
@@ -127,7 +132,7 @@ export function DealGame({
     <View style={s.page}>
       <Text style={ui.eyebrow}>{t("SPILL OG HENT VENNEPRISEN")}</Text>
       <Text style={ui.h1}>
-        {t(game?.kind === "memory" ? "Memory" : "Tre på rad")}
+        {t(game ? gameNames[game.kind] : "Velger spill …")}
       </Text>
       <View style={ui.card}>
         <Text style={ui.h3}>{deal.title}</Text>
@@ -155,6 +160,22 @@ export function DealGame({
             <Text style={ui.link}>{t("Last spillrunden på nytt")}</Text>
           </Pressable>
         </View>
+      )}
+      {game?.kind === "burgers" && (
+        <BurgerBoard
+          state={game.state}
+          busy={busy}
+          onMove={(i) => void move(i)}
+          onRestart={() => void move(-1)}
+        />
+      )}
+      {game?.kind === "sliding_puzzle" && (
+        <SlidingBoard
+          state={game.state}
+          busy={busy}
+          onMove={(i) => void move(i)}
+          onRestart={() => void move(-1)}
+        />
       )}
       {game?.kind === "memory" && (
         <MemoryBoard

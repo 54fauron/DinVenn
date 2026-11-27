@@ -137,3 +137,11 @@ Nye nettlesertester på desktop og mobilvisning dekker automatisk adresseoppslag
 - 65 kjerne-/databasetester bestått. Testet variasjon i spilltype og kortfordeling over 64 nye runder, nøyaktig to av hver verdi, at skjulte kort ikke sendes, feil bruker/revisjon/trekk, seks feil, gjenstart, åtte par og engangsinnløsning. Tilfeldighetstesten har svært lav, men ikke null, statistisk feilrisiko.
 - 24 nettlesertester bestått på mobil og PC, inkludert Memory i spillhjørnet, tap/nytt forsøk/seier/QR og eksisterende tre på rad-flyt. 17 native regresjonstester, typesjekk og begge produksjonsbygg bestått. Mobilskjermbilde visuelt kontrollert.
 - Lokale database- og nettlesertester bruker testdata/mocker. Brukeren bekreftet at upgrade-memory.sql er kjørt i Supabase uten problemer. Ingen ekte tilbud er hentet som del av testingen.
+
+
+### 2026-11-27 – Bygg burgeren og Skyvepuslespill
+
+- Migrasjon 19 legger til fireveis tilfeldig spillvalg, servervalidert bestilling med tre-feil-grense og puslespill med lovlige nabotrekk. Nye oppgaver blandes tilfeldig, og skyvebrett genereres gjennom lovlige trekk uten ferdig løst startstilling.
+- 66 kjerne-/databasetester bestått: 96 nye reservasjoner gir alle fire typer, varierte oppgaver, løsbart 3x3-paritet, riktige ingredienser, ugyldige trekk, bruker/revisjonstilgang, tap/omstart og seier med engangs-QR. Statistikktesten har svært lav, men ikke null, feilrisiko.
+- 32 nettlesertester på mobil og PC og 17 native regresjonstester bestått. Etter justering av førstegangs brikkelayout bestod fire fokuserte nettlesertester på nytt. Burger/puslespill-skjermbilder visuelt kontrollert etter at animasjonene var ferdige. Typesjekk og begge produksjonsbygg bestått.
+- Brukeren bekreftet upgrade-burger-sliding.sql kjørt i Supabase. Lokale tester bruker testdata/mocker og henter ingen ekte rabatt.
